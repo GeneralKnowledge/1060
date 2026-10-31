@@ -1,0 +1,6 @@
+{
+  "version": "b1",
+  "fingerprint": "bcbc2a1746a06f39cf83b5d51adc25a0b4edef609b76eff341102169a2d8ad6a",
+  "approved_at": "2026-10-31T18:17:45Z",
+  "note": "initial benchmark b1; approved by merging the PR that adds it"
+}

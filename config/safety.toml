@@ -1,0 +1,24 @@
+# Safety limits. Enforced by lab/safety.py independently of the research agent.
+# The agent cannot change this file (protected path).
+[limits]
+gpu_temp_max_c = 87          # abort experiment above this
+gpu_temp_warn_c = 82
+vram_max_fraction = 0.98
+host_mem_available_min_mb = 512
+disk_free_min_gb = 5
+experiment_time_budget_s = 300     # cheap software experiments
+build_time_budget_s = 3600         # compilation
+telemetry_stale_s = 15             # nvidia-smi silent this long = driver unhealthy
+max_consecutive_failures = 3       # session stops after this many crashes/aborts
+
+[policy]
+# Executables an experiment may launch (resolved basename). Everything else is refused.
+allowed_executables = ["llama-bench", "llama-perplexity", "llama-cli", "llama-server",
+                       "cmake", "git", "nvidia-smi"]
+# Anything matching these needs explicit human approval (Mode 2/3) and is
+# written to experiments/proposals/ instead of being run.
+approval_required_patterns = [
+  "sudo", "nvflash", "nvidia-smi -pl", "nvidia-smi -lgc", "nvidia-smi -lmc", "nvidia-smi -ac",
+  "nvidia-smi -pm", "nvidia-smi -r", "nvidia-settings", "/sys/", "/dev/", "modprobe", "insmod",
+  "apt", "dpkg", "grub", "update-initramfs", "systemctl", "dell-smm", "i8kctl", "setpci", "rw-mmio",
+]

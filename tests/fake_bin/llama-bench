@@ -1,0 +1,20 @@
+#!/usr/bin/env python3
+"""Fake llama-bench for tests: deterministic-ish throughput driven by flags."""
+import json, os, random, sys
+a = sys.argv[1:]
+def opt(flag, default=None):
+    return a[a.index(flag) + 1] if flag in a else default
+if os.environ.get("FAKE_CRASH"):
+    print("CUDA error: an illegal memory access was encountered", file=sys.stderr); sys.exit(1)
+pp_mult = 1.15 if opt("-fa") == "1" else 1.0
+tg_mult = 0.80 if opt("-ngl") == "10" else 1.0
+reps = int(opt("-r", "1"))
+rows = []
+for p in map(int, opt("-p", "512").split(",")):
+    s = [300 * pp_mult * random.uniform(0.997, 1.003) for _ in range(reps)]
+    rows.append({"n_prompt": p, "n_gen": 0, "avg_ts": sum(s) / reps, "stddev_ts": 0.5, "samples_ts": s,
+                 "build_commit": "fake", "model_type": "fake 3B Q4_K_M"})
+for n in map(int, opt("-n", "128").split(",")):
+    s = [20 * tg_mult * random.uniform(0.997, 1.003) for _ in range(reps)]
+    rows.append({"n_prompt": 0, "n_gen": n, "avg_ts": sum(s) / reps, "stddev_ts": 0.05, "samples_ts": s})
+print(json.dumps(rows, indent=1))

@@ -1,0 +1,23 @@
+{
+  "id": "initial",
+  "validated": false,
+  "note": "Starting point, not yet measured. `python3 -m lab baseline` validates it on the laptop.",
+  "workload": "small",
+  "backend": "cuda",
+  "build": {
+    "llama_cpp_commit": "7bd18083082126c08d375cefaa6a5aa1c170ecde",
+    "llama_cpp_tag": "b12021",
+    "cmake_flags": [],
+    "patches": []
+  },
+  "runtime": {
+    "n_gpu_layers": 99,
+    "flash_attn": 0,
+    "cache_type_k": "f16",
+    "cache_type_v": "f16",
+    "batch_size": 2048,
+    "ubatch_size": 512,
+    "mmap": 1
+  },
+  "env": {}
+}

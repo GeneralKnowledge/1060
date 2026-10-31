@@ -3,3 +3,9 @@ __pycache__/
 .venv/
 research/audit_raw/
 models/
+backends/llama.cpp-src/
+backends/builds/
+experiments/worktrees/
+experiments/logs/
+experiments/.hashcache.json
+experiments/STOP

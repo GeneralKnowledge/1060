@@ -1,0 +1,54 @@
+<?xml version="1.0" ?>
+<!-- SYNTHETIC fixture for parser tests. Values are illustrative, NOT measurements of the target laptop. -->
+<nvidia_smi_log>
+  <driver_version>580.95.05</driver_version>
+  <cuda_version>13.0</cuda_version>
+  <attached_gpus>1</attached_gpus>
+  <gpu id="00000000:01:00.0">
+    <product_name>NVIDIA GeForce GTX 1060 with Max-Q Design</product_name>
+    <product_brand>GeForce</product_brand>
+    <product_architecture>Pascal</product_architecture>
+    <persistence_mode>Disabled</persistence_mode>
+    <vbios_version>86.06.00.00.00</vbios_version>
+    <pci>
+      <pci_device_id>0x1C2010DE</pci_device_id>
+      <pci_sub_system_id>0x00000000</pci_sub_system_id>
+      <pci_gpu_link_info>
+        <pcie_gen><max_link_gen>3</max_link_gen><current_link_gen>1</current_link_gen></pcie_gen>
+        <link_widths><max_link_width>16x</max_link_width><current_link_width>16x</current_link_width></link_widths>
+      </pci_gpu_link_info>
+    </pci>
+    <fan_speed>N/A</fan_speed>
+    <performance_state>P8</performance_state>
+    <clocks_event_reasons>
+      <clocks_event_reason_gpu_idle>Active</clocks_event_reason_gpu_idle>
+      <clocks_event_reason_sw_power_cap>Not Active</clocks_event_reason_sw_power_cap>
+      <clocks_event_reason_hw_thermal_slowdown>Not Active</clocks_event_reason_hw_thermal_slowdown>
+    </clocks_event_reasons>
+    <fb_memory_usage><total>6144 MiB</total><reserved>0 MiB</reserved><used>2 MiB</used><free>6142 MiB</free></fb_memory_usage>
+    <compute_mode>Default</compute_mode>
+    <temperature>
+      <gpu_temp>41 C</gpu_temp>
+      <gpu_temp_max_threshold>102 C</gpu_temp_max_threshold>
+      <gpu_temp_slow_threshold>99 C</gpu_temp_slow_threshold>
+      <gpu_temp_max_gpu_threshold>N/A</gpu_temp_max_gpu_threshold>
+      <gpu_target_temperature>N/A</gpu_target_temperature>
+    </temperature>
+    <gpu_power_readings>
+      <power_state>P8</power_state>
+      <power_draw>4.50 W</power_draw>
+      <current_power_limit>N/A</current_power_limit>
+      <default_power_limit>N/A</default_power_limit>
+      <min_power_limit>N/A</min_power_limit>
+      <max_power_limit>N/A</max_power_limit>
+    </gpu_power_readings>
+    <clocks><graphics_clock>139 MHz</graphics_clock><sm_clock>139 MHz</sm_clock><mem_clock>405 MHz</mem_clock></clocks>
+    <max_clocks><graphics_clock>1911 MHz</graphics_clock><sm_clock>1911 MHz</sm_clock><mem_clock>4004 MHz</mem_clock></max_clocks>
+    <supported_clocks>
+      <supported_mem_clock><value>4004 MHz</value>
+        <supported_graphics_clock>1911 MHz</supported_graphics_clock>
+        <supported_graphics_clock>139 MHz</supported_graphics_clock>
+      </supported_mem_clock>
+    </supported_clocks>
+  </gpu>
+</nvidia_smi_log>

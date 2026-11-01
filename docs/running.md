@@ -11,9 +11,10 @@ scripts/hardware_audit.sh --sudo     # read-only; --sudo only adds `sudo -n dmid
 
 ## 1. Toolchain (human, only if the audit shows it missing)
 
-- NVIDIA **R580** driver (last branch supporting Pascal) and a **CUDA 12.x** toolkit
-  (12.8 or 12.9; CUDA 13 cannot build for sm_61). Hold the driver package so upgrades do not
-  move it to 590+.
+- An NVIDIA driver that supports Pascal (R580 is the last branch) and a **CUDA 12.x** toolkit
+  (CUDA 13 cannot build for sm_61). Hold the driver package so upgrades do not move it to 590+.
+  The lab laptop currently runs driver 550.163.01 with CUDA 12.0 and g++-12 as the host
+  compiler; that combination built and validated the baseline, so no driver change is needed.
 - `cmake`, `g++`, `git`; for the Vulkan backend also the Vulkan headers and `glslc`.
 - Python 3.11+ (stdlib only). `pip install anthropic` if you use the Anthropic provider.
 

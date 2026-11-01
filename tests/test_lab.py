@@ -27,12 +27,29 @@ def sh(cwd, *args):
     return subprocess.run(args, cwd=cwd, check=True, capture_output=True, text=True).stdout
 
 
+INITIAL_BEST = {
+    "id": "initial", "validated": False, "note": "Starting point, not yet measured.",
+    "workload": "small", "backend": "cuda",
+    "build": {"llama_cpp_commit": "7bd18083082126c08d375cefaa6a5aa1c170ecde",
+              "llama_cpp_tag": "b12021", "cmake_flags": [], "patches": []},
+    "runtime": {"n_gpu_layers": 99, "flash_attn": 0, "cache_type_k": "f16", "cache_type_v": "f16",
+                "batch_size": 2048, "ubatch_size": 512, "mmap": 1},
+    "env": {},
+}
+
+
 @pytest.fixture
 def lab(tmp_path):
     root = tmp_path / "lab"
     for d in ("config", "benchmarks", "lab", "winners", "research", "experiments", "backends"):
         shutil.copytree(REPO / d, root / d, ignore=shutil.ignore_patterns("__pycache__", "*.lock"))
     shutil.copy(REPO / ".gitignore", root / ".gitignore")
+    # Start every test from a fixed, unmeasured winner and an empty history, so the
+    # tests don't depend on what the real lab has promoted or recorded so far.
+    for d in ("winners/history", "winners/profiles", "experiments/records", "experiments/proposals"):
+        shutil.rmtree(root / d, ignore_errors=True)
+    (root / "experiments" / "results.tsv").unlink(missing_ok=True)
+    (root / "winners" / "best_config.json").write_text(json.dumps(INITIAL_BEST, indent=2) + "\n")
     (root / "models").mkdir()
     model = root / "models" / "Llama-3.2-3B-Instruct-Q4_K_M.gguf"
     model.write_bytes(b"fake gguf")
@@ -188,6 +205,23 @@ def test_baseline_then_promote_with_patch(lab):
     dup = lab.run(ExperimentSpec(hypothesis="again", objective="", description="",
                                  changes={"runtime": {"flash_attn": 0}}))
     assert dup["decision"] == "duplicate"
+
+
+def test_rewritten_patch_is_not_a_duplicate(lab):
+    """Same patch path, different content: a new experiment, not a duplicate."""
+    lab.validate_baseline()
+    assert "note" not in lab.best()
+    patch = "backends/experimental/kernel.patch"
+    first = lab.run(ExperimentSpec(hypothesis="v1", objective="", description="",
+                                   changes={"build": {"patches": [patch]}},
+                                   files={patch: "# version 1\n"}))
+    assert first["decision"] != "duplicate"
+    second = lab.run(ExperimentSpec(hypothesis="v2", objective="", description="",
+                                    changes={"build": {"patches": [patch]}},
+                                    files={patch: "# version 2\n"}))
+    assert second["decision"] != "duplicate"
+    assert second["candidate_config_hash"] != first["candidate_config_hash"]
+    assert "note" not in second["experimental_config"]
 
 
 def test_regression_is_discarded_and_best_untouched(lab):

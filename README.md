@@ -4,8 +4,19 @@ An autonomous research environment for extracting the best practical AI-inferenc
 NVIDIA GTX 1060 laptop (Dell G3 17, Ubuntu Server, headless). Inspired by Karpathy's *autoresearch*: a small
 experiment loop, measurable results, and a knowledge base that separates verified facts from hypotheses.
 
-**Status:** M0 to M4 are built and tested against fake llama.cpp binaries. Nothing has run on the
-laptop yet. See [`docs/assessment.md`](docs/assessment.md) for the technical assessment and
+**Status (2026-11-01):** M0 to M4 run on the laptop. The hardware audit identified a GTX 1060 Max-Q
+6 GB (driver 550, llama.cpp built with CUDA 12.0 and g++-12). The benchmark is locked
+([`config/benchmark.lock`](config/benchmark.lock), approved 2026-11-01) and the baseline is validated:
+Llama-3.2-3B-Instruct Q4_K_M on CUDA, 41.2 tok/s decode (tg128), 773 tok/s prompt (pp512), 2.5 GB VRAM
+([record](experiments/records/baseline-2026-11-01T175223+0000.json)). Autonomous research sessions
+have started; the current best config is always [`winners/best_config.json`](winners/best_config.json)
+and every attempt is in [`experiments/results.tsv`](experiments/results.tsv).
+
+So far the loop searches runtime flags, build flags and environment variables well. Source-level
+(kernel) changes are possible in principle through `backends/experimental/*.patch`, but the agent
+cannot yet read or compile llama.cpp source while it works, so it is not yet a practical route.
+
+See [`docs/assessment.md`](docs/assessment.md) for the technical assessment and
 [`docs/running.md`](docs/running.md) for the steps to run it on the hardware.
 
 | Milestone | What exists |

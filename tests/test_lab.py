@@ -421,7 +421,17 @@ def _add_qwen(lab, pin=True):
     root = lab.root
     model = root / "models" / "Qwen3.5-4B-Q4_K_M.gguf"
     model.write_bytes(b"fake qwen gguf")
-    (root / "models" / "Qwen3.5-4B-Q8_0.gguf").write_bytes(b"fake qwen q8")
+    q8 = root / "models" / "Qwen3.5-4B-Q8_0.gguf"
+    q8.write_bytes(b"fake qwen q8")
+    p = root / "config" / "benchmark.toml"
+    p.write_text(re.sub(r'^reference_model_sha256 = "[^"]*"',
+                        f'reference_model_sha256 = "{bench.sha256_file(q8)}"', p.read_text(),
+                        flags=re.M))
+    if not pin:
+        p.write_text(re.sub(r'(\[workloads\.qwen35-4b\][^\[]*?)sha256 = "[^"]*"',
+                            lambda m: f'{m.group(1)}sha256 = ""', p.read_text(), count=1,
+                            flags=re.S))
+    bench.approve("test qwen", root)
     if pin:
         p = root / "config" / "benchmark.toml"
         cfg = p.read_text()

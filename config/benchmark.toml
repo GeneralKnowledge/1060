@@ -24,7 +24,7 @@ ctx = 4096
 # layers, head_dim 256). A separate model family with its own reference logits, kernel suites
 # and winners directory: its results are never compared with Llama's. See docs/qwen35.md.
 model = "models/Qwen3.5-4B-Q4_K_M.gguf"
-sha256 = ""              # pin after download (python3 -m lab hash); empty = refuse to benchmark
+sha256 = "00fe7986ff5f6b463e62455821146049db6f9313603938a70800d1fb69ef11a4"   # 2,740,937,888 bytes
 family = "qwen3.5-4b"
 ctx = 4096
 winners = "winners/qwen35-4b"
@@ -82,6 +82,7 @@ reference_logits = "models/llama-3.2-3b-q8_0.kld"
 [families."qwen3.5-4b"]
 reference_logits = "models/qwen3.5-4b-q8_0.kld"
 reference_model = "models/Qwen3.5-4B-Q8_0.gguf"
+reference_model_sha256 = "10cc391b403021dd11c614679d2fd92f611c3681d29e29651b717316965d61e1"   # 4,482,403,488 bytes
 # Kernel suites for this family replace [[kernel_check.suites]]. They follow the ops that
 # llama.cpp b12021 builds for qwen35 (src/models/qwen35.cpp, delta-net-base.cpp) on CUDA,
 # where the fused GATED_DELTA_NET path is used for both prompt and decode. See

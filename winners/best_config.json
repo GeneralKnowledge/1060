@@ -1,6 +1,5 @@
 {
-  "id": "initial",
-  "validated": true,
+  "id": "20261101-180123-d476",
   "note": "Starting point, not yet measured. `python3 -m lab baseline` validates it on the laptop.",
   "workload": "small",
   "backend": "cuda",
@@ -12,7 +11,7 @@
   },
   "runtime": {
     "n_gpu_layers": 99,
-    "flash_attn": 0,
+    "flash_attn": 1,
     "cache_type_k": "f16",
     "cache_type_v": "f16",
     "batch_size": 2048,
@@ -20,16 +19,6 @@
     "mmap": 1
   },
   "env": {},
-  "metrics": {
-    "pp512_ts": 773.015,
-    "pp2048_ts": 681.4655,
-    "tg128_ts": 41.1611,
-    "ttft_s": 0.6861,
-    "vram_peak_mib": 2525.0,
-    "host_rss_peak_mb": 2214.1,
-    "tokens_per_joule": 0.6091,
-    "temp_max_c": 65.0
-  },
   "validated_utc": "2026-11-01T17:56:20+00:00",
   "baseline_quality": {
     "argv": [
@@ -63,5 +52,22 @@
     "has_reference": true,
     "mean_kld": 0.020544,
     "ppl": 11.877513
+  },
+  "validated": true,
+  "promoted_utc": "2026-11-01T18:07:22+00:00",
+  "previous": "initial",
+  "metrics": {
+    "pp512_ts": 769.6405,
+    "pp2048_ts": 677.4435,
+    "tg128_ts": 43.6775,
+    "ttft_s": 0.688,
+    "vram_peak_mib": 2509.0,
+    "host_rss_peak_mb": 2214.15,
+    "tokens_per_joule": 0.6677,
+    "temp_max_c": 66.5
+  },
+  "evaluation_summary": {
+    "balanced_score": 1.0293,
+    "tradeoffs": []
   }
 }

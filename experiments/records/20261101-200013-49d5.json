@@ -1,0 +1,773 @@
+{
+  "id": "20261101-200013-49d5",
+  "hypothesis": "cuBLAS instead of MMQ for prompt batches (-DGGML_CUDA_FORCE_CUBLAS=ON) is slower on Pascal.",
+  "research_objective": "sweep known-knobs step 6",
+  "description": "scripted sweep known-knobs",
+  "kind": "software",
+  "source": "sweep:known-knobs",
+  "started_utc": "2026-11-01T20:00:13+00:00",
+  "baseline_config": {
+    "id": "20261101-195050-3b4f",
+    "workload": "small",
+    "backend": "cuda",
+    "build": {
+      "llama_cpp_commit": "7bd18083082126c08d375cefaa6a5aa1c170ecde",
+      "llama_cpp_tag": "b12021",
+      "cmake_flags": [],
+      "patches": []
+    },
+    "runtime": {
+      "n_gpu_layers": 99,
+      "flash_attn": 1,
+      "cache_type_k": "f16",
+      "cache_type_v": "f16",
+      "batch_size": 2048,
+      "ubatch_size": 256,
+      "mmap": 0
+    },
+    "env": {},
+    "promoted_utc": "2026-11-01T20:00:13+00:00",
+    "previous": "20261101-193155-4d54",
+    "evaluation_summary": {
+      "balanced_score": 1.0602,
+      "tradeoffs": []
+    },
+    "validated": true,
+    "metrics": {
+      "pp512_ts": 785.1415,
+      "pp2048_ts": 690.2835,
+      "tg128_ts": 43.2815,
+      "ttft_s": 0.6751,
+      "vram_peak_mib": 2365.0,
+      "host_rss_peak_mb": 660.4,
+      "tokens_per_joule": 0.6508,
+      "temp_max_c": 69.0
+    }
+  },
+  "benchmark": {
+    "version": "b1",
+    "fingerprint": "c62ac34b8eda3a9308c41091dd0b3641a1cf83e84acd45e3d534c15abc1b8010",
+    "approved_at": "2026-11-01T19:07:59Z",
+    "note": "M5 step 1: decode-path quality check + per-op kernel check (PR #8)"
+  },
+  "execution_environment": {
+    "workload": "small",
+    "hardware_profile": {
+      "audit_time": "2026-11-01T14:49:38+00:00",
+      "gpu": "NVIDIA GeForce GTX 1060 with Max-Q Design",
+      "vbios": "86.06.6F.00.46",
+      "driver": "550.163.01"
+    },
+    "power_state": {
+      "ac_online": true,
+      "battery_pct": 100.0,
+      "battery_status": "Full"
+    }
+  },
+  "experimental_config": {
+    "id": "20261101-200013-49d5",
+    "workload": "small",
+    "backend": "cuda",
+    "build": {
+      "llama_cpp_commit": "7bd18083082126c08d375cefaa6a5aa1c170ecde",
+      "llama_cpp_tag": "b12021",
+      "cmake_flags": [
+        "-DGGML_CUDA_FORCE_CUBLAS=ON"
+      ],
+      "patches": []
+    },
+    "runtime": {
+      "n_gpu_layers": 99,
+      "flash_attn": 1,
+      "cache_type_k": "f16",
+      "cache_type_v": "f16",
+      "batch_size": 2048,
+      "ubatch_size": 256,
+      "mmap": 0
+    },
+    "env": {},
+    "promoted_utc": "2026-11-01T20:00:13+00:00",
+    "previous": "20261101-193155-4d54",
+    "evaluation_summary": {
+      "balanced_score": 1.0602,
+      "tradeoffs": []
+    }
+  },
+  "candidate_config_hash": "cc7f8e1050ec41e5",
+  "files_modified": [],
+  "benchmark_parameters": {
+    "repetitions": 5,
+    "rounds": 2,
+    "n_prompt": [
+      512,
+      2048
+    ],
+    "n_gen": [
+      128
+    ],
+    "cooldown_max_delta_c": 5,
+    "cooldown_timeout_s": 300,
+    "warmup": true
+  },
+  "results": {
+    "trials": {
+      "baseline": {
+        "pp512_ts": [
+          794.734,
+          797.575,
+          795.045,
+          796.994,
+          796.344,
+          796.258,
+          795.805,
+          794.237,
+          795.863,
+          792.099
+        ],
+        "pp2048_ts": [
+          701.98,
+          700.532,
+          699.813,
+          697.55,
+          696.306,
+          699.923,
+          696.896,
+          696.189,
+          695.69,
+          694.667
+        ],
+        "tg128_ts": [
+          43.8388,
+          43.826,
+          43.7905,
+          43.7505,
+          43.727,
+          43.7257,
+          43.7211,
+          43.7125,
+          43.6857,
+          43.6543
+        ],
+        "ttft_s": [
+          0.6659421924357343,
+          0.6670281374442022
+        ],
+        "vram_peak_mib": [
+          2365.0,
+          2365.0
+        ],
+        "host_rss_peak_mb": [
+          660.4,
+          660.6
+        ],
+        "tokens_per_joule": [
+          0.6626294188861985,
+          0.6562526805826701
+        ],
+        "temp_max_c": [
+          61.0,
+          64.0
+        ]
+      },
+      "candidate": {
+        "pp512_ts": [
+          382.705,
+          381.288,
+          379.116,
+          380.85,
+          377.508,
+          382.609,
+          380.942,
+          380.784,
+          380.379,
+          378.724
+        ],
+        "pp2048_ts": [
+          357.513,
+          356.424,
+          355.173,
+          354.531,
+          354.584,
+          355.986,
+          354.942,
+          355.424,
+          354.031,
+          353.829
+        ],
+        "tg128_ts": [
+          43.7028,
+          43.6212,
+          43.6091,
+          43.619,
+          43.5528,
+          43.6211,
+          43.509,
+          43.5896,
+          43.5613,
+          43.4748
+        ],
+        "ttft_s": [
+          1.3692533916221703,
+          1.3678959329513478
+        ],
+        "vram_peak_mib": [
+          2467.0,
+          2467.0
+        ],
+        "host_rss_peak_mb": [
+          670.5,
+          670.7
+        ],
+        "tokens_per_joule": [
+          0.6574377694046722,
+          0.6583700982615267
+        ],
+        "temp_max_c": [
+          66.0,
+          67.0
+        ]
+      }
+    },
+    "idle_temp_c": 33.0,
+    "telemetry": {
+      "baseline": [
+        {
+          "samples": 36,
+          "gpu_samples": 36,
+          "errors": [],
+          "temp_c": {
+            "min": 39.0,
+            "max": 61.0,
+            "mean": 55.69
+          },
+          "util_pct": {
+            "min": 90.0,
+            "max": 100.0,
+            "mean": 99.36
+          },
+          "vram_used_mib": {
+            "min": 1987.0,
+            "max": 2365.0,
+            "mean": 2227.0
+          },
+          "sm_mhz": {
+            "min": 1392.0,
+            "max": 1594.0,
+            "mean": 1550.03
+          },
+          "mem_mhz": {
+            "min": 3802.0,
+            "max": 3802.0,
+            "mean": 3802.0
+          },
+          "power_w": {
+            "min": 24.29,
+            "max": 70.05,
+            "mean": 66.08
+          },
+          "host_mem_available_mb_min": 5917.609375,
+          "clock_event_reasons_seen": {
+            "0x0000000000000004": 22
+          },
+          "ac_online_all": true,
+          "battery_pct": {
+            "min": 100.0,
+            "max": 100.0
+          },
+          "energy_j": 2410.31
+        },
+        {
+          "samples": 36,
+          "gpu_samples": 36,
+          "errors": [],
+          "temp_c": {
+            "min": 39.0,
+            "max": 64.0,
+            "mean": 58.47
+          },
+          "util_pct": {
+            "min": 90.0,
+            "max": 100.0,
+            "mean": 99.47
+          },
+          "vram_used_mib": {
+            "min": 1987.0,
+            "max": 2365.0,
+            "mean": 2227.0
+          },
+          "sm_mhz": {
+            "min": 1392.0,
+            "max": 1594.0,
+            "mean": 1548.61
+          },
+          "mem_mhz": {
+            "min": 3802.0,
+            "max": 3802.0,
+            "mean": 3802.0
+          },
+          "power_w": {
+            "min": 24.43,
+            "max": 70.88,
+            "mean": 66.59
+          },
+          "host_mem_available_mb_min": 5893.171875,
+          "clock_event_reasons_seen": {
+            "0x0000000000000004": 21
+          },
+          "ac_online_all": true,
+          "battery_pct": {
+            "min": 100.0,
+            "max": 100.0
+          },
+          "energy_j": 2428.05
+        }
+      ],
+      "candidate": [
+        {
+          "samples": 56,
+          "gpu_samples": 56,
+          "errors": [],
+          "temp_c": {
+            "min": 38.0,
+            "max": 66.0,
+            "mean": 59.88
+          },
+          "util_pct": {
+            "min": 0.0,
+            "max": 100.0,
+            "mean": 98.12
+          },
+          "vram_used_mib": {
+            "min": 1987.0,
+            "max": 2467.0,
+            "mean": 2340.57
+          },
+          "sm_mhz": {
+            "min": 1265.0,
+            "max": 1620.0,
+            "mean": 1558.34
+          },
+          "mem_mhz": {
+            "min": 3802.0,
+            "max": 3802.0,
+            "mean": 3802.0
+          },
+          "power_w": {
+            "min": 23.01,
+            "max": 72.94,
+            "mean": 66.35
+          },
+          "host_mem_available_mb_min": 5921.671875,
+          "clock_event_reasons_seen": {
+            "0x0000000000000004": 22
+          },
+          "ac_online_all": true,
+          "battery_pct": {
+            "min": 100.0,
+            "max": 100.0
+          },
+          "energy_j": 3792.36
+        },
+        {
+          "samples": 57,
+          "gpu_samples": 57,
+          "errors": [],
+          "temp_c": {
+            "min": 38.0,
+            "max": 67.0,
+            "mean": 60.56
+          },
+          "util_pct": {
+            "min": 0.0,
+            "max": 100.0,
+            "mean": 98.23
+          },
+          "vram_used_mib": {
+            "min": 67.0,
+            "max": 2467.0,
+            "mean": 2302.54
+          },
+          "sm_mhz": {
+            "min": 1265.0,
+            "max": 1620.0,
+            "mean": 1554.33
+          },
+          "mem_mhz": {
+            "min": 3802.0,
+            "max": 3802.0,
+            "mean": 3802.0
+          },
+          "power_w": {
+            "min": 23.72,
+            "max": 73.67,
+            "mean": 66.15
+          },
+          "host_mem_available_mb_min": 5896.26171875,
+          "clock_event_reasons_seen": {
+            "0x0000000000000004": 26
+          },
+          "ac_online_all": true,
+          "battery_pct": {
+            "min": 100.0,
+            "max": 100.0
+          },
+          "energy_j": 3846.73
+        }
+      ]
+    }
+  },
+  "correctness": {
+    "baseline": {
+      "argv": [
+        "/home/red/1060/backends/builds/d2db58ba90808f32/build/bin/llama-perplexity",
+        "-m",
+        "/home/red/1060/models/Llama-3.2-3B-Instruct-Q4_K_M.gguf",
+        "-f",
+        "/home/red/1060/benchmarks/workloads/wikitext-2-test-slice.txt",
+        "--chunks",
+        "20",
+        "-c",
+        "512",
+        "--kl-divergence-base",
+        "/home/red/1060/models/llama-3.2-3b-q8_0.kld",
+        "--kl-divergence",
+        "-ngl",
+        "99",
+        "-fa",
+        "1",
+        "-ctk",
+        "f16",
+        "-ctv",
+        "f16",
+        "-b",
+        "2048",
+        "-ub",
+        "256"
+      ],
+      "returncode": 0,
+      "aborted": null,
+      "has_reference": true,
+      "mean_kld": 0.020753,
+      "ppl": 11.879274
+    },
+    "candidate": {
+      "argv": [
+        "/home/red/1060/backends/builds/7353d036b53a5f35/build/bin/llama-perplexity",
+        "-m",
+        "/home/red/1060/models/Llama-3.2-3B-Instruct-Q4_K_M.gguf",
+        "-f",
+        "/home/red/1060/benchmarks/workloads/wikitext-2-test-slice.txt",
+        "--chunks",
+        "20",
+        "-c",
+        "512",
+        "--kl-divergence-base",
+        "/home/red/1060/models/llama-3.2-3b-q8_0.kld",
+        "--kl-divergence",
+        "-ngl",
+        "99",
+        "-fa",
+        "1",
+        "-ctk",
+        "f16",
+        "-ctv",
+        "f16",
+        "-b",
+        "2048",
+        "-ub",
+        "256"
+      ],
+      "returncode": 0,
+      "aborted": null,
+      "has_reference": true,
+      "mean_kld": 0.019454,
+      "ppl": 11.854827
+    }
+  },
+  "decode_correctness": {
+    "baseline": {
+      "argv": [
+        "/home/red/1060/backends/builds/d2db58ba90808f32/build/bin/llama-perplexity",
+        "-m",
+        "/home/red/1060/models/Llama-3.2-3B-Instruct-Q4_K_M.gguf",
+        "-f",
+        "/home/red/1060/benchmarks/workloads/wikitext-2-test-slice.txt",
+        "--chunks",
+        "2",
+        "-c",
+        "512",
+        "-ngl",
+        "99",
+        "-fa",
+        "1",
+        "-ctk",
+        "f16",
+        "-ctv",
+        "f16",
+        "-b",
+        "2048",
+        "-ub",
+        "1"
+      ],
+      "returncode": 0,
+      "aborted": null,
+      "duration_s": 13.13,
+      "ppl": 7.234
+    },
+    "candidate": {
+      "argv": [
+        "/home/red/1060/backends/builds/7353d036b53a5f35/build/bin/llama-perplexity",
+        "-m",
+        "/home/red/1060/models/Llama-3.2-3B-Instruct-Q4_K_M.gguf",
+        "-f",
+        "/home/red/1060/benchmarks/workloads/wikitext-2-test-slice.txt",
+        "--chunks",
+        "2",
+        "-c",
+        "512",
+        "-ngl",
+        "99",
+        "-fa",
+        "1",
+        "-ctk",
+        "f16",
+        "-ctv",
+        "f16",
+        "-b",
+        "2048",
+        "-ub",
+        "1"
+      ],
+      "returncode": 0,
+      "aborted": null,
+      "duration_s": 13.14,
+      "ppl": 7.234
+    }
+  },
+  "kernel_check": {
+    "baseline": {
+      "complete": true,
+      "passed": 3023,
+      "failed": [],
+      "suites": [
+        {
+          "argv": [
+            "test",
+            "-b",
+            "CUDA0",
+            "-o",
+            "MUL_MAT",
+            "-p",
+            "type_a=(q4_K|q6_K|f16|f32),type_b=f32"
+          ],
+          "returncode": 0,
+          "aborted": null,
+          "duration_s": 25.77,
+          "passed": 752,
+          "failed": 0,
+          "not_supported": 0,
+          "complete": true
+        },
+        {
+          "argv": [
+            "test",
+            "-b",
+            "CUDA0",
+            "-o",
+            "FLASH_ATTN_EXT",
+            "-p",
+            "hsk=128,hsv=128"
+          ],
+          "returncode": 0,
+          "aborted": null,
+          "duration_s": 24.96,
+          "passed": 571,
+          "failed": 0,
+          "not_supported": 2,
+          "complete": true
+        },
+        {
+          "argv": [
+            "test",
+            "-b",
+            "CUDA0",
+            "-o",
+            "RMS_NORM,ROPE,SOFT_MAX,GET_ROWS,SWIGLU,ADD,MUL,CPY,SET_ROWS"
+          ],
+          "returncode": 0,
+          "aborted": null,
+          "duration_s": 92.8,
+          "passed": 1700,
+          "failed": 0,
+          "not_supported": 1050,
+          "complete": true
+        }
+      ],
+      "failed_total": 0
+    },
+    "candidate": {
+      "complete": false,
+      "passed": 2489,
+      "failed": [],
+      "suites": [
+        {
+          "argv": [
+            "test",
+            "-b",
+            "CUDA0",
+            "-o",
+            "MUL_MAT",
+            "-p",
+            "type_a=(q4_K|q6_K|f16|f32),type_b=f32"
+          ],
+          "returncode": -6,
+          "aborted": null,
+          "duration_s": 17.19,
+          "passed": 218,
+          "failed": 0,
+          "not_supported": 0,
+          "complete": false
+        },
+        {
+          "argv": [
+            "test",
+            "-b",
+            "CUDA0",
+            "-o",
+            "FLASH_ATTN_EXT",
+            "-p",
+            "hsk=128,hsv=128"
+          ],
+          "returncode": 0,
+          "aborted": null,
+          "duration_s": 25.04,
+          "passed": 571,
+          "failed": 0,
+          "not_supported": 2,
+          "complete": true
+        },
+        {
+          "argv": [
+            "test",
+            "-b",
+            "CUDA0",
+            "-o",
+            "RMS_NORM,ROPE,SOFT_MAX,GET_ROWS,SWIGLU,ADD,MUL,CPY,SET_ROWS"
+          ],
+          "returncode": 0,
+          "aborted": null,
+          "duration_s": 94.32,
+          "passed": 1700,
+          "failed": 0,
+          "not_supported": 1050,
+          "complete": true
+        }
+      ],
+      "failed_total": 0
+    }
+  },
+  "stability": {
+    "candidate_errors": [],
+    "candidate_safety_aborts": [],
+    "baseline_errors": [],
+    "safety_events": []
+  },
+  "evaluation": {
+    "decision": "rejected",
+    "balanced_score": 0.7426,
+    "threshold": 0.01,
+    "metrics": {
+      "tg128_ts": {
+        "baseline": 43.72635,
+        "candidate": 43.59935,
+        "ratio": 0.9971,
+        "noise": 0.002,
+        "n": [
+          10,
+          10
+        ],
+        "significant": false
+      },
+      "pp512_ts": {
+        "baseline": 795.8340000000001,
+        "candidate": 380.817,
+        "ratio": 0.4785,
+        "noise": 0.0048,
+        "n": [
+          10,
+          10
+        ],
+        "significant": true
+      },
+      "ttft_s": {
+        "baseline": 0.6664851649399682,
+        "candidate": 1.368574662286759,
+        "ratio": 0.487,
+        "noise": 0.0013,
+        "n": [
+          2,
+          2
+        ],
+        "significant": true
+      },
+      "vram_peak_mib": {
+        "baseline": 2365.0,
+        "candidate": 2467.0,
+        "ratio": 0.9587,
+        "noise": 0.0,
+        "n": [
+          2,
+          2
+        ],
+        "significant": true
+      },
+      "host_rss_peak_mb": {
+        "baseline": 660.5,
+        "candidate": 670.6,
+        "ratio": 0.9849,
+        "noise": 0.0003,
+        "n": [
+          2,
+          2
+        ],
+        "significant": true
+      },
+      "tokens_per_joule": {
+        "baseline": 0.6594410497344343,
+        "candidate": 0.6579039338330994,
+        "ratio": 0.9977,
+        "noise": 0.0069,
+        "n": [
+          2,
+          2
+        ],
+        "significant": false
+      },
+      "pp2048_ts": {
+        "baseline": 697.223,
+        "candidate": 355.0575,
+        "ratio": 0.5092,
+        "noise": 0.0047,
+        "n": [
+          10,
+          10
+        ],
+        "significant": true
+      }
+    },
+    "gate_failures": [
+      "kernel check did not complete on the candidate"
+    ],
+    "tradeoffs": [
+      "pp512_ts worse by 52.2%",
+      "ttft_s worse by 51.3%",
+      "vram_peak_mib worse by 4.1%",
+      "host_rss_peak_mb worse by 1.5%",
+      "pp2048_ts worse by 49.1%"
+    ],
+    "profile_wins": []
+  },
+  "decision": "rejected",
+  "finished_utc": "2026-11-01T20:33:54+00:00",
+  "promoted": false
+}

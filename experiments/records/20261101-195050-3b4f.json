@@ -1,0 +1,764 @@
+{
+  "id": "20261101-195050-3b4f",
+  "hypothesis": "Loading without mmap (load mode none) lowers host RSS without slowing inference.",
+  "research_objective": "sweep known-knobs step 5",
+  "description": "scripted sweep known-knobs",
+  "kind": "software",
+  "source": "sweep:known-knobs",
+  "started_utc": "2026-11-01T19:50:50+00:00",
+  "baseline_config": {
+    "id": "20261101-193155-4d54",
+    "workload": "small",
+    "backend": "cuda",
+    "build": {
+      "llama_cpp_commit": "7bd18083082126c08d375cefaa6a5aa1c170ecde",
+      "llama_cpp_tag": "b12021",
+      "cmake_flags": [],
+      "patches": []
+    },
+    "runtime": {
+      "n_gpu_layers": 99,
+      "flash_attn": 1,
+      "cache_type_k": "f16",
+      "cache_type_v": "f16",
+      "batch_size": 2048,
+      "ubatch_size": 256,
+      "mmap": 1
+    },
+    "env": {},
+    "promoted_utc": "2026-11-01T19:41:31+00:00",
+    "previous": "20261101-180123-d476",
+    "evaluation_summary": {
+      "balanced_score": 1.0136,
+      "tradeoffs": []
+    },
+    "validated": true,
+    "metrics": {
+      "pp512_ts": 784.7635,
+      "pp2048_ts": 689.6185,
+      "tg128_ts": 43.1831,
+      "ttft_s": 0.6757,
+      "vram_peak_mib": 2365.0,
+      "host_rss_peak_mb": 2214.2,
+      "tokens_per_joule": 0.6525,
+      "temp_max_c": 70.5
+    }
+  },
+  "benchmark": {
+    "version": "b1",
+    "fingerprint": "c62ac34b8eda3a9308c41091dd0b3641a1cf83e84acd45e3d534c15abc1b8010",
+    "approved_at": "2026-11-01T19:07:59Z",
+    "note": "M5 step 1: decode-path quality check + per-op kernel check (PR #8)"
+  },
+  "execution_environment": {
+    "workload": "small",
+    "hardware_profile": {
+      "audit_time": "2026-11-01T14:49:38+00:00",
+      "gpu": "NVIDIA GeForce GTX 1060 with Max-Q Design",
+      "vbios": "86.06.6F.00.46",
+      "driver": "550.163.01"
+    },
+    "power_state": {
+      "ac_online": true,
+      "battery_pct": 100.0,
+      "battery_status": "Full"
+    }
+  },
+  "experimental_config": {
+    "id": "20261101-195050-3b4f",
+    "workload": "small",
+    "backend": "cuda",
+    "build": {
+      "llama_cpp_commit": "7bd18083082126c08d375cefaa6a5aa1c170ecde",
+      "llama_cpp_tag": "b12021",
+      "cmake_flags": [],
+      "patches": []
+    },
+    "runtime": {
+      "n_gpu_layers": 99,
+      "flash_attn": 1,
+      "cache_type_k": "f16",
+      "cache_type_v": "f16",
+      "batch_size": 2048,
+      "ubatch_size": 256,
+      "mmap": 0
+    },
+    "env": {},
+    "promoted_utc": "2026-11-01T19:41:31+00:00",
+    "previous": "20261101-180123-d476",
+    "evaluation_summary": {
+      "balanced_score": 1.0136,
+      "tradeoffs": []
+    }
+  },
+  "candidate_config_hash": "aa8dc45923b7da89",
+  "files_modified": [],
+  "benchmark_parameters": {
+    "repetitions": 5,
+    "rounds": 2,
+    "n_prompt": [
+      512,
+      2048
+    ],
+    "n_gen": [
+      128
+    ],
+    "cooldown_max_delta_c": 5,
+    "cooldown_timeout_s": 300,
+    "warmup": true
+  },
+  "results": {
+    "trials": {
+      "baseline": {
+        "pp512_ts": [
+          790.22,
+          787.329,
+          785.584,
+          784.942,
+          784.873,
+          787.024,
+          782.321,
+          784.389,
+          782.915,
+          784.503
+        ],
+        "pp2048_ts": [
+          692.735,
+          692.324,
+          693.019,
+          690.998,
+          692.585,
+          691.094,
+          690.215,
+          691.08,
+          689.841,
+          689.975
+        ],
+        "tg128_ts": [
+          43.6597,
+          43.6697,
+          43.598,
+          43.5234,
+          43.5574,
+          43.3487,
+          43.2381,
+          43.2179,
+          43.1999,
+          43.2719
+        ],
+        "ttft_s": [
+          0.6738461674241195,
+          0.6759878250661552
+        ],
+        "vram_peak_mib": [
+          2365.0,
+          2365.0
+        ],
+        "host_rss_peak_mb": [
+          2214.2,
+          2214.1
+        ],
+        "tokens_per_joule": [
+          0.6546794744744745,
+          0.6569759113001215
+        ],
+        "temp_max_c": [
+          68.0,
+          70.0
+        ]
+      },
+      "candidate": {
+        "pp512_ts": [
+          784.445,
+          785.918,
+          784.09,
+          784.675,
+          785.195,
+          784.843,
+          787.169,
+          785.088,
+          785.582,
+          785.447
+        ],
+        "pp2048_ts": [
+          692.225,
+          690.988,
+          690.503,
+          689.938,
+          688.901,
+          690.654,
+          690.064,
+          689.888,
+          690.518,
+          689.11
+        ],
+        "tg128_ts": [
+          43.3752,
+          43.4407,
+          43.3651,
+          43.3439,
+          43.3212,
+          43.2419,
+          43.1731,
+          43.1451,
+          43.1602,
+          43.124
+        ],
+        "ttft_s": [
+          0.6753996354486304,
+          0.6748747743990098
+        ],
+        "vram_peak_mib": [
+          2365.0,
+          2365.0
+        ],
+        "host_rss_peak_mb": [
+          660.4,
+          660.4
+        ],
+        "tokens_per_joule": [
+          0.6529543059319481,
+          0.6485707932692307
+        ],
+        "temp_max_c": [
+          69.0,
+          69.0
+        ]
+      }
+    },
+    "idle_temp_c": 48.0,
+    "telemetry": {
+      "baseline": [
+        {
+          "samples": 36,
+          "gpu_samples": 36,
+          "errors": [],
+          "temp_c": {
+            "min": 50.0,
+            "max": 68.0,
+            "mean": 63.61
+          },
+          "util_pct": {
+            "min": 0.0,
+            "max": 100.0,
+            "mean": 97.08
+          },
+          "vram_used_mib": {
+            "min": 15.0,
+            "max": 2365.0,
+            "mean": 2175.06
+          },
+          "sm_mhz": {
+            "min": 1265.0,
+            "max": 1594.0,
+            "mean": 1536.67
+          },
+          "mem_mhz": {
+            "min": 3802.0,
+            "max": 4006.0,
+            "mean": 3807.67
+          },
+          "power_w": {
+            "min": 24.29,
+            "max": 72.4,
+            "mean": 66.6
+          },
+          "host_mem_available_mb_min": 6391.21484375,
+          "clock_event_reasons_seen": {
+            "0x0000000000000004": 19
+          },
+          "ac_online_all": true,
+          "battery_pct": {
+            "min": 100.0,
+            "max": 100.0
+          },
+          "energy_j": 2430.33
+        },
+        {
+          "samples": 37,
+          "gpu_samples": 37,
+          "errors": [],
+          "temp_c": {
+            "min": 51.0,
+            "max": 70.0,
+            "mean": 66.08
+          },
+          "util_pct": {
+            "min": 0.0,
+            "max": 100.0,
+            "mean": 96.32
+          },
+          "vram_used_mib": {
+            "min": 5.0,
+            "max": 2365.0,
+            "mean": 2172.57
+          },
+          "sm_mhz": {
+            "min": 139.0,
+            "max": 1569.0,
+            "mean": 1495.22
+          },
+          "mem_mhz": {
+            "min": 405.0,
+            "max": 3802.0,
+            "mean": 3710.19
+          },
+          "power_w": {
+            "min": 4.95,
+            "max": 71.13,
+            "mean": 65.84
+          },
+          "host_mem_available_mb_min": 6420.609375,
+          "clock_event_reasons_seen": {
+            "0x0000000000000001": 1,
+            "0x0000000000000004": 18
+          },
+          "ac_online_all": true,
+          "battery_pct": {
+            "min": 100.0,
+            "max": 100.0
+          },
+          "energy_j": 2480.5
+        }
+      ],
+      "candidate": [
+        {
+          "samples": 36,
+          "gpu_samples": 36,
+          "errors": [],
+          "temp_c": {
+            "min": 53.0,
+            "max": 69.0,
+            "mean": 66.39
+          },
+          "util_pct": {
+            "min": 90.0,
+            "max": 100.0,
+            "mean": 99.64
+          },
+          "vram_used_mib": {
+            "min": 1987.0,
+            "max": 2365.0,
+            "mean": 2234.56
+          },
+          "sm_mhz": {
+            "min": 1392.0,
+            "max": 1582.0,
+            "mean": 1532.17
+          },
+          "mem_mhz": {
+            "min": 3802.0,
+            "max": 3802.0,
+            "mean": 3802.0
+          },
+          "power_w": {
+            "min": 25.0,
+            "max": 71.49,
+            "mean": 66.42
+          },
+          "host_mem_available_mb_min": 6104.46875,
+          "clock_event_reasons_seen": {
+            "0x0000000000000004": 17
+          },
+          "ac_online_all": true,
+          "battery_pct": {
+            "min": 100.0,
+            "max": 100.0
+          },
+          "energy_j": 2424.14
+        },
+        {
+          "samples": 36,
+          "gpu_samples": 36,
+          "errors": [],
+          "temp_c": {
+            "min": 52.0,
+            "max": 69.0,
+            "mean": 66.0
+          },
+          "util_pct": {
+            "min": 0.0,
+            "max": 100.0,
+            "mean": 97.17
+          },
+          "vram_used_mib": {
+            "min": 1987.0,
+            "max": 2365.0,
+            "mean": 2229.83
+          },
+          "sm_mhz": {
+            "min": 1265.0,
+            "max": 1569.0,
+            "mean": 1525.56
+          },
+          "mem_mhz": {
+            "min": 3802.0,
+            "max": 3802.0,
+            "mean": 3802.0
+          },
+          "power_w": {
+            "min": 23.58,
+            "max": 70.29,
+            "mean": 66.56
+          },
+          "host_mem_available_mb_min": 6105.51953125,
+          "clock_event_reasons_seen": {
+            "0x0000000000000004": 21
+          },
+          "ac_online_all": true,
+          "battery_pct": {
+            "min": 100.0,
+            "max": 100.0
+          },
+          "energy_j": 2428.36
+        }
+      ]
+    }
+  },
+  "correctness": {
+    "baseline": {
+      "argv": [
+        "/home/red/1060/backends/builds/d2db58ba90808f32/build/bin/llama-perplexity",
+        "-m",
+        "/home/red/1060/models/Llama-3.2-3B-Instruct-Q4_K_M.gguf",
+        "-f",
+        "/home/red/1060/benchmarks/workloads/wikitext-2-test-slice.txt",
+        "--chunks",
+        "20",
+        "-c",
+        "512",
+        "--kl-divergence-base",
+        "/home/red/1060/models/llama-3.2-3b-q8_0.kld",
+        "--kl-divergence",
+        "-ngl",
+        "99",
+        "-fa",
+        "1",
+        "-ctk",
+        "f16",
+        "-ctv",
+        "f16",
+        "-b",
+        "2048",
+        "-ub",
+        "256"
+      ],
+      "returncode": 0,
+      "aborted": null,
+      "has_reference": true,
+      "mean_kld": 0.020753,
+      "ppl": 11.879274
+    },
+    "candidate": {
+      "argv": [
+        "/home/red/1060/backends/builds/d2db58ba90808f32/build/bin/llama-perplexity",
+        "-m",
+        "/home/red/1060/models/Llama-3.2-3B-Instruct-Q4_K_M.gguf",
+        "-f",
+        "/home/red/1060/benchmarks/workloads/wikitext-2-test-slice.txt",
+        "--chunks",
+        "20",
+        "-c",
+        "512",
+        "--kl-divergence-base",
+        "/home/red/1060/models/llama-3.2-3b-q8_0.kld",
+        "--kl-divergence",
+        "-ngl",
+        "99",
+        "-fa",
+        "1",
+        "-ctk",
+        "f16",
+        "-ctv",
+        "f16",
+        "-b",
+        "2048",
+        "-ub",
+        "256"
+      ],
+      "returncode": 0,
+      "aborted": null,
+      "has_reference": true,
+      "mean_kld": 0.020753,
+      "ppl": 11.879274
+    }
+  },
+  "decode_correctness": {
+    "baseline": {
+      "argv": [
+        "/home/red/1060/backends/builds/d2db58ba90808f32/build/bin/llama-perplexity",
+        "-m",
+        "/home/red/1060/models/Llama-3.2-3B-Instruct-Q4_K_M.gguf",
+        "-f",
+        "/home/red/1060/benchmarks/workloads/wikitext-2-test-slice.txt",
+        "--chunks",
+        "2",
+        "-c",
+        "512",
+        "-ngl",
+        "99",
+        "-fa",
+        "1",
+        "-ctk",
+        "f16",
+        "-ctv",
+        "f16",
+        "-b",
+        "2048",
+        "-ub",
+        "1"
+      ],
+      "returncode": 0,
+      "aborted": null,
+      "duration_s": 13.2,
+      "ppl": 7.234
+    },
+    "candidate": {
+      "argv": [
+        "/home/red/1060/backends/builds/d2db58ba90808f32/build/bin/llama-perplexity",
+        "-m",
+        "/home/red/1060/models/Llama-3.2-3B-Instruct-Q4_K_M.gguf",
+        "-f",
+        "/home/red/1060/benchmarks/workloads/wikitext-2-test-slice.txt",
+        "--chunks",
+        "2",
+        "-c",
+        "512",
+        "-ngl",
+        "99",
+        "-fa",
+        "1",
+        "-ctk",
+        "f16",
+        "-ctv",
+        "f16",
+        "-b",
+        "2048",
+        "-ub",
+        "1"
+      ],
+      "returncode": 0,
+      "aborted": null,
+      "duration_s": 13.09,
+      "ppl": 7.234
+    }
+  },
+  "kernel_check": {
+    "baseline": {
+      "complete": true,
+      "passed": 3023,
+      "failed": [],
+      "suites": [
+        {
+          "argv": [
+            "test",
+            "-b",
+            "CUDA0",
+            "-o",
+            "MUL_MAT",
+            "-p",
+            "type_a=(q4_K|q6_K|f16|f32),type_b=f32"
+          ],
+          "returncode": 0,
+          "aborted": null,
+          "duration_s": 26.31,
+          "passed": 752,
+          "failed": 0,
+          "not_supported": 0,
+          "complete": true
+        },
+        {
+          "argv": [
+            "test",
+            "-b",
+            "CUDA0",
+            "-o",
+            "FLASH_ATTN_EXT",
+            "-p",
+            "hsk=128,hsv=128"
+          ],
+          "returncode": 0,
+          "aborted": null,
+          "duration_s": 24.71,
+          "passed": 571,
+          "failed": 0,
+          "not_supported": 2,
+          "complete": true
+        },
+        {
+          "argv": [
+            "test",
+            "-b",
+            "CUDA0",
+            "-o",
+            "RMS_NORM,ROPE,SOFT_MAX,GET_ROWS,SWIGLU,ADD,MUL,CPY,SET_ROWS"
+          ],
+          "returncode": 0,
+          "aborted": null,
+          "duration_s": 91.65,
+          "passed": 1700,
+          "failed": 0,
+          "not_supported": 1050,
+          "complete": true
+        }
+      ],
+      "failed_total": 0
+    },
+    "candidate": {
+      "complete": true,
+      "passed": 3023,
+      "failed": [],
+      "suites": [
+        {
+          "argv": [
+            "test",
+            "-b",
+            "CUDA0",
+            "-o",
+            "MUL_MAT",
+            "-p",
+            "type_a=(q4_K|q6_K|f16|f32),type_b=f32"
+          ],
+          "returncode": 0,
+          "aborted": null,
+          "duration_s": 26.53,
+          "passed": 752,
+          "failed": 0,
+          "not_supported": 0,
+          "complete": true
+        },
+        {
+          "argv": [
+            "test",
+            "-b",
+            "CUDA0",
+            "-o",
+            "FLASH_ATTN_EXT",
+            "-p",
+            "hsk=128,hsv=128"
+          ],
+          "returncode": 0,
+          "aborted": null,
+          "duration_s": 24.25,
+          "passed": 571,
+          "failed": 0,
+          "not_supported": 2,
+          "complete": true
+        },
+        {
+          "argv": [
+            "test",
+            "-b",
+            "CUDA0",
+            "-o",
+            "RMS_NORM,ROPE,SOFT_MAX,GET_ROWS,SWIGLU,ADD,MUL,CPY,SET_ROWS"
+          ],
+          "returncode": 0,
+          "aborted": null,
+          "duration_s": 92.78,
+          "passed": 1700,
+          "failed": 0,
+          "not_supported": 1050,
+          "complete": true
+        }
+      ],
+      "failed_total": 0
+    }
+  },
+  "stability": {
+    "candidate_errors": [],
+    "candidate_safety_aborts": [],
+    "baseline_errors": [],
+    "safety_events": []
+  },
+  "evaluation": {
+    "decision": "promote",
+    "balanced_score": 1.0602,
+    "threshold": 0.01,
+    "metrics": {
+      "tg128_ts": {
+        "baseline": 43.43605,
+        "candidate": 43.281549999999996,
+        "ratio": 0.9964,
+        "noise": 0.0051,
+        "n": [
+          10,
+          10
+        ],
+        "significant": false
+      },
+      "pp512_ts": {
+        "baseline": 784.9075,
+        "candidate": 785.1415,
+        "ratio": 1.0003,
+        "noise": 0.0031,
+        "n": [
+          10,
+          10
+        ],
+        "significant": false
+      },
+      "ttft_s": {
+        "baseline": 0.6749169962451373,
+        "candidate": 0.67513720492382,
+        "ratio": 0.9997,
+        "noise": 0.0023,
+        "n": [
+          2,
+          2
+        ],
+        "significant": false
+      },
+      "vram_peak_mib": {
+        "baseline": 2365.0,
+        "candidate": 2365.0,
+        "ratio": 1.0,
+        "noise": 0.0,
+        "n": [
+          2,
+          2
+        ],
+        "significant": false
+      },
+      "host_rss_peak_mb": {
+        "baseline": 2214.1499999999996,
+        "candidate": 660.4,
+        "ratio": 3.3527,
+        "noise": 0.0,
+        "n": [
+          2,
+          2
+        ],
+        "significant": true
+      },
+      "tokens_per_joule": {
+        "baseline": 0.6558276928872979,
+        "candidate": 0.6507625496005894,
+        "ratio": 0.9923,
+        "noise": 0.0054,
+        "n": [
+          2,
+          2
+        ],
+        "significant": false
+      },
+      "pp2048_ts": {
+        "baseline": 691.087,
+        "candidate": 690.2835,
+        "ratio": 0.9988,
+        "noise": 0.0022,
+        "n": [
+          10,
+          10
+        ],
+        "significant": false
+      }
+    },
+    "gate_failures": [],
+    "tradeoffs": [],
+    "profile_wins": []
+  },
+  "decision": "promote",
+  "finished_utc": "2026-11-01T20:00:13+00:00",
+  "promoted": true
+}

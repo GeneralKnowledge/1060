@@ -1,0 +1,92 @@
+{
+  "id": "baseline-2026-11-01T165854+0000",
+  "hypothesis": "baseline validation",
+  "kind": "baseline",
+  "started_utc": "2026-11-01T16:59:39+00:00",
+  "baseline_config": {
+    "id": "initial",
+    "validated": false,
+    "note": "Starting point, not yet measured. `python3 -m lab baseline` validates it on the laptop.",
+    "workload": "small",
+    "backend": "cuda",
+    "build": {
+      "llama_cpp_commit": "7bd18083082126c08d375cefaa6a5aa1c170ecde",
+      "llama_cpp_tag": "b12021",
+      "cmake_flags": [],
+      "patches": []
+    },
+    "runtime": {
+      "n_gpu_layers": 99,
+      "flash_attn": 0,
+      "cache_type_k": "f16",
+      "cache_type_v": "f16",
+      "batch_size": 2048,
+      "ubatch_size": 512,
+      "mmap": 1
+    },
+    "env": {}
+  },
+  "execution_environment": {
+    "workload": "small",
+    "hardware_profile": {
+      "audit_time": "2026-11-01T14:49:38+00:00",
+      "gpu": "NVIDIA GeForce GTX 1060 with Max-Q Design",
+      "vbios": "86.06.6F.00.46",
+      "driver": "550.163.01"
+    },
+    "power_state": {
+      "ac_online": true,
+      "battery_pct": 34.0,
+      "battery_status": "Charging"
+    }
+  },
+  "results": {
+    "trials": {
+      "baseline": {}
+    }
+  },
+  "correctness": {
+    "baseline": {
+      "argv": [
+        "/home/red/1060/backends/builds/d2db58ba90808f32/build/bin/llama-perplexity",
+        "-m",
+        "/home/red/1060/models/Llama-3.2-3B-Instruct-Q4_K_M.gguf",
+        "-f",
+        "/home/red/1060/benchmarks/workloads/wikitext-2-test-slice.txt",
+        "--chunks",
+        "20",
+        "-c",
+        "512",
+        "--kl-divergence-base",
+        "/home/red/1060/models/llama-3.2-3b-q8_0.kld",
+        "--kl-divergence",
+        "-ngl",
+        "99",
+        "-fa",
+        "0",
+        "-ctk",
+        "f16",
+        "-ctv",
+        "f16",
+        "-b",
+        "2048",
+        "-ub",
+        "512"
+      ],
+      "returncode": 0,
+      "aborted": null,
+      "has_reference": true,
+      "mean_kld": 0.020544,
+      "ppl": 11.877513
+    }
+  },
+  "stability": {
+    "errors": [
+      "exit 1: ggml_cuda_init: found 1 CUDA devices (Total VRAM: 6065 MiB):\n  Device 0: NVIDIA GeForce GTX 1060 with Max-Q Design, compute capability 6.1, VMM: yes, VRAM: 6065 MiB\nerror: invalid parameter for argument: -mmp",
+      "exit 1: ggml_cuda_init: found 1 CUDA devices (Total VRAM: 6065 MiB):\n  Device 0: NVIDIA GeForce GTX 1060 with Max-Q Design, compute capability 6.1, VMM: yes, VRAM: 6065 MiB\nerror: invalid parameter for argument: -mmp"
+    ],
+    "power_capped": []
+  },
+  "decision": "baseline_failed",
+  "finished_utc": "2026-11-01T16:59:39+00:00"
+}

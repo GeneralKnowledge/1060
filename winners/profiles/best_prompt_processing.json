@@ -1,0 +1,40 @@
+{
+  "id": "20261101-193155-4d54",
+  "workload": "small",
+  "backend": "cuda",
+  "build": {
+    "llama_cpp_commit": "7bd18083082126c08d375cefaa6a5aa1c170ecde",
+    "llama_cpp_tag": "b12021",
+    "cmake_flags": [],
+    "patches": []
+  },
+  "runtime": {
+    "n_gpu_layers": 99,
+    "flash_attn": 1,
+    "cache_type_k": "f16",
+    "cache_type_v": "f16",
+    "batch_size": 2048,
+    "ubatch_size": 256,
+    "mmap": 1
+  },
+  "env": {},
+  "promoted_utc": "2026-11-01T18:07:22+00:00",
+  "previous": "initial",
+  "evaluation_summary": {
+    "balanced_score": 1.0293,
+    "tradeoffs": []
+  },
+  "profile": "best_prompt_processing",
+  "from_experiment": "20261101-193155-4d54",
+  "metrics": {
+    "pp512_ts": 784.7635,
+    "pp2048_ts": 689.6185,
+    "tg128_ts": 43.1831,
+    "ttft_s": 0.6757,
+    "vram_peak_mib": 2365.0,
+    "host_rss_peak_mb": 2214.2,
+    "tokens_per_joule": 0.6525,
+    "temp_max_c": 70.5
+  },
+  "updated_utc": "2026-11-01T19:41:31+00:00"
+}

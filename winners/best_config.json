@@ -1,5 +1,5 @@
 {
-  "id": "20261101-180123-d476",
+  "id": "20261101-193155-4d54",
   "workload": "small",
   "backend": "cuda",
   "build": {
@@ -14,59 +14,25 @@
     "cache_type_k": "f16",
     "cache_type_v": "f16",
     "batch_size": 2048,
-    "ubatch_size": 512,
+    "ubatch_size": 256,
     "mmap": 1
   },
   "env": {},
-  "validated_utc": "2026-11-01T19:09:31+00:00",
-  "baseline_quality": {
-    "argv": [
-      "/home/red/1060/backends/builds/d2db58ba90808f32/build/bin/llama-perplexity",
-      "-m",
-      "/home/red/1060/models/Llama-3.2-3B-Instruct-Q4_K_M.gguf",
-      "-f",
-      "/home/red/1060/benchmarks/workloads/wikitext-2-test-slice.txt",
-      "--chunks",
-      "20",
-      "-c",
-      "512",
-      "--kl-divergence-base",
-      "/home/red/1060/models/llama-3.2-3b-q8_0.kld",
-      "--kl-divergence",
-      "-ngl",
-      "99",
-      "-fa",
-      "1",
-      "-ctk",
-      "f16",
-      "-ctv",
-      "f16",
-      "-b",
-      "2048",
-      "-ub",
-      "512"
-    ],
-    "returncode": 0,
-    "aborted": null,
-    "has_reference": true,
-    "mean_kld": 0.020753,
-    "ppl": 11.879274
+  "promoted_utc": "2026-11-01T19:41:31+00:00",
+  "previous": "20261101-180123-d476",
+  "evaluation_summary": {
+    "balanced_score": 1.0136,
+    "tradeoffs": []
   },
   "validated": true,
-  "promoted_utc": "2026-11-01T18:07:22+00:00",
-  "previous": "initial",
   "metrics": {
-    "pp512_ts": 768.4155,
-    "pp2048_ts": 676.948,
-    "tg128_ts": 43.6595,
-    "ttft_s": 0.6901,
-    "vram_peak_mib": 2509.0,
-    "host_rss_peak_mb": 2214.1,
-    "tokens_per_joule": 0.6586,
-    "temp_max_c": 67.0
-  },
-  "evaluation_summary": {
-    "balanced_score": 1.0293,
-    "tradeoffs": []
+    "pp512_ts": 784.7635,
+    "pp2048_ts": 689.6185,
+    "tg128_ts": 43.1831,
+    "ttft_s": 0.6757,
+    "vram_peak_mib": 2365.0,
+    "host_rss_peak_mb": 2214.2,
+    "tokens_per_joule": 0.6525,
+    "temp_max_c": 70.5
   }
 }

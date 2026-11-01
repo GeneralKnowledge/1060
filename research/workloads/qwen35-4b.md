@@ -35,7 +35,10 @@ The compatibility assessment is in `docs/qwen35.md`.
 ## What carries over from Llama-3.2-3B (priors, not measurements)
 
 The starting config (`winners/qwen35-4b/best_config.json`) uses the settings that won on Llama:
-flash attention on, full offload, f16 KV, batch 2048, ubatch 512, mmap. They are a starting point.
+flash attention on, full offload, f16 KV, batch 2048, ubatch 256 and no mmap (the last two promoted by the
+known-knobs sweep on Llama: +2-3% prompt speed, -6% VRAM, host RAM 2.2 GB to 0.66 GB). They are a starting point.
+Also settled on Llama and not worth repeating without a reason: CUDA graph env knobs (no effect), 2 CPU threads (no
+effect), cuBLAS instead of MMQ (prompt about 50% slower).
 Re-test one only with a stated reason that is specific to this architecture.
 
 - **KV-cache quantisation is less interesting here (hypothesis).** Only the 8 full-attention layers keep

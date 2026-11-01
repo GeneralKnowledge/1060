@@ -1,10 +1,10 @@
 {
   "id": "qwen35-4b-initial",
   "validated": false,
-  "note": "Best-known settings carried over from the Llama-3.2-3B work on this card (flash attention on, full offload, f16 KV, b 2048, ub 512, mmap). Not yet measured for Qwen3.5: `python3 -m lab --workload qwen35-4b baseline` validates it. Llama results are priors here, not measurements.",
+  "note": "Best-known settings carried over from the Llama-3.2-3B work on this card: flash attention on, full offload, f16 KV, batch 2048, ubatch 256 and no mmap (both promoted by the known-knobs sweep). Not yet measured for Qwen3.5: `python3 -m lab --workload qwen35-4b baseline` validates it. Llama results are priors here, not measurements.",
   "carried_over_from": {
     "workload": "small",
-    "config": "20261101-180123-d476"
+    "config": "20261101-195050-3b4f"
   },
   "workload": "qwen35-4b",
   "backend": "cuda",
@@ -20,8 +20,8 @@
     "cache_type_k": "f16",
     "cache_type_v": "f16",
     "batch_size": 2048,
-    "ubatch_size": 512,
-    "mmap": 1
+    "ubatch_size": 256,
+    "mmap": 0
   },
   "env": {}
 }

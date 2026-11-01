@@ -1,0 +1,26 @@
+#!/usr/bin/env python3
+"""Fake llama-completion: prints a llama.cpp-style load log on stderr and text on stdout."""
+import os, sys
+a = sys.argv[1:]
+def opt(flag, default=None):
+    return a[a.index(flag) + 1] if flag in a else default
+arch = os.environ.get("FAKE_ARCH", "qwen35")
+ngl = int(opt("-ngl", "0"))
+layers = 33
+err = sys.stderr
+print("ggml_cuda_init: found 1 CUDA devices:", file=err)
+print("  Device 0: NVIDIA GeForce GTX 1060 with Max-Q Design, compute capability 6.1, VMM: yes", file=err)
+print("llama_model_loader: - kv   0:                       general.architecture str              = " + arch, file=err)
+print("llama_model_loader: - kv  20:                       tokenizer.ggml.model str              = gpt2", file=err)
+print("llama_model_loader: - kv  21:                         tokenizer.ggml.pre str              = qwen35", file=err)
+print("llama_model_loader: - kv  30:                    tokenizer.chat_template str              = {%- ...", file=err)
+print(f"print_info: arch                  = {arch}", file=err)
+print("print_info: n_layer               = 32", file=err)
+print("print_info: n_vocab               = 248320", file=err)
+print(f"load_tensors: offloaded {min(ngl, layers)}/{layers} layers to GPU", file=err)
+print("load_tensors:        CUDA0 model buffer size =  2100.50 MiB", file=err)
+print("load_tensors:   CPU_Mapped model buffer size =   600.25 MiB", file=err)
+print("llama_context:      CUDA0 compute buffer size =   500.00 MiB", file=err)
+print("common_perf_print: prompt eval time =      20.00 ms /     6 tokens (    3.33 ms per token,   300.00 tokens per second)", file=err)
+print("common_perf_print:        eval time =    2000.00 ms /    63 runs   (   31.75 ms per token,    31.50 tokens per second)", file=err)
+print(opt("-p", "") + " red, yellow and blue. These colours cannot be made by mixing other colours.")

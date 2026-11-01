@@ -18,3 +18,10 @@ Status of each source: **reported** (not reproduced on our hardware).
 - llama.cpp (ggml-org/llama.cpp): CUDA backend with DP4A MMQ kernels, Vulkan backend, `llama-bench`,
   `llama-perplexity --kl-divergence`. https://github.com/ggml-org/llama.cpp
 - Karpathy, autoresearch (project inspiration).
+
+## Qwen3.5-4B workload
+- Model card and `config.json`: https://huggingface.co/Qwen/Qwen3.5-4B
+- GGUF files used: https://huggingface.co/unsloth/Qwen3.5-4B-GGUF (Unsloth guide: https://unsloth.ai/docs/models/qwen3.5)
+- llama.cpp b12021 sources for the architecture: `src/models/qwen35.cpp`, `src/models/delta-net-base.cpp`,
+  `ggml/src/ggml-cuda/gated_delta_net.cu`, `ggml/src/ggml-cuda/ssm-conv.cu`, `ggml/src/ggml-cuda/fattn.cu`
+- Gated DeltaNet: Yang, Kautz, Hatamizadeh, "Gated Delta Networks: Improving Mamba2 with Delta Rule" (2024), arXiv:2412.06464

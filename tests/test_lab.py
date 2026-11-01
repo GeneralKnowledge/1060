@@ -412,3 +412,114 @@ def test_bench_argv_uses_load_mode_not_mmp():
     assert "-mmp" not in a and a[a.index("-lm") + 1] == "mmap"
     a = bench.bench_argv(Path("/x"), {"mmap": 0}, wl, d)
     assert a[a.index("-lm") + 1] == "none"
+
+
+# ------------------------------------------------------------ workloads (Qwen3.5)
+
+def _add_qwen(lab, pin=True):
+    """Give the fixture lab a fake Qwen3.5 model (and pin it), re-approve, commit."""
+    root = lab.root
+    model = root / "models" / "Qwen3.5-4B-Q4_K_M.gguf"
+    model.write_bytes(b"fake qwen gguf")
+    (root / "models" / "Qwen3.5-4B-Q8_0.gguf").write_bytes(b"fake qwen q8")
+    if pin:
+        p = root / "config" / "benchmark.toml"
+        cfg = p.read_text()
+        cfg = re.sub(r'(\[workloads\.qwen35-4b\][^\[]*?)sha256 = ""',
+                     lambda m: f'{m.group(1)}sha256 = "{bench.sha256_file(model)}"', cfg, count=1,
+                     flags=re.S)
+        p.write_text(cfg)
+        bench.approve("test qwen", root)
+    sh(root, "git", "add", "-A")
+    sh(root, "git", "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "--allow-empty", "-m", "qwen")
+    return Controller(root=root, builder=lambda spec, limits, patch_root, log_dir: FAKE_BIN,
+                      use_telemetry=False, workload="qwen35-4b")
+
+
+def test_qwen_workload_has_own_kernel_suites():
+    cfg = bench.load_config(REPO / "config" / "benchmark.toml")
+    llama = bench.kernel_check_argvs(Path("/b"), cfg, "llama-3.2-3b")
+    qwen = bench.kernel_check_argvs(Path("/b"), cfg, "qwen3.5-4b")
+    ops = lambda argvs: " ".join(a[a.index("-o") + 1] for a in argvs)
+    assert "GATED_DELTA_NET" in ops(qwen) and "SSM_CONV" in ops(qwen)
+    assert "GATED_DELTA_NET" not in ops(llama)
+    fa = [a for a in qwen if a[a.index("-o") + 1] == "FLASH_ATTN_EXT"][0]
+    assert "hsk=256" in fa[fa.index("-p") + 1]
+    assert ops(llama) == ops(bench.kernel_check_argvs(Path("/b"), cfg))  # default = global suites
+
+
+def test_qwen_baseline_uses_its_own_winners(lab):
+    llama_best = (lab.root / "winners" / "best_config.json").read_text()
+    q = _add_qwen(lab)
+    assert q.best()["workload"] == "qwen35-4b" and q.best()["runtime"]["flash_attn"] == 1
+    rec = q.validate_baseline()
+    assert rec["decision"] == "baseline_validated", rec
+    env = rec["execution_environment"]
+    assert env["workload"] == "qwen35-4b" and env["family"] == "qwen3.5-4b"
+    assert env["model_sha256"] and env["arch"] == "qwen35" and env["llama_cpp_commit"]
+    ops = " ".join(" ".join(s["argv"]) for s in rec["kernel_check"]["baseline"]["suites"])
+    assert "GATED_DELTA_NET" in ops
+    assert json.loads((lab.root / "winners" / "qwen35-4b" / "best_config.json").read_text())[
+        "validated"] is True
+    assert (lab.root / "winners" / "best_config.json").read_text() == llama_best
+
+
+def test_unknown_workload_is_refused(lab):
+    with pytest.raises(Exception, match="unknown workload"):
+        Controller(root=lab.root, builder=lambda *a: FAKE_BIN, use_telemetry=False,
+                   workload="nope")
+
+
+def test_agent_sees_only_its_workload_history(lab):
+    from lab.agent import record_workload
+    assert record_workload({"id": "old"}) == "small"
+    assert record_workload({"id": "q", "execution_environment": {"workload": "qwen35-4b"}}) == \
+        "qwen35-4b"
+    lab.validate_baseline()  # a Llama ("small") record
+    q = _add_qwen(lab)
+    agent = ResearchAgent(q, provider=ScriptedProvider([]), root=q.root)
+    ctx = agent.context()
+    assert "qwen3.5-4b" in ctx and "Gated DeltaNet" in ctx  # the workload brief is included
+    assert "baseline-" not in ctx.split("## Experiment history")[1].split("##")[0]
+
+
+def test_smoke_before_hash_is_pinned_reports_hash(lab):
+    from lab import smoke
+    q = _add_qwen(lab, pin=False)
+    rec = smoke.smoke(q)
+    assert rec["ok"], rec
+    s = smoke.summary(rec)
+    assert s["pin_this_sha256"] == bench.sha256_file(q.root / "models" / "Qwen3.5-4B-Q4_K_M.gguf")
+    assert rec["load"]["offloaded_layers"] == rec["load"]["total_layers"] == 33
+    assert rec["load"]["model_info"]["arch"] == "qwen35"
+    assert rec["load"]["gguf_kv"]["tokenizer.ggml.pre"] == "qwen35"
+    assert rec["load"]["has_chat_template"] is True
+    assert rec["load"]["eval_tokens_per_s"] == 31.5
+    assert (q.root / "experiments" / "smoke" / f"{rec['id']}.json").exists()
+
+
+def test_smoke_fails_on_wrong_architecture(lab, monkeypatch):
+    from lab import smoke
+    q = _add_qwen(lab)
+    monkeypatch.setenv("FAKE_ARCH", "llama")
+    rec = smoke.smoke(q)
+    assert not rec["ok"] and rec["checks"]["arch_matches"] is False
+
+
+def test_smoke_fails_on_hash_mismatch(lab):
+    from lab import smoke
+    q = _add_qwen(lab)
+    (q.root / "models" / "Qwen3.5-4B-Q4_K_M.gguf").write_bytes(b"a different file")
+    (q.root / "experiments" / ".hashcache.json").unlink(missing_ok=True)
+    rec = smoke.smoke(q)
+    assert not rec["ok"] and "hash mismatch" in rec["error"]
+
+
+def test_reference_writes_family_file_once(lab):
+    from lab import smoke
+    q = _add_qwen(lab)
+    out = smoke.reference(q)
+    assert out["ok"] and out["output"].endswith("qwen3.5-4b-q8_0.kld")
+    assert (lab.root / "models" / "llama-3.2-3b-q8_0.kld").read_bytes() == b"ref"  # untouched
+    with pytest.raises(smoke.SmokeError, match="written once"):
+        smoke.reference(q)

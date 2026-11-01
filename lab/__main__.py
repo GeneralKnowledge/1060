@@ -4,6 +4,8 @@
   approve-benchmark NOTE    (human) approve current benchmark code/config
   hash FILE                 sha256 of a model/dataset, to pin in config/benchmark.toml
   build [--backend B]       build llama.cpp for the best config (or another backend)
+  smoke                     load the workload's model, generate text, check GPU offload
+  reference                 write the family's Q8_0 reference logits (once per family)
   baseline                  measure + validate the current best config
   run SPEC.json             run one manually written experiment
   agent-step                let the research agent propose and run one experiment
@@ -11,6 +13,10 @@
   sweep FILE.json           run a scripted list of known knobs (no research agent)
   status                    best config, recent results, pending proposals
   restore                   discard stray worktrees, reset winners/ to the last commit
+
+Global option --workload W (before the command) picks the workload from
+config/benchmark.toml; the default is [session] workload in config/research.toml.
+Each workload has its own best config, history and profiles.
 """
 from __future__ import annotations
 
@@ -27,6 +33,7 @@ sys.path.insert(0, str(ROOT))
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(prog="lab", description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--workload", help="workload from config/benchmark.toml (default: research.toml)")
     sub = ap.add_subparsers(dest="cmd", required=True)
     a = sub.add_parser("audit")
     a.add_argument("rest", nargs=argparse.REMAINDER)
@@ -37,6 +44,12 @@ def main(argv=None) -> int:
     p = sub.add_parser("build")
     p.add_argument("--backend", choices=["cuda", "vulkan", "cpu"])
     sub.add_parser("baseline")
+    p = sub.add_parser("smoke")
+    p.add_argument("--prompt", default="The three primary colours are")
+    p.add_argument("-n", type=int, default=64)
+    p = sub.add_parser("reference")
+    p.add_argument("--ngl", type=int, default=99, help="GPU layers for the Q8_0 model")
+    p.add_argument("--force", action="store_true", help="overwrite an existing reference file")
     p = sub.add_parser("run")
     p.add_argument("spec")
     sub.add_parser("agent-step")
@@ -63,17 +76,28 @@ def main(argv=None) -> int:
     if args.cmd == "build":
         from lab.build import build
         from lab.safety import load_limits
-        best = json.loads((ROOT / "winners" / "best_config.json").read_text())
+        from lab.controller import Controller
+        best = Controller(workload=args.workload).best()
         spec = {"backend": args.backend or best["backend"], **best["build"]}
         print(build(spec, load_limits(), log_dir=ROOT / "experiments" / "logs" / "builds"))
         return 0
     if args.cmd == "status":
-        return status()
+        return status(args.workload)
+    if args.cmd in ("smoke", "reference"):
+        from lab import smoke
+        from lab.controller import Controller
+        c = Controller(workload=args.workload)
+        if args.cmd == "smoke":
+            rec = smoke.smoke(c, prompt=args.prompt, n_predict=args.n)
+            print(json.dumps(smoke.summary(rec), indent=2))
+            return 0 if rec["ok"] else 1
+        print(json.dumps(smoke.reference(c, ngl=args.ngl, force=args.force), indent=2))
+        return 0
     if args.cmd == "restore":
         return restore()
 
     from lab.controller import Controller
-    c = Controller()
+    c = Controller(workload=args.workload)
     if args.cmd == "baseline":
         rec = c.validate_baseline()
     elif args.cmd == "run":
@@ -96,8 +120,9 @@ def main(argv=None) -> int:
     return 0
 
 
-def status() -> int:
-    best = json.loads((ROOT / "winners" / "best_config.json").read_text())
+def status(workload=None) -> int:
+    from lab.controller import Controller
+    best = Controller(workload=workload).best()
     print("best config:", best["id"], "(validated)" if best.get("validated") else "(NOT validated)")
     print(json.dumps({k: best.get(k) for k in ("workload", "backend", "build", "runtime", "env",
                                                "metrics")}, indent=2))

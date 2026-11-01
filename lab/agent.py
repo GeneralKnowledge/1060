@@ -47,8 +47,13 @@ How the lab works:
 - Clock, power, fan, firmware, driver or any privileged change: set kind to "hardware" or
   "deep_hardware". It will be written up for a human to approve, not executed.
 
+Workloads: each model family is a separate workload with its own best config and history.
+Results from another workload are priors for this one, never measurements: carry a setting over
+only as a hypothesis, and never compare speeds across models. The workload brief describes the
+model's architecture and the questions that are open for it.
+
 Research discipline:
-- Start from the prior-knowledge file. Do not spend an experiment re-establishing a result it
+- Start from the workload brief and the prior-knowledge file. Do not spend an experiment re-establishing a result it
   lists as known or measured; knobs it lists as settled by sweep are not yours to re-test. If
   you have new evidence against a prior, say so in revisit_reason.
 - Spend the budget on its open questions. Say which one an experiment addresses.
@@ -90,6 +95,11 @@ def _read(p: Path, limit: int = 6000) -> str:
     return t if len(t) <= limit else "...(truncated)...\n" + t[-limit:]
 
 
+def record_workload(r: dict) -> str:
+    env = r.get("execution_environment") or {}
+    return env.get("workload") or (r.get("baseline_config") or {}).get("workload") or "small"
+
+
 def record_summary(r: dict) -> dict:
     ev = r.get("evaluation") or {}
     return {"id": r["id"], "hypothesis": r.get("hypothesis"), "decision": r.get("decision"),
@@ -123,7 +133,12 @@ class ResearchAgent:
         self.notes = self.root / "research" / "research_notes.md"
 
     def context(self, history_limit: int = 30) -> str:
-        records = load_records(self.c.records)[-history_limit:]
+        # Only this workload's experiments: another model's numbers are not comparable.
+        # Records from before workloads were recorded belong to the original "small" one.
+        records = [r for r in load_records(self.c.records)
+                   if record_workload(r) == self.c.workload][-history_limit:]
+        wl = self.c.cfg["workloads"][self.c.workload]
+        brief = wl.get("research_brief")
         profile = self.root / "research" / "hardware_profile.json"
         prof = "(hardware audit not run yet: treat all hardware facts as unverified)"
         if profile.exists():
@@ -134,6 +149,10 @@ class ResearchAgent:
         props = sorted((self.root / "experiments" / "proposals").glob("*.json"))
         parts = [
             "## Hardware profile\n" + prof,
+            f"## Workload\n{self.c.workload} (model family {wl.get('family')}, model "
+            f"{wl.get('model')}, architecture {wl.get('arch', 'see brief')})",
+            "## Workload research brief (read first)\n" +
+            (_read(self.root / brief, 9000) if brief else "(none: use the general priors)"),
             "## Current best config\n" + json.dumps(self.c.best(), indent=1),
             "## Editable paths\n" + json.dumps(self.research["permissions"]["editable"]),
             "## Experiment history (oldest first)\n" +

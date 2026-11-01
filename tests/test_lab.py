@@ -41,8 +41,12 @@ def lab(tmp_path):
     data.write_text("hello world\n")
     (root / "models" / "llama-3.2-3b-q8_0.kld").write_bytes(b"ref")
     cfg = (root / "config" / "benchmark.toml").read_text()
-    cfg = cfg.replace('sha256 = ""              # fill in after download; empty = refuse to benchmark',
-                      f'sha256 = "{bench.sha256_file(model)}"', 1)
+    # Pin the fake model's hash and clear any real hashes pinned on the lab machine,
+    # so the fixture works whether or not config/benchmark.toml has been filled in.
+    cfg = re.sub(r'^(dataset_)?sha256 = "[^"]*"', lambda m: f'{m.group(1) or ""}sha256 = ""',
+                 cfg, flags=re.M)
+    cfg = re.sub(r'^sha256 = ""', f'sha256 = "{bench.sha256_file(model)}"', cfg, count=1,
+                 flags=re.M)
     cfg = re.sub(r"repetitions = \d+", "repetitions = 3", cfg)
     cfg = cfg.replace("warmup = true", "warmup = false")
     (root / "config" / "benchmark.toml").write_text(cfg)

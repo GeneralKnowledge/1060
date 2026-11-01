@@ -1,0 +1,52 @@
+# Benchmark definition. PROTECTED: experiments may not change this file or
+# anything under benchmarks/. Changes need a human to run
+# `python3 -m lab approve-benchmark`, which bumps the lock in config/benchmark.lock.
+version = "b1"
+
+[defaults]
+repetitions = 5          # llama-bench -r
+rounds = 2               # baseline/candidate alternate this many times (A B A B)
+n_prompt = [512, 2048]   # prompt-processing tests (pp)
+n_gen = [128]            # token-generation tests (tg)
+cooldown_max_delta_c = 5 # start a round only when GPU temp is within this of the idle temp
+cooldown_timeout_s = 300
+warmup = true
+
+[workloads.small]
+# Primary balanced workload: fits fully on a 6 GB card with room for KV cache.
+model = "models/Llama-3.2-3B-Instruct-Q4_K_M.gguf"
+sha256 = ""              # fill in after download; empty = refuse to benchmark
+family = "llama-3.2-3b"
+ctx = 4096
+
+[workloads.capacity]
+model = "models/Llama-3.1-8B-Instruct-Q4_K_M.gguf"
+sha256 = ""
+family = "llama-3.1-8b"
+ctx = 4096
+
+[quality]
+# KL divergence vs reference logits produced from a Q8_0 build of the same family.
+dataset = "benchmarks/workloads/wikitext-2-test-slice.txt"
+dataset_sha256 = ""
+chunks = 20
+max_mean_kld = 0.03      # candidate fails if mean KLD vs reference exceeds this
+max_ppl_ratio = 1.01     # ...or perplexity rises more than 1% vs baseline
+
+[families."llama-3.2-3b"]
+reference_logits = "models/llama-3.2-3b-q8_0.kld"
+
+[families."llama-3.1-8b"]
+reference_logits = "models/llama-3.1-8b-q8_0.kld"
+
+[evaluation]
+min_effect = 0.01        # ignore changes below 1 %
+noise_k = 2.0            # change must exceed k x measured noise
+# Balanced score = weighted geometric mean of candidate/baseline ratios.
+[evaluation.weights]
+tg = 0.35
+pp = 0.20
+ttft = 0.20
+vram = 0.10
+host_ram = 0.05
+efficiency = 0.10

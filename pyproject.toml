@@ -2,11 +2,12 @@
 name = "gtx1060-research-lab"
 version = "0.0.1"
 description = "Autonomous GPU optimisation research for a GTX 1060 laptop"
-requires-python = ">=3.8"
+requires-python = ">=3.11"
 dependencies = []
 
 [project.optional-dependencies]
 dev = ["pytest"]
+anthropic = ["anthropic"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

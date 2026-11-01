@@ -1,0 +1,7 @@
+{
+  "hypothesis": "Flash attention reduces KV-cache traffic and improves pp2048 without hurting tg128 on Pascal.",
+  "objective": "Measure the effect of -fa 1 on the small workload.",
+  "description": "Enable flash attention; everything else unchanged.",
+  "kind": "software",
+  "changes": {"runtime": {"flash_attn": 1}}
+}

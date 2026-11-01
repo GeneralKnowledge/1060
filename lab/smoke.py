@@ -48,6 +48,9 @@ def smoke_argv(bin_dir: Path, model_path: str, runtime: dict, ctx: int, prompt: 
                n_predict: int) -> list[str]:
     argv = [str(bin_dir / "llama-completion"), "-m", model_path, "-p", prompt,
             "-n", str(n_predict), "-c", str(ctx), "--temp", "0", "--seed", "1", "-no-cnv",
+            # -v: at default verbosity llama-completion (b12021) prints no loader, print_info,
+            # CUDA-init or offload lines, so there would be nothing to check.
+            "-v",
             "-ngl", str(runtime.get("n_gpu_layers", 99)),
             "-fa", "on" if runtime.get("flash_attn") else "off"]
     for key, flag in (("cache_type_k", "-ctk"), ("cache_type_v", "-ctv"),

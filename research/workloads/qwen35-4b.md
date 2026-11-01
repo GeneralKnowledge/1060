@@ -47,6 +47,29 @@ Re-test one only with a stated reason that is specific to this architecture.
 - **Flash attention at head_dim 256 is not the same experiment as at 128 (hypothesis).** The FA win on
   Llama (+6% decode) does not prove one here: the tile and vec kernels run a different head size.
 
+## Measured here (baseline 2026-11-01T213540)
+
+Validated baseline on this laptop (b12021, CUDA, ngl 99, FA on, f16 K/V, batch 2048, ubatch 256,
+no mmap), median of 10 samples:
+
+| Metric | Value |
+|---|---|
+| pp512 | 572.6 tok/s (noise 0.18%) |
+| pp2048 | 551.9 tok/s (noise 0.12%) |
+| tg128 | 29.27 tok/s (noise 0.12%) |
+| TTFT | 0.93 s |
+| Mean KLD vs Q8_0 reference | 0.0242 (Q8_0 PPL 10.145, this config 10.240) |
+| Decode-path PPL (ubatch 1, 2 chunks) | 8.571 |
+| Peak VRAM | 3057 MiB |
+| Peak GPU temperature | 69 °C |
+
+Notes:
+- Tokens per joule was 0.44 in one round and 0.61 in the other (23% spread). Speed metrics varied
+  by under 1%. Treat efficiency gains on this workload as unproven unless they are large.
+- The GATED_DELTA_NET / SSM_CONV / L2_NORM kernel suite reports 10 cases that CUDA does not support
+  (124 passed, 0 failed). Identify which cases these are and whether the model's own shapes hit them,
+  since an unsupported op falls back to the CPU.
+
 ## Bandwidth arithmetic (estimate, not measured)
 
 - Decode reads about 2.7 GB of weights per token. That includes the tied 248k x 2560 output matrix,

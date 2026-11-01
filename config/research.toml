@@ -15,7 +15,7 @@ max_experiments = 20
 max_hours = 8
 pause_between_s = 30
 stop_file = "experiments/STOP"     # touch this to stop a session cleanly
-workload = "small"
+workload = "qwen35-4b"
 
 [permissions]
 # Paths (relative to repo root) the agent may create or modify inside an

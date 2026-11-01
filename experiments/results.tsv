@@ -1,3 +1,4 @@
 id	finished_utc	workload	kind	decision	balanced_score	tg128_ratio	pp512_ratio	ttft_ratio	vram_ratio	cand_tg128_ts	cand_pp512_ts	mean_kld	hypothesis
 baseline-2026-11-01T165854+0000	2026-11-01T16:59:39+00:00	small	baseline	baseline_failed									baseline validation
 baseline-2026-11-01T175223+0000	2026-11-01T17:56:20+00:00	small	baseline	baseline_validated									baseline validation
+20261101-180123-d476	2026-11-01T18:07:22+00:00	small	software	promote	1.0293	1.0617	0.9978	0.9997	1.0064	43.67755	769.6405	0.020753	Enabling flash attention (flash_attn=1) on the CUDA backend at the pinned commit changes balanced performance on this SM 6.1 GPU. Pascal has no tensor cores, so llama.cpp uses its tile and vec FA kern

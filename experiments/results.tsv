@@ -8,3 +8,4 @@ baseline-2026-11-01T190446+0000	2026-11-01T19:09:31+00:00	small	baseline	baselin
 20261101-191042-6847	2026-11-01T19:22:09+00:00	small	software	inconclusive	0.9998	0.9996	0.9989	0.9984	1.0	43.6339	769.409	0.020753	GGML_CUDA_GRAPH_OPT=1 changes balanced performance at full offload.
 20261101-192210-4b9a	2026-11-01T19:31:54+00:00	small	software	inconclusive	0.9982	0.9972	0.9995	0.9996	1.0	43.2568	762.2815	0.020753	Capturing the whole graph as one CUDA graph (GGML_CUDA_GRAPH_CHUNK_SIZE=0) changes decode speed.
 20261101-193155-4d54	2026-11-01T19:41:32+00:00	small	software	promote	1.0136	0.9932	1.0293	1.0283	1.0609	43.18315	784.7635	0.020753	ubatch 256 (from 512) changes prompt speed or VRAM.
+20261101-194132-bea3	2026-11-01T19:50:50+00:00	small	software	inconclusive	1.0	0.9988	0.9983	0.9984	1.0	43.250299999999996	783.7715000000001	0.020753	With full offload, 2 CPU threads match the default and use less energy.

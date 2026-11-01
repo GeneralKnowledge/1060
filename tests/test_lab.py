@@ -41,8 +41,12 @@ def lab(tmp_path):
     data.write_text("hello world\n")
     (root / "models" / "llama-3.2-3b-q8_0.kld").write_bytes(b"ref")
     cfg = (root / "config" / "benchmark.toml").read_text()
-    cfg = cfg.replace('sha256 = ""              # fill in after download; empty = refuse to benchmark',
-                      f'sha256 = "{bench.sha256_file(model)}"', 1)
+    # Pin the fake model's hash and clear any real hashes pinned on the lab machine,
+    # so the fixture works whether or not config/benchmark.toml has been filled in.
+    cfg = re.sub(r'^(dataset_)?sha256 = "[^"]*"', lambda m: f'{m.group(1) or ""}sha256 = ""',
+                 cfg, flags=re.M)
+    cfg = re.sub(r'^sha256 = ""', f'sha256 = "{bench.sha256_file(model)}"', cfg, count=1,
+                 flags=re.M)
     cfg = re.sub(r"repetitions = \d+", "repetitions = 3", cfg)
     cfg = cfg.replace("warmup = true", "warmup = false")
     (root / "config" / "benchmark.toml").write_text(cfg)
@@ -287,3 +291,12 @@ def test_audit_accepts_g3_3779():
          "memory": {"total_bytes": {"value": 8_100_000_000}},
          "os": {"distribution": {"value": "Ubuntu 24.04.3 LTS"}}}
     assert ha.check_claims(p)["machine"]["result"] == "confirmed"
+
+
+def test_bench_argv_uses_load_mode_not_mmp():
+    wl = {"model_path": "m.gguf"}
+    d = {"n_prompt": [512], "n_gen": [128], "repetitions": 1}
+    a = bench.bench_argv(Path("/x"), {"mmap": 1, "n_gpu_layers": 99}, wl, d)
+    assert "-mmp" not in a and a[a.index("-lm") + 1] == "mmap"
+    a = bench.bench_argv(Path("/x"), {"mmap": 0}, wl, d)
+    assert a[a.index("-lm") + 1] == "none"

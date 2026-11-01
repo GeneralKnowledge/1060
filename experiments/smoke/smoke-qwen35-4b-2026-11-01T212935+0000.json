@@ -1,0 +1,152 @@
+{
+  "id": "smoke-qwen35-4b-2026-11-01T212935+0000",
+  "kind": "smoke",
+  "started_utc": "2026-11-01T21:29:35+00:00",
+  "workload": "qwen35-4b",
+  "family": "qwen3.5-4b",
+  "arch_expected": "qwen35",
+  "config": {
+    "backend": "cuda",
+    "build": {
+      "llama_cpp_commit": "7bd18083082126c08d375cefaa6a5aa1c170ecde",
+      "llama_cpp_tag": "b12021",
+      "cmake_flags": [],
+      "patches": []
+    },
+    "runtime": {
+      "n_gpu_layers": 99,
+      "flash_attn": 1,
+      "cache_type_k": "f16",
+      "cache_type_v": "f16",
+      "batch_size": 2048,
+      "ubatch_size": 256,
+      "mmap": 0
+    },
+    "env": {}
+  },
+  "prompt": "The three primary colours are",
+  "n_predict": 64,
+  "model": {
+    "path": "/home/red/1060/models/Qwen3.5-4B-Q4_K_M.gguf",
+    "sha256": "00fe7986ff5f6b463e62455821146049db6f9313603938a70800d1fb69ef11a4",
+    "pinned": true,
+    "size_bytes": 2740937888
+  },
+  "telemetry": {
+    "samples": 303,
+    "gpu_samples": 303,
+    "errors": [],
+    "temp_c": {
+      "min": 41.0,
+      "max": 52.0,
+      "mean": 42.76
+    },
+    "util_pct": {
+      "min": 0.0,
+      "max": 98.0,
+      "mean": 0.92
+    },
+    "vram_used_mib": {
+      "min": 5.0,
+      "max": 3115.0,
+      "mean": 86.56
+    },
+    "sm_mhz": {
+      "min": 139.0,
+      "max": 1670.0,
+      "mean": 236.96
+    },
+    "mem_mhz": {
+      "min": 405.0,
+      "max": 4006.0,
+      "mean": 694.56
+    },
+    "power_w": {
+      "min": 4.52,
+      "max": 69.21,
+      "mean": 6.6
+    },
+    "host_mem_available_mb_min": 6311.625,
+    "clock_event_reasons_seen": {
+      "0x0000000000000001": 279,
+      "0x0000000000000004": 4
+    },
+    "ac_online_all": true,
+    "battery_pct": {
+      "min": 100.0,
+      "max": 100.0
+    },
+    "energy_j": 2091.67
+  },
+  "argv": [
+    "/home/red/1060/backends/builds/d2db58ba90808f32/build/bin/llama-completion",
+    "-m",
+    "/home/red/1060/models/Qwen3.5-4B-Q4_K_M.gguf",
+    "-p",
+    "The three primary colours are",
+    "-n",
+    "64",
+    "-c",
+    "4096",
+    "--temp",
+    "0",
+    "--seed",
+    "1",
+    "-no-cnv",
+    "-v",
+    "-ngl",
+    "99",
+    "-fa",
+    "on",
+    "-ctk",
+    "f16",
+    "-ctv",
+    "f16",
+    "-b",
+    "2048",
+    "-ub",
+    "256"
+  ],
+  "returncode": 0,
+  "aborted": null,
+  "load": {
+    "model_info": {},
+    "gguf_kv": {
+      "general.architecture": "qwen35",
+      "general.name": "Qwen3.5-4B",
+      "general.basename": "Qwen3.5-4B",
+      "general.size_label": "4B",
+      "tokenizer.ggml.model": "gpt2",
+      "tokenizer.ggml.pre": "qwen35"
+    },
+    "has_chat_template": true,
+    "offloaded_layers": 33,
+    "total_layers": 33,
+    "cuda_devices": [
+      "NVIDIA GeForce GTX 1060 with Max-Q Design, compute capability 6.1, VMM: yes, VRAM: 6065 MiB"
+    ],
+    "cuda_backend": true,
+    "buffers_mib": {
+      "CUDA0 model buffer size": 2603.5,
+      "CUDA0 KV buffer size": 128.0,
+      "CUDA0 RS buffer size": 50.25,
+      "CUDA0 compute buffer size": 509.02,
+      "CPU_Mapped model buffer size": 497.31
+    },
+    "prompt_tokens_per_s": 96.94,
+    "eval_tokens_per_s": 29.78,
+    "cuda_error": false
+  },
+  "generated_text": "The three primary colours are red, green, and blue.\n\n**Why these three?**  \nIn the additive colour system used for light, red, green, and blue are the fundamental wavelengths that, when combined in different proportions, can produce the full range of visible colours. This is why they are called the primary colours of light.\n\n**",
+  "safety_events": null,
+  "checks": {
+    "exit_ok": true,
+    "arch_matches": true,
+    "cuda_backend": true,
+    "all_layers_offloaded": true,
+    "generated_text": true,
+    "no_cuda_error": true
+  },
+  "ok": true,
+  "finished_utc": "2026-11-01T21:34:59+00:00"
+}

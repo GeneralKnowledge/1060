@@ -220,17 +220,18 @@ class Controller:
             return self._finish(rec)
 
         cand = deep_merge(best, spec.changes)
-        cand.pop("validated", None), cand.pop("metrics", None)
+        for stale in ("validated", "metrics", "note", "validated_utc", "baseline_quality"):
+            cand.pop(stale, None)
         cand["id"] = spec.id
         rec["experimental_config"] = cand
-        h = config_hash(cand)
+        h = config_hash(cand, self._patch_contents(cand, spec.files))
         rec["candidate_config_hash"] = h
         prior = self.tested_hashes().get(h)
         if prior and not spec.revisit_reason:
             rec.update(decision="duplicate", finished_utc=now(),
                        research_observations=f"identical config already tested in {prior}")
             return self._finish(rec)
-        if h == config_hash(best) and not spec.files:
+        if h == config_hash(best, self._patch_contents(best, {})) and not spec.files:
             rec.update(decision="no_change", finished_utc=now())
             return self._finish(rec)
 
@@ -288,6 +289,16 @@ class Controller:
         rec["finished_utc"] = now()
         rec["promoted"] = promoted
         return self._finish(rec)
+
+    def _patch_contents(self, cfg: dict, files: dict) -> dict:
+        """Text of each patch cfg references: the experiment's own files first, else this checkout."""
+        out = {}
+        for p in (cfg.get("build") or {}).get("patches") or []:
+            if p in files:
+                out[p] = files[p]
+            elif (self.root / p).is_file():
+                out[p] = (self.root / p).read_text()
+        return out
 
     def _finish(self, rec: dict) -> dict:
         save_record(rec, self.records)
@@ -359,6 +370,7 @@ class Controller:
         ok = not errs and q.get("returncode") == 0 and not m["power_capped"]
         rec["decision"] = "baseline_validated" if ok else "baseline_failed"
         if ok:
+            best.pop("note", None)  # e.g. "not yet measured": no longer true once validated
             best.update(validated=True, metrics=_medians(m["trials"]["baseline"]),
                         validated_utc=now(), baseline_quality=q)
             self.best_path.write_text(json.dumps(best, indent=2) + "\n")

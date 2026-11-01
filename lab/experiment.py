@@ -54,8 +54,18 @@ def deep_merge(base: dict, changes: dict) -> dict:
     return out
 
 
-def config_hash(cfg: dict) -> str:
+def config_hash(cfg: dict, patch_contents: dict | None = None) -> str:
+    """Identity of a config for duplicate detection.
+
+    Patches are referenced by path, so two experiments that rewrite the same
+    patch file would otherwise look identical. When patch_contents
+    ({path: text}) is given, each referenced patch's content is hashed in too.
+    Configs without patches hash exactly as before."""
     keep = {k: cfg.get(k) for k in ("workload", "model", "backend", "build", "runtime", "env")}
+    patches = (cfg.get("build") or {}).get("patches") or []
+    if patches and patch_contents is not None:
+        keep["patch_sha256"] = {p: hashlib.sha256((patch_contents.get(p) or "").encode()).hexdigest()
+                                for p in patches}
     return hashlib.sha256(json.dumps(keep, sort_keys=True).encode()).hexdigest()[:16]
 
 

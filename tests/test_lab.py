@@ -190,6 +190,23 @@ def test_baseline_then_promote_with_patch(lab):
     assert dup["decision"] == "duplicate"
 
 
+def test_rewritten_patch_is_not_a_duplicate(lab):
+    """Same patch path, different content: a new experiment, not a duplicate."""
+    lab.validate_baseline()
+    assert "note" not in lab.best()
+    patch = "backends/experimental/kernel.patch"
+    first = lab.run(ExperimentSpec(hypothesis="v1", objective="", description="",
+                                   changes={"build": {"patches": [patch]}},
+                                   files={patch: "# version 1\n"}))
+    assert first["decision"] != "duplicate"
+    second = lab.run(ExperimentSpec(hypothesis="v2", objective="", description="",
+                                    changes={"build": {"patches": [patch]}},
+                                    files={patch: "# version 2\n"}))
+    assert second["decision"] != "duplicate"
+    assert second["candidate_config_hash"] != first["candidate_config_hash"]
+    assert "note" not in second["experimental_config"]
+
+
 def test_regression_is_discarded_and_best_untouched(lab):
     before = lab.best()
     rec = lab.run(ExperimentSpec(hypothesis="partial offload", objective="", description="",

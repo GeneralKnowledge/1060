@@ -1,0 +1,657 @@
+{
+  "id": "20261101-180922-4bd0",
+  "hypothesis": "H008, first half: with flash_attn=1 already promoted, quantising the KV cache to q8_0 for both K and V (cache_type_k = cache_type_v = q8_0) lowers peak VRAM with no material quality cost and without significantly slowing decode at benchmark context lengths. For Llama-3.2-3B (28 layers, 8 KV heads, head_dim 128) the f16 KV cache costs about 112 KiB per token, so about 224 MiB at a 2048-token context. q8_0 stores 8.5 bits per value, so the expected saving is about 100 MiB, roughly 4% of the 2509 MiB peak. This is an estimate, not a measurement. Predicted effects: (a) peak VRAM drops by an amount that scales with the largest benchmark context. (b) tg128 is unchanged within noise or slightly lower, because the FA vec kernel dequantises q8_0 K/V inline, and at KV length \u2264128 the KV reads are a negligible share of per-token bytes next to the ~1.9 GB of weights. (c) pp512 and pp2048 may drop slightly, because the batched FA path on Pascal converts quantised K/V to f16 before the tile kernel. Any pp2048 cost should be larger than the pp512 cost. (d) mean KLD against the q8_0 reference rises by a small amount, on the order of 1e-3. This is expected, not measured.",
+  "research_objective": "Measure the VRAM saving from a q8_0 KV cache, and its throughput and quality costs, on the promoted FA=1 config. These are the facts needed to decide whether a quantised KV cache belongs in the balanced config and whether it can extend usable context on this 6 GB card.",
+  "description": "Single conceptual variable: KV-cache precision f16 \u2192 q8_0, applied to K and V together. The K-only variant is deferred. Quantised V requires FA, and the matched q8_0/q8_0 pair is one of the FA vec kernel type combinations compiled by default, so no GGML_CUDA_FA_ALL_QUANTS flag or rebuild change is needed. The build, commit, batch and ubatch settings, and env are all unchanged. What to look at: (1) vram_peak_mib. If it falls much less than ~100 MiB, the KV cache is not the dominant contributor to the peak at these benchmark lengths, which agrees with the earlier finding that removing the KQ buffer barely moved peak VRAM. In that case the next step is to locate what sets the peak, starting with the ubatch_size experiment. (2) pp2048 against pp512, to see whether the cost of converting quantised KV for prefill grows with context. (3) KLD and PPL against the gate. Controller note: the promoted config's baseline_quality block still holds the FA=0 run (argv -fa 0, KLD 0.020544), while the true FA=1 reference is KLD 0.020753 / PPL 11.879274. For this experiment the quality delta should be judged against the FA=1 value. If the controller re-measures the baseline arm's quality each round, this does not matter. Planned follow-up depends on the result. If the VRAM saving is real and quality passes, try ubatch_size 512 \u2192 1024 as a separate single variable for prompt throughput. If KLD cost is non-trivial, test K-only q8_0, because K is usually the more quantisation-sensitive half.",
+  "kind": "software",
+  "started_utc": "2026-11-01T18:09:22+00:00",
+  "baseline_config": {
+    "id": "20261101-180123-d476",
+    "note": "Starting point, not yet measured. `python3 -m lab baseline` validates it on the laptop.",
+    "workload": "small",
+    "backend": "cuda",
+    "build": {
+      "llama_cpp_commit": "7bd18083082126c08d375cefaa6a5aa1c170ecde",
+      "llama_cpp_tag": "b12021",
+      "cmake_flags": [],
+      "patches": []
+    },
+    "runtime": {
+      "n_gpu_layers": 99,
+      "flash_attn": 1,
+      "cache_type_k": "f16",
+      "cache_type_v": "f16",
+      "batch_size": 2048,
+      "ubatch_size": 512,
+      "mmap": 1
+    },
+    "env": {},
+    "validated_utc": "2026-11-01T17:56:20+00:00",
+    "baseline_quality": {
+      "argv": [
+        "/home/red/1060/backends/builds/d2db58ba90808f32/build/bin/llama-perplexity",
+        "-m",
+        "/home/red/1060/models/Llama-3.2-3B-Instruct-Q4_K_M.gguf",
+        "-f",
+        "/home/red/1060/benchmarks/workloads/wikitext-2-test-slice.txt",
+        "--chunks",
+        "20",
+        "-c",
+        "512",
+        "--kl-divergence-base",
+        "/home/red/1060/models/llama-3.2-3b-q8_0.kld",
+        "--kl-divergence",
+        "-ngl",
+        "99",
+        "-fa",
+        "0",
+        "-ctk",
+        "f16",
+        "-ctv",
+        "f16",
+        "-b",
+        "2048",
+        "-ub",
+        "512"
+      ],
+      "returncode": 0,
+      "aborted": null,
+      "has_reference": true,
+      "mean_kld": 0.020544,
+      "ppl": 11.877513
+    },
+    "validated": true,
+    "promoted_utc": "2026-11-01T18:07:22+00:00",
+    "previous": "initial",
+    "metrics": {
+      "pp512_ts": 769.6405,
+      "pp2048_ts": 677.4435,
+      "tg128_ts": 43.6775,
+      "ttft_s": 0.688,
+      "vram_peak_mib": 2509.0,
+      "host_rss_peak_mb": 2214.15,
+      "tokens_per_joule": 0.6677,
+      "temp_max_c": 66.5
+    },
+    "evaluation_summary": {
+      "balanced_score": 1.0293,
+      "tradeoffs": []
+    }
+  },
+  "benchmark": {
+    "version": "b1",
+    "fingerprint": "5e2b5d3629b44a01d8a8a9b227a8e1d87ae24a2758d07540cb42626f959cb2ed",
+    "approved_at": "2026-11-01T17:51:45Z",
+    "note": "Fix llama-bench -lm load mode (PR #4); pinned Llama-3.2-3B hashes"
+  },
+  "execution_environment": {
+    "workload": "small",
+    "hardware_profile": {
+      "audit_time": "2026-11-01T14:49:38+00:00",
+      "gpu": "NVIDIA GeForce GTX 1060 with Max-Q Design",
+      "vbios": "86.06.6F.00.46",
+      "driver": "550.163.01"
+    },
+    "power_state": {
+      "ac_online": true,
+      "battery_pct": 100.0,
+      "battery_status": "Full"
+    }
+  },
+  "experimental_config": {
+    "id": "20261101-180922-4bd0",
+    "note": "Starting point, not yet measured. `python3 -m lab baseline` validates it on the laptop.",
+    "workload": "small",
+    "backend": "cuda",
+    "build": {
+      "llama_cpp_commit": "7bd18083082126c08d375cefaa6a5aa1c170ecde",
+      "llama_cpp_tag": "b12021",
+      "cmake_flags": [],
+      "patches": []
+    },
+    "runtime": {
+      "n_gpu_layers": 99,
+      "flash_attn": 1,
+      "cache_type_k": "q8_0",
+      "cache_type_v": "q8_0",
+      "batch_size": 2048,
+      "ubatch_size": 512,
+      "mmap": 1
+    },
+    "env": {},
+    "validated_utc": "2026-11-01T17:56:20+00:00",
+    "baseline_quality": {
+      "argv": [
+        "/home/red/1060/backends/builds/d2db58ba90808f32/build/bin/llama-perplexity",
+        "-m",
+        "/home/red/1060/models/Llama-3.2-3B-Instruct-Q4_K_M.gguf",
+        "-f",
+        "/home/red/1060/benchmarks/workloads/wikitext-2-test-slice.txt",
+        "--chunks",
+        "20",
+        "-c",
+        "512",
+        "--kl-divergence-base",
+        "/home/red/1060/models/llama-3.2-3b-q8_0.kld",
+        "--kl-divergence",
+        "-ngl",
+        "99",
+        "-fa",
+        "0",
+        "-ctk",
+        "f16",
+        "-ctv",
+        "f16",
+        "-b",
+        "2048",
+        "-ub",
+        "512"
+      ],
+      "returncode": 0,
+      "aborted": null,
+      "has_reference": true,
+      "mean_kld": 0.020544,
+      "ppl": 11.877513
+    },
+    "promoted_utc": "2026-11-01T18:07:22+00:00",
+    "previous": "initial",
+    "evaluation_summary": {
+      "balanced_score": 1.0293,
+      "tradeoffs": []
+    }
+  },
+  "candidate_config_hash": "1c3ea19bc14b550e",
+  "files_modified": [],
+  "benchmark_parameters": {
+    "repetitions": 5,
+    "rounds": 2,
+    "n_prompt": [
+      512,
+      2048
+    ],
+    "n_gen": [
+      128
+    ],
+    "cooldown_max_delta_c": 5,
+    "cooldown_timeout_s": 300,
+    "warmup": true
+  },
+  "results": {
+    "trials": {
+      "baseline": {
+        "pp512_ts": [
+          771.296,
+          774.049,
+          771.501,
+          769.725,
+          770.825,
+          773.126,
+          772.432,
+          772.319,
+          770.705,
+          766.857
+        ],
+        "pp2048_ts": [
+          680.601,
+          680.013,
+          678.222,
+          678.548,
+          677.298,
+          679.251,
+          676.977,
+          678.368,
+          676.354,
+          675.689
+        ],
+        "tg128_ts": [
+          43.7214,
+          43.6932,
+          43.6971,
+          43.7016,
+          43.6965,
+          43.6483,
+          43.6502,
+          43.6082,
+          43.6857,
+          43.5804
+        ],
+        "ttft_s": [
+          0.686542423823676,
+          0.6869146676615588
+        ],
+        "vram_peak_mib": [
+          2509.0,
+          2509.0
+        ],
+        "host_rss_peak_mb": [
+          2214.0,
+          2214.0
+        ],
+        "tokens_per_joule": [
+          0.6662897545357523,
+          0.6672971096497935
+        ],
+        "temp_max_c": [
+          65.0,
+          67.0
+        ]
+      },
+      "candidate": {
+        "pp512_ts": [
+          757.061,
+          754.703,
+          754.374,
+          754.439,
+          752.059,
+          759.654,
+          755.652,
+          755.84,
+          759.539,
+          754.561
+        ],
+        "pp2048_ts": [
+          667.807,
+          667.022,
+          665.95,
+          664.411,
+          666.188,
+          666.895,
+          666.4,
+          665.916,
+          666.789,
+          666.701
+        ],
+        "tg128_ts": [
+          42.941,
+          42.842,
+          42.8504,
+          42.819,
+          42.8095,
+          42.8968,
+          42.8445,
+          42.9061,
+          42.8614,
+          42.8381
+        ],
+        "ttft_s": [
+          0.7019065053938617,
+          0.6996369046048516
+        ],
+        "vram_peak_mib": [
+          2409.0,
+          2409.0
+        ],
+        "host_rss_peak_mb": [
+          2214.1,
+          2214.0
+        ],
+        "tokens_per_joule": [
+          0.6648929402637703,
+          0.6527004110840438
+        ],
+        "temp_max_c": [
+          67.0,
+          67.0
+        ]
+      }
+    },
+    "idle_temp_c": 38.0,
+    "telemetry": {
+      "baseline": [
+        {
+          "samples": 37,
+          "gpu_samples": 37,
+          "errors": [],
+          "temp_c": {
+            "min": 43.0,
+            "max": 65.0,
+            "mean": 59.76
+          },
+          "util_pct": {
+            "min": 1.0,
+            "max": 100.0,
+            "mean": 97.11
+          },
+          "vram_used_mib": {
+            "min": 67.0,
+            "max": 2509.0,
+            "mean": 2255.97
+          },
+          "sm_mhz": {
+            "min": 1265.0,
+            "max": 1607.0,
+            "mean": 1533.08
+          },
+          "mem_mhz": {
+            "min": 3802.0,
+            "max": 3802.0,
+            "mean": 3802.0
+          },
+          "power_w": {
+            "min": 23.87,
+            "max": 71.23,
+            "mean": 65.59
+          },
+          "host_mem_available_mb_min": 6253.203125,
+          "clock_event_reasons_seen": {
+            "0x0000000000000004": 18
+          },
+          "ac_online_all": true,
+          "battery_pct": {
+            "min": 100.0,
+            "max": 100.0
+          },
+          "energy_j": 2459.48
+        },
+        {
+          "samples": 36,
+          "gpu_samples": 36,
+          "errors": [],
+          "temp_c": {
+            "min": 44.0,
+            "max": 67.0,
+            "mean": 61.75
+          },
+          "util_pct": {
+            "min": 93.0,
+            "max": 100.0,
+            "mean": 99.58
+          },
+          "vram_used_mib": {
+            "min": 1987.0,
+            "max": 2509.0,
+            "mean": 2310.44
+          },
+          "sm_mhz": {
+            "min": 1506.0,
+            "max": 1607.0,
+            "mean": 1536.94
+          },
+          "mem_mhz": {
+            "min": 3802.0,
+            "max": 3802.0,
+            "mean": 3802.0
+          },
+          "power_w": {
+            "min": 24.71,
+            "max": 73.89,
+            "mean": 65.39
+          },
+          "host_mem_available_mb_min": 6279.1953125,
+          "clock_event_reasons_seen": {
+            "0x0000000000000004": 20
+          },
+          "ac_online_all": true,
+          "battery_pct": {
+            "min": 100.0,
+            "max": 100.0
+          },
+          "energy_j": 2383.8
+        }
+      ],
+      "candidate": [
+        {
+          "samples": 38,
+          "gpu_samples": 38,
+          "errors": [],
+          "temp_c": {
+            "min": 43.0,
+            "max": 67.0,
+            "mean": 61.5
+          },
+          "util_pct": {
+            "min": 0.0,
+            "max": 100.0,
+            "mean": 97.34
+          },
+          "vram_used_mib": {
+            "min": 21.0,
+            "max": 2409.0,
+            "mean": 2155.63
+          },
+          "sm_mhz": {
+            "min": 1265.0,
+            "max": 1594.0,
+            "mean": 1531.42
+          },
+          "mem_mhz": {
+            "min": 3802.0,
+            "max": 4006.0,
+            "mean": 3807.37
+          },
+          "power_w": {
+            "min": 19.07,
+            "max": 69.79,
+            "mean": 64.45
+          },
+          "host_mem_available_mb_min": 6273.9609375,
+          "clock_event_reasons_seen": {
+            "0x0000000000000004": 16
+          },
+          "ac_online_all": true,
+          "battery_pct": {
+            "min": 100.0,
+            "max": 100.0
+          },
+          "energy_j": 2502.99
+        },
+        {
+          "samples": 37,
+          "gpu_samples": 37,
+          "errors": [],
+          "temp_c": {
+            "min": 44.0,
+            "max": 67.0,
+            "mean": 61.62
+          },
+          "util_pct": {
+            "min": 0.0,
+            "max": 100.0,
+            "mean": 97.24
+          },
+          "vram_used_mib": {
+            "min": 67.0,
+            "max": 2409.0,
+            "mean": 2213.16
+          },
+          "sm_mhz": {
+            "min": 1265.0,
+            "max": 1556.0,
+            "mean": 1531.16
+          },
+          "mem_mhz": {
+            "min": 3802.0,
+            "max": 3802.0,
+            "mean": 3802.0
+          },
+          "power_w": {
+            "min": 24.01,
+            "max": 71.55,
+            "mean": 65.68
+          },
+          "host_mem_available_mb_min": 6266.92578125,
+          "clock_event_reasons_seen": {
+            "0x0000000000000004": 23
+          },
+          "ac_online_all": true,
+          "battery_pct": {
+            "min": 100.0,
+            "max": 100.0
+          },
+          "energy_j": 2462.53
+        }
+      ]
+    }
+  },
+  "correctness": {
+    "baseline": {
+      "argv": [
+        "/home/red/1060/backends/builds/d2db58ba90808f32/build/bin/llama-perplexity",
+        "-m",
+        "/home/red/1060/models/Llama-3.2-3B-Instruct-Q4_K_M.gguf",
+        "-f",
+        "/home/red/1060/benchmarks/workloads/wikitext-2-test-slice.txt",
+        "--chunks",
+        "20",
+        "-c",
+        "512",
+        "--kl-divergence-base",
+        "/home/red/1060/models/llama-3.2-3b-q8_0.kld",
+        "--kl-divergence",
+        "-ngl",
+        "99",
+        "-fa",
+        "1",
+        "-ctk",
+        "f16",
+        "-ctv",
+        "f16",
+        "-b",
+        "2048",
+        "-ub",
+        "512"
+      ],
+      "returncode": 0,
+      "aborted": null,
+      "has_reference": true,
+      "mean_kld": 0.020753,
+      "ppl": 11.879274
+    },
+    "candidate": {
+      "argv": [
+        "/home/red/1060/backends/builds/d2db58ba90808f32/build/bin/llama-perplexity",
+        "-m",
+        "/home/red/1060/models/Llama-3.2-3B-Instruct-Q4_K_M.gguf",
+        "-f",
+        "/home/red/1060/benchmarks/workloads/wikitext-2-test-slice.txt",
+        "--chunks",
+        "20",
+        "-c",
+        "512",
+        "--kl-divergence-base",
+        "/home/red/1060/models/llama-3.2-3b-q8_0.kld",
+        "--kl-divergence",
+        "-ngl",
+        "99",
+        "-fa",
+        "1",
+        "-ctk",
+        "q8_0",
+        "-ctv",
+        "q8_0",
+        "-b",
+        "2048",
+        "-ub",
+        "512"
+      ],
+      "returncode": 0,
+      "aborted": null,
+      "has_reference": true,
+      "mean_kld": 0.020697,
+      "ppl": 11.875227
+    }
+  },
+  "stability": {
+    "candidate_errors": [],
+    "candidate_safety_aborts": [],
+    "baseline_errors": [],
+    "safety_events": []
+  },
+  "evaluation": {
+    "decision": "discard",
+    "balanced_score": 0.9878,
+    "threshold": 0.01,
+    "metrics": {
+      "tg128_ts": {
+        "baseline": 43.689449999999994,
+        "candidate": 42.847449999999995,
+        "ratio": 0.9807,
+        "noise": 0.0014,
+        "n": [
+          10,
+          10
+        ],
+        "significant": true
+      },
+      "pp512_ts": {
+        "baseline": 771.3985,
+        "candidate": 755.1775,
+        "ratio": 0.979,
+        "noise": 0.0041,
+        "n": [
+          10,
+          10
+        ],
+        "significant": true
+      },
+      "ttft_s": {
+        "baseline": 0.6867285457426174,
+        "candidate": 0.7007717049993567,
+        "ratio": 0.98,
+        "noise": 0.0023,
+        "n": [
+          2,
+          2
+        ],
+        "significant": true
+      },
+      "vram_peak_mib": {
+        "baseline": 2509.0,
+        "candidate": 2409.0,
+        "ratio": 1.0415,
+        "noise": 0.0,
+        "n": [
+          2,
+          2
+        ],
+        "significant": true
+      },
+      "host_rss_peak_mb": {
+        "baseline": 2214.0,
+        "candidate": 2214.05,
+        "ratio": 1.0,
+        "noise": 0.0,
+        "n": [
+          2,
+          2
+        ],
+        "significant": false
+      },
+      "tokens_per_joule": {
+        "baseline": 0.6667934320927729,
+        "candidate": 0.658796675673907,
+        "ratio": 0.988,
+        "noise": 0.0131,
+        "n": [
+          2,
+          2
+        ],
+        "significant": false
+      },
+      "pp2048_ts": {
+        "baseline": 678.2950000000001,
+        "candidate": 666.5505,
+        "ratio": 0.9827,
+        "noise": 0.0027,
+        "n": [
+          10,
+          10
+        ],
+        "significant": true
+      }
+    },
+    "gate_failures": [],
+    "tradeoffs": [
+      "tg128_ts worse by 1.9%",
+      "pp512_ts worse by 2.1%",
+      "ttft_s worse by 2.0%",
+      "pp2048_ts worse by 1.7%"
+    ],
+    "profile_wins": [
+      "best_model_capacity"
+    ]
+  },
+  "decision": "discard",
+  "finished_utc": "2026-11-01T18:15:11+00:00",
+  "promoted": false
+}

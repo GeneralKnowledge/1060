@@ -3,7 +3,8 @@
 Inputs are per-metric trial lists for the baseline and the candidate,
 measured in the same session with interleaved rounds. Output is a decision:
 
-  rejected      a mandatory gate failed (errors, safety abort, quality)
+  rejected      a mandatory gate failed (errors, safety abort, quality, decode-path
+                quality, or an op test that newly fails against the CPU backend)
   promote       balanced score improved by more than the noise threshold
   discard       balanced score got worse by more than the threshold
   inconclusive  the difference is within measurement noise
@@ -67,8 +68,41 @@ def quality_gate(base_q: dict, cand_q: dict, qcfg: dict) -> list[str]:
     return fails
 
 
+def decode_gate(base_d: dict | None, cand_d: dict | None, dcfg: dict) -> list[str]:
+    """Decode-path quality (ubatch 1) relative to the baseline's own decode run."""
+    if cand_d is None:
+        return []
+    if cand_d.get("returncode") not in (0, None) or cand_d.get("aborted"):
+        return ["decode quality run failed"]
+    if "ppl" not in cand_d:
+        return ["decode quality: no perplexity parsed"]
+    if not base_d or "ppl" not in base_d:
+        return ["decode quality: baseline decode run has no perplexity to compare with"]
+    limit = dcfg.get("max_ppl_ratio", 1.01)
+    if cand_d["ppl"] / base_d["ppl"] > limit:
+        return [f"decode perplexity {cand_d['ppl']} vs baseline {base_d['ppl']} (limit x{limit})"]
+    return []
+
+
+def kernel_gate(base_k: dict | None, cand_k: dict | None) -> list[str]:
+    """No op may fail test-backend-ops on the candidate that passes on the baseline."""
+    if cand_k is None:
+        return []
+    if not cand_k.get("complete"):
+        return ["kernel check did not complete on the candidate"]
+    if not base_k or not base_k.get("complete"):
+        return ["kernel check did not complete on the baseline; nothing to compare with"]
+    new = sorted(set(cand_k.get("failed", [])) - set(base_k.get("failed", [])))
+    if new:
+        return [f"kernel check: {len(new)} op test(s) fail that pass on the baseline, e.g. "
+                + "; ".join(new[:3])]
+    return []
+
+
 def evaluate(base: dict, cand: dict, *, base_quality: dict | None, cand_quality: dict | None,
-             errors: list[str], safety_aborts: list[str], cfg: dict) -> dict:
+             errors: list[str], safety_aborts: list[str], cfg: dict,
+             base_decode: dict | None = None, cand_decode: dict | None = None,
+             base_kernels: dict | None = None, cand_kernels: dict | None = None) -> dict:
     ev = cfg["evaluation"]
     weights = ev["weights"]
     per_metric = {}
@@ -82,6 +116,8 @@ def evaluate(base: dict, cand: dict, *, base_quality: dict | None, cand_quality:
     gates += [f"error: {e}" for e in errors]
     gates += [f"safety: {s}" for s in safety_aborts]
     gates += quality_gate(base_quality or {}, cand_quality or {}, cfg["quality"])
+    gates += decode_gate(base_decode, cand_decode, cfg["quality"].get("decode") or {})
+    gates += kernel_gate(base_kernels, cand_kernels)
     if "tg128_ts" not in per_metric and "pp512_ts" not in per_metric:
         gates.append("no throughput measurements")
 

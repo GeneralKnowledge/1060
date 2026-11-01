@@ -1,0 +1,24 @@
+#!/usr/bin/env python3
+"""Fake test-backend-ops (console output of the pinned llama.cpp).
+
+One case always fails, standing in for a known upstream failure that the
+baseline shares. FAKE_KERNEL_BROKEN=1 (set via a config's env) adds a new one."""
+import os, sys
+a = sys.argv[1:]
+ops = a[a.index("-o") + 1] if "-o" in a else "MUL_MAT"
+G, R, Z = "\033[1;32m", "\033[1;31m", "\033[0m"
+print("Testing 2 devices\n\nBackend 1/2: CUDA0\n  Device description: NVIDIA GeForce GTX 1060 with Max-Q Design")
+n = 0
+for op in ops.split(","):
+    for m in (16, 4096):
+        print(f"  {op}(type_a=q4_K,type_b=f32,m={m},n=1,k=3072): {G}OK{Z}")
+        n += 1
+print(f"  {ops.split(',')[0]}(type_a=f16,type_b=f32,m=1,n=1,k=1): [X] NMSE = 0.1 > 0.0005 {R}FAIL{Z}")
+fails = 1
+if os.environ.get("FAKE_KERNEL_BROKEN"):
+    print(f"  {ops.split(',')[0]}(type_a=q4_K,type_b=f32,m=3072,n=1,k=3072): [X] NMSE = 2.1 > 0.0005 {R}FAIL{Z}")
+    fails += 1
+print(f"  {n}/{n + fails} tests passed")
+print(f"  Backend CUDA0: {R}FAIL{Z}")
+print("Backend 2/2: CPU\n  Skipping CPU backend\n1/2 backends passed")
+sys.exit(1)

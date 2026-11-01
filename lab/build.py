@@ -20,7 +20,8 @@ ROOT = Path(__file__).resolve().parents[1]
 UPSTREAM = "https://github.com/ggml-org/llama.cpp"
 SRC = ROOT / "backends" / "llama.cpp-src"
 BUILDS = ROOT / "backends" / "builds"
-TARGETS = ["llama-bench", "llama-perplexity", "llama-cli", "llama-server"]
+TARGETS = ["llama-bench", "llama-perplexity", "llama-cli", "llama-server", "test-backend-ops"]
+REQUIRED = ["llama-bench", "llama-perplexity", "test-backend-ops"]
 
 BACKEND_FLAGS = {
     "cuda": ["-DGGML_CUDA=ON", "-DCMAKE_CUDA_ARCHITECTURES=61"],
@@ -75,11 +76,21 @@ def build(spec: dict, limits: Limits, patch_root: Path = ROOT, jobs: int = 2,
         raise PolicyViolation(f"cmake flags need approval: {bad}")
     key = build_key(spec, patch_root)
     out = bin_dir_for(key)
-    if all((out / t).exists() for t in ("llama-bench", "llama-perplexity")):
+    if all((out / t).exists() for t in REQUIRED):
         return out
+    work = BUILDS / key
+    if all((out / t).exists() for t in ("llama-bench", "llama-perplexity")) and \
+            (work / "build" / "CMakeCache.txt").exists():
+        # Built before test-backend-ops was required: add only the missing targets.
+        missing = [t for t in REQUIRED if not (out / t).exists()]
+        r = run_guarded(["cmake", "--build", str(work / "build"), "--config", "Release",
+                         f"-j{jobs}", "--target", *missing],
+                        limits=limits, budget_s=limits.build_time_budget_s, gpu_expected=False,
+                        log_path=(log_dir / f"build-{key}-add-targets.log") if log_dir else None)
+        if r.returncode == 0 and not r.aborted and all((out / t).exists() for t in REQUIRED):
+            return out
     commit = spec["llama_cpp_commit"]
     ensure_source(commit, limits)
-    work = BUILDS / key
     src = work / "src"
     if work.exists():
         shutil.rmtree(work)  # half-finished build of this exact key; safe to redo
@@ -89,7 +100,7 @@ def build(spec: dict, limits: Limits, patch_root: Path = ROOT, jobs: int = 2,
         _git(["apply", "--whitespace=nowarn", str((patch_root / p).resolve())], limits, cwd=src)
     (work / "spec.json").write_text(json.dumps(spec, indent=2))
     cfg = ["cmake", "-S", str(src), "-B", str(work / "build"), "-DCMAKE_BUILD_TYPE=Release",
-           "-DLLAMA_CURL=OFF", *BACKEND_FLAGS[backend], *flags]
+           "-DLLAMA_CURL=OFF", "-DLLAMA_BUILD_TESTS=ON", *BACKEND_FLAGS[backend], *flags]
     r = run_guarded(cfg, limits=limits, budget_s=limits.build_time_budget_s, gpu_expected=False,
                     log_path=(log_dir / f"build-{key}-configure.log") if log_dir else None)
     if r.returncode != 0:

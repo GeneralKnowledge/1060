@@ -1,5 +1,5 @@
 {
-  "id": "20261101-193155-4d54",
+  "id": "20261101-195050-3b4f",
   "workload": "small",
   "backend": "cuda",
   "build": {
@@ -15,24 +15,24 @@
     "cache_type_v": "f16",
     "batch_size": 2048,
     "ubatch_size": 256,
-    "mmap": 1
+    "mmap": 0
   },
   "env": {},
-  "promoted_utc": "2026-11-01T19:41:31+00:00",
-  "previous": "20261101-180123-d476",
+  "promoted_utc": "2026-11-01T20:00:13+00:00",
+  "previous": "20261101-193155-4d54",
   "evaluation_summary": {
-    "balanced_score": 1.0136,
+    "balanced_score": 1.0602,
     "tradeoffs": []
   },
   "validated": true,
   "metrics": {
-    "pp512_ts": 784.7635,
-    "pp2048_ts": 689.6185,
-    "tg128_ts": 43.1831,
-    "ttft_s": 0.6757,
+    "pp512_ts": 785.1415,
+    "pp2048_ts": 690.2835,
+    "tg128_ts": 43.2815,
+    "ttft_s": 0.6751,
     "vram_peak_mib": 2365.0,
-    "host_rss_peak_mb": 2214.2,
-    "tokens_per_joule": 0.6525,
-    "temp_max_c": 70.5
+    "host_rss_peak_mb": 660.4,
+    "tokens_per_joule": 0.6508,
+    "temp_max_c": 69.0
   }
 }

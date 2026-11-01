@@ -1,0 +1,327 @@
+{
+  "id": "baseline-2026-11-01T213540+0000",
+  "hypothesis": "baseline validation",
+  "kind": "baseline",
+  "started_utc": "2026-11-01T21:43:33+00:00",
+  "baseline_config": {
+    "id": "qwen35-4b-initial",
+    "validated": true,
+    "carried_over_from": {
+      "workload": "small",
+      "config": "20261101-195050-3b4f"
+    },
+    "workload": "qwen35-4b",
+    "backend": "cuda",
+    "build": {
+      "llama_cpp_commit": "7bd18083082126c08d375cefaa6a5aa1c170ecde",
+      "llama_cpp_tag": "b12021",
+      "cmake_flags": [],
+      "patches": []
+    },
+    "runtime": {
+      "n_gpu_layers": 99,
+      "flash_attn": 1,
+      "cache_type_k": "f16",
+      "cache_type_v": "f16",
+      "batch_size": 2048,
+      "ubatch_size": 256,
+      "mmap": 0
+    },
+    "env": {},
+    "metrics": {
+      "pp512_ts": 572.571,
+      "pp2048_ts": 551.876,
+      "tg128_ts": 29.2702,
+      "ttft_s": 0.9283,
+      "vram_peak_mib": 3057.0,
+      "host_rss_peak_mb": 907.8,
+      "tokens_per_joule": 0.5246,
+      "temp_max_c": 69.0
+    },
+    "validated_utc": "2026-11-01T21:43:33+00:00",
+    "baseline_quality": {
+      "argv": [
+        "/home/red/1060/backends/builds/d2db58ba90808f32/build/bin/llama-perplexity",
+        "-m",
+        "/home/red/1060/models/Qwen3.5-4B-Q4_K_M.gguf",
+        "-f",
+        "/home/red/1060/benchmarks/workloads/wikitext-2-test-slice.txt",
+        "--chunks",
+        "20",
+        "-c",
+        "512",
+        "--kl-divergence-base",
+        "/home/red/1060/models/qwen3.5-4b-q8_0.kld",
+        "--kl-divergence",
+        "-ngl",
+        "99",
+        "-fa",
+        "1",
+        "-ctk",
+        "f16",
+        "-ctv",
+        "f16",
+        "-b",
+        "2048",
+        "-ub",
+        "256"
+      ],
+      "returncode": 0,
+      "aborted": null,
+      "has_reference": true,
+      "mean_kld": 0.024235,
+      "ppl": 10.24048
+    }
+  },
+  "execution_environment": {
+    "workload": "qwen35-4b",
+    "family": "qwen3.5-4b",
+    "model": "models/Qwen3.5-4B-Q4_K_M.gguf",
+    "model_sha256": "00fe7986ff5f6b463e62455821146049db6f9313603938a70800d1fb69ef11a4",
+    "model_source": "https://huggingface.co/unsloth/Qwen3.5-4B-GGUF",
+    "model_source_revision": "",
+    "arch": "qwen35",
+    "ctx": 4096,
+    "backend": "cuda",
+    "llama_cpp_commit": "7bd18083082126c08d375cefaa6a5aa1c170ecde",
+    "hardware_profile": {
+      "audit_time": "2026-11-01T14:49:38+00:00",
+      "gpu": "NVIDIA GeForce GTX 1060 with Max-Q Design",
+      "vbios": "86.06.6F.00.46",
+      "driver": "550.163.01"
+    },
+    "power_state": {
+      "ac_online": true,
+      "battery_pct": 100.0,
+      "battery_status": "Full"
+    }
+  },
+  "results": {
+    "trials": {
+      "baseline": {
+        "pp512_ts": [
+          573.13,
+          571.992,
+          571.377,
+          572.012,
+          571.061,
+          573.731,
+          573.779,
+          573.705,
+          573.364,
+          571.998
+        ],
+        "pp2048_ts": [
+          552.534,
+          551.833,
+          552.384,
+          551.523,
+          551.273,
+          552.878,
+          552.323,
+          551.919,
+          551.263,
+          550.881
+        ],
+        "tg128_ts": [
+          29.3072,
+          29.2855,
+          29.2726,
+          29.2705,
+          29.2452,
+          29.3148,
+          29.2698,
+          29.266,
+          29.2502,
+          29.1874
+        ],
+        "ttft_s": [
+          0.9293965467610226,
+          0.9272304127853573
+        ],
+        "vram_peak_mib": [
+          3057.0,
+          3057.0
+        ],
+        "host_rss_peak_mb": [
+          907.8,
+          907.8
+        ],
+        "tokens_per_joule": [
+          0.4392530232558139,
+          0.610042848206839
+        ],
+        "temp_max_c": [
+          69.0,
+          69.0
+        ]
+      }
+    }
+  },
+  "correctness": {
+    "baseline": {
+      "argv": [
+        "/home/red/1060/backends/builds/d2db58ba90808f32/build/bin/llama-perplexity",
+        "-m",
+        "/home/red/1060/models/Qwen3.5-4B-Q4_K_M.gguf",
+        "-f",
+        "/home/red/1060/benchmarks/workloads/wikitext-2-test-slice.txt",
+        "--chunks",
+        "20",
+        "-c",
+        "512",
+        "--kl-divergence-base",
+        "/home/red/1060/models/qwen3.5-4b-q8_0.kld",
+        "--kl-divergence",
+        "-ngl",
+        "99",
+        "-fa",
+        "1",
+        "-ctk",
+        "f16",
+        "-ctv",
+        "f16",
+        "-b",
+        "2048",
+        "-ub",
+        "256"
+      ],
+      "returncode": 0,
+      "aborted": null,
+      "has_reference": true,
+      "mean_kld": 0.024235,
+      "ppl": 10.24048
+    }
+  },
+  "decode_correctness": {
+    "baseline": {
+      "argv": [
+        "/home/red/1060/backends/builds/d2db58ba90808f32/build/bin/llama-perplexity",
+        "-m",
+        "/home/red/1060/models/Qwen3.5-4B-Q4_K_M.gguf",
+        "-f",
+        "/home/red/1060/benchmarks/workloads/wikitext-2-test-slice.txt",
+        "--chunks",
+        "2",
+        "-c",
+        "512",
+        "-ngl",
+        "99",
+        "-fa",
+        "1",
+        "-ctk",
+        "f16",
+        "-ctv",
+        "f16",
+        "-b",
+        "2048",
+        "-ub",
+        "1"
+      ],
+      "returncode": 0,
+      "aborted": null,
+      "duration_s": 21.62,
+      "ppl": 8.5711
+    }
+  },
+  "kernel_check": {
+    "baseline": {
+      "complete": true,
+      "passed": 3289,
+      "failed": [],
+      "suites": [
+        {
+          "argv": [
+            "test",
+            "-b",
+            "CUDA0",
+            "-o",
+            "MUL_MAT",
+            "-p",
+            "type_a=(q4_K|q5_K|q6_K|q8_0|f16|f32),type_b=f32"
+          ],
+          "returncode": 0,
+          "aborted": null,
+          "duration_s": 59.98,
+          "passed": 953,
+          "failed": 0,
+          "not_supported": 0,
+          "complete": true
+        },
+        {
+          "argv": [
+            "test",
+            "-b",
+            "CUDA0",
+            "-o",
+            "FLASH_ATTN_EXT",
+            "-p",
+            "hsk=256,hsv=256"
+          ],
+          "returncode": 0,
+          "aborted": null,
+          "duration_s": 27.49,
+          "passed": 162,
+          "failed": 0,
+          "not_supported": 0,
+          "complete": true
+        },
+        {
+          "argv": [
+            "test",
+            "-b",
+            "CUDA0",
+            "-o",
+            "GATED_DELTA_NET,SSM_CONV,L2_NORM"
+          ],
+          "returncode": 0,
+          "aborted": null,
+          "duration_s": 8.01,
+          "passed": 124,
+          "failed": 0,
+          "not_supported": 10,
+          "complete": true
+        },
+        {
+          "argv": [
+            "test",
+            "-b",
+            "CUDA0",
+            "-o",
+            "CUMSUM,TRI,SOLVE_TRI,SIGMOID,SOFTPLUS,SILU,EXP,CONCAT,PAD"
+          ],
+          "returncode": 0,
+          "aborted": null,
+          "duration_s": 13.74,
+          "passed": 339,
+          "failed": 0,
+          "not_supported": 15,
+          "complete": true
+        },
+        {
+          "argv": [
+            "test",
+            "-b",
+            "CUDA0",
+            "-o",
+            "RMS_NORM,ROPE,SOFT_MAX,GET_ROWS,SWIGLU,ADD,MUL,CPY,SET_ROWS,SCALE"
+          ],
+          "returncode": 0,
+          "aborted": null,
+          "duration_s": 96.35,
+          "passed": 1711,
+          "failed": 0,
+          "not_supported": 1050,
+          "complete": true
+        }
+      ],
+      "failed_total": 0
+    }
+  },
+  "stability": {
+    "errors": [],
+    "power_capped": []
+  },
+  "decision": "baseline_validated",
+  "finished_utc": "2026-11-01T21:43:59+00:00"
+}

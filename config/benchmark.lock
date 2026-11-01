@@ -1,6 +1,6 @@
 {
   "version": "b1",
-  "fingerprint": "c62ac34b8eda3a9308c41091dd0b3641a1cf83e84acd45e3d534c15abc1b8010",
-  "approved_at": "2026-11-01T19:07:59Z",
-  "note": "M5 step 1: decode-path quality check + per-op kernel check (PR #8)"
+  "fingerprint": "b1ce9ae9c829519288581bdd55605776df3a59f97961c1ad9c308434b5887493",
+  "approved_at": "2026-11-01T21:18:35Z",
+  "note": "Qwen3.5-4B workload, hashes and kernel suites (PR #9, #11)"
 }

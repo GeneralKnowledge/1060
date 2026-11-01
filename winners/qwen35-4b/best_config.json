@@ -1,7 +1,6 @@
 {
   "id": "qwen35-4b-initial",
-  "validated": false,
-  "note": "Best-known settings carried over from the Llama-3.2-3B work on this card: flash attention on, full offload, f16 KV, batch 2048, ubatch 256 and no mmap (both promoted by the known-knobs sweep). Not yet measured for Qwen3.5: `python3 -m lab --workload qwen35-4b baseline` validates it. Llama results are priors here, not measurements.",
+  "validated": true,
   "carried_over_from": {
     "workload": "small",
     "config": "20261101-195050-3b4f"
@@ -23,5 +22,49 @@
     "ubatch_size": 256,
     "mmap": 0
   },
-  "env": {}
+  "env": {},
+  "metrics": {
+    "pp512_ts": 572.571,
+    "pp2048_ts": 551.876,
+    "tg128_ts": 29.2702,
+    "ttft_s": 0.9283,
+    "vram_peak_mib": 3057.0,
+    "host_rss_peak_mb": 907.8,
+    "tokens_per_joule": 0.5246,
+    "temp_max_c": 69.0
+  },
+  "validated_utc": "2026-11-01T21:43:33+00:00",
+  "baseline_quality": {
+    "argv": [
+      "/home/red/1060/backends/builds/d2db58ba90808f32/build/bin/llama-perplexity",
+      "-m",
+      "/home/red/1060/models/Qwen3.5-4B-Q4_K_M.gguf",
+      "-f",
+      "/home/red/1060/benchmarks/workloads/wikitext-2-test-slice.txt",
+      "--chunks",
+      "20",
+      "-c",
+      "512",
+      "--kl-divergence-base",
+      "/home/red/1060/models/qwen3.5-4b-q8_0.kld",
+      "--kl-divergence",
+      "-ngl",
+      "99",
+      "-fa",
+      "1",
+      "-ctk",
+      "f16",
+      "-ctv",
+      "f16",
+      "-b",
+      "2048",
+      "-ub",
+      "256"
+    ],
+    "returncode": 0,
+    "aborted": null,
+    "has_reference": true,
+    "mean_kld": 0.024235,
+    "ppl": 10.24048
+  }
 }

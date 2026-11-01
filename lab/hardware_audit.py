@@ -739,7 +739,9 @@ def check_claims(p: dict) -> dict:
     dist = p["os"]["distribution"]["value"]
     return {
         "machine": {"claim": SPEC_CLAIMS["machine"],
-                    **verdict(product, bool(product) and "G3" in product and "17" in product)},
+                    # Dell reports the G3 17 as "G3 3779" (17-inch models are 37xx).
+                    **verdict(product, bool(product) and "G3" in product
+                              and ("17" in product or "3779" in product))},
         "gpu_model": {"claim": "GeForce GTX 1060",
                       **verdict(name, bool(name) and SPEC_CLAIMS["gpu_name_contains"] in name)},
         "architecture": {"claim": SPEC_CLAIMS["architecture"],

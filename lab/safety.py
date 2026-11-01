@@ -36,6 +36,9 @@ class Limits:
     build_time_budget_s: float = 3600
     telemetry_stale_s: float = 15
     max_consecutive_failures: int = 3
+    require_ac: bool = False
+    battery_min_pct: float = 0
+    power_limit_min_w: float = 0
     allowed_executables: list = field(default_factory=list)
     approval_required_patterns: list = field(default_factory=list)
 
@@ -121,9 +124,15 @@ class SafetyMonitor:
                 self._event("gpu_overtemp", f"{s.temp_c} C >= {L.gpu_temp_max_c}", True)
             elif s.temp_c is not None and s.temp_c >= L.gpu_temp_warn_c:
                 self._event("gpu_temp_warn", f"{s.temp_c} C", False)
+            if L.power_limit_min_w and s.power_limit_w is not None \
+                    and s.power_limit_w < L.power_limit_min_w:
+                self._event("power_capped", f"GPU power limit {s.power_limit_w} W < "
+                            f"{L.power_limit_min_w} W (firmware throttling?)", False)
             if s.vram_used_mib and s.vram_total_mib and \
                     s.vram_used_mib / s.vram_total_mib > L.vram_max_fraction:
                 self._event("vram_exhausted", f"{s.vram_used_mib}/{s.vram_total_mib} MiB", True)
+        if L.require_ac and s.ac_online is False:
+            self._event("ac_lost", "AC adapter disconnected during run", True)
         if s.host_mem_available_mb is not None and s.host_mem_available_mb < L.host_mem_available_min_mb:
             self._event("host_mem_low", f"{s.host_mem_available_mb:.0f} MB available", True)
 
@@ -139,6 +148,18 @@ class SafetyMonitor:
                 return
 
     _gpu_expected = True
+
+
+def power_preflight(limits: Limits) -> tuple[bool, str, dict]:
+    """Is the machine in a fit power state to start a measurement?"""
+    from benchmarks.telemetry import read_power_supply
+    ps = read_power_supply()
+    if limits.require_ac and ps["ac_online"] is False:
+        return False, "on battery power (AC adapter not connected)", ps
+    if limits.battery_min_pct and ps["battery_pct"] is not None \
+            and ps["battery_pct"] < limits.battery_min_pct:
+        return False, f"battery at {ps['battery_pct']:.0f}% < {limits.battery_min_pct}%", ps
+    return True, "ok", ps
 
 
 def disk_ok(limits: Limits, path: Path = ROOT) -> bool:

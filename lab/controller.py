@@ -24,7 +24,7 @@ from benchmarks.telemetry import NvidiaSmiSource, Sampler
 from lab import evaluator
 from lab.experiment import (ExperimentSpec, append_tsv, config_hash, deep_merge, load_records,
                             now, save_record)
-from lab.safety import Limits, PolicyViolation, approval_reasons, load_limits
+from lab.safety import Limits, PolicyViolation, approval_reasons, load_limits, power_preflight
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -141,6 +141,9 @@ class Controller:
         if cand_cfg is not None:
             arms["candidate"] = (cand_cfg, patch_root)
         prepared = {name: self._prepare(c, pr, log_dir) for name, (c, pr) in arms.items()}
+        ok, why, power_state = power_preflight(self.limits)
+        if not ok:
+            raise ControllerError(f"power preflight failed: {why}")
         runs = {name: [] for name in arms}
         quality = {}
         sampler = self._sampler()
@@ -156,6 +159,9 @@ class Controller:
                                          wl, warm, limits=self.limits, sampler=sampler)
             order = list(arms)
             for rnd in range(defaults["rounds"]):
+                ok, why, _ = power_preflight(self.limits)
+                if not ok:
+                    raise ControllerError(f"power check failed before round {rnd}: {why}")
                 for name in (order if rnd % 2 == 0 else order[::-1]):
                     bench.wait_cooldown(sampler, idle, defaults["cooldown_max_delta_c"],
                                         defaults["cooldown_timeout_s"])
@@ -171,7 +177,19 @@ class Controller:
                                                   limits=self.limits, sampler=sampler,
                                                   log_path=log_dir / f"{name}-quality.log",
                                                   root=self.root)
+        capped = sorted({f"{name}: {ev['detail']}" for name, rs in runs.items() for r in rs
+                         for ev in r.get("safety_events", []) if ev.get("kind") == "power_capped"})
+        # Short runs can finish between monitor ticks, so also check every sample
+        # the sampler took during the whole measurement (including the idle one).
+        floor = self.limits.power_limit_min_w
+        if sampler and floor:
+            low = [s.power_limit_w for s in sampler.samples
+                   if s.power_limit_w is not None and s.power_limit_w < floor]
+            if low:
+                capped = sorted(set(capped) | {f"sampler: GPU power limit {min(low):.0f} W "
+                                               f"< {floor:.0f} W in {len(low)} sample(s)"})
         return {"runs": runs, "quality": quality, "idle_temp_c": idle,
+                "power_state": power_state, "power_capped": capped,
                 "trials": {n: bench.derive_metrics(r, defaults) for n, r in runs.items()},
                 "defaults": defaults,
                 "bin_dirs": {n: str(p[0]) for n, p in prepared.items()}}
@@ -227,6 +245,7 @@ class Controller:
                 (self.records / f"{spec.id}.diff").write_text(diff)
             m = self.measure_pair(best, cand, wt, spec.id, spec.benchmark_overrides)
             rec["benchmark_parameters"] = m["defaults"]
+            rec["execution_environment"]["power_state"] = m["power_state"]
             rec["results"] = {"trials": m["trials"], "idle_temp_c": m["idle_temp_c"],
                               "telemetry": {n: [r.get("telemetry") for r in rs]
                                             for n, rs in m["runs"].items()}}
@@ -240,6 +259,13 @@ class Controller:
                                                   for ev in r.get("safety_events", [])]}
             if base_errors:
                 raise ControllerError(f"baseline failed during experiment: {base_errors[:3]}")
+            if m["power_capped"]:
+                # Firmware power throttling in either arm makes the A/B comparison meaningless.
+                rec["stability"]["power_capped"] = m["power_capped"]
+                rec.update(decision="invalid_power_state",
+                           research_observations="GPU power limit dropped during measurement; "
+                                                 "result not comparable, re-run when power is stable")
+                raise _Stop()
             ev = evaluator.evaluate(m["trials"]["baseline"], m["trials"]["candidate"],
                                     base_quality=m["quality"].get("baseline"),
                                     cand_quality=m["quality"].get("candidate"),
@@ -251,6 +277,8 @@ class Controller:
                 promoted = True
             elif ev["profile_wins"]:
                 self.update_profiles(spec.id, cand, ev, m["trials"]["candidate"])
+        except _Stop:
+            pass
         except PolicyViolation as e:
             rec.update(decision="rejected", error=f"policy: {e}")
         except (ControllerError, bench.BenchmarkError, Exception) as e:  # record every failure
@@ -326,7 +354,9 @@ class Controller:
                                          "hardware_profile": _profile_digest(self.root)},
                "results": {"trials": m["trials"]}, "correctness": {"baseline": q},
                "stability": {"errors": errs}}
-        ok = not errs and q.get("returncode") == 0
+        rec["execution_environment"]["power_state"] = m["power_state"]
+        rec["stability"]["power_capped"] = m["power_capped"]
+        ok = not errs and q.get("returncode") == 0 and not m["power_capped"]
         rec["decision"] = "baseline_validated" if ok else "baseline_failed"
         if ok:
             best.update(validated=True, metrics=_medians(m["trials"]["baseline"]),
@@ -336,6 +366,10 @@ class Controller:
                 self._commit(["winners/best_config.json"], f"winners: validate baseline {exp_id}")
         rec["finished_utc"] = now()
         return self._finish(rec)
+
+
+class _Stop(Exception):
+    """Ends an experiment early with the decision already set on the record."""
 
 
 class _Null:

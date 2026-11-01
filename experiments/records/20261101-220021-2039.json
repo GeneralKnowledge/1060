@@ -866,5 +866,6 @@
   },
   "decision": "inconclusive",
   "finished_utc": "2026-11-01T22:14:21+00:00",
-  "promoted": false
+  "promoted": false,
+  "research_observations": "(interpretation unavailable: claude exit 1: )"
 }

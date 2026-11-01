@@ -1,0 +1,288 @@
+{
+  "id": "baseline-2026-11-01T190446+0000",
+  "hypothesis": "baseline validation",
+  "kind": "baseline",
+  "started_utc": "2026-11-01T19:09:31+00:00",
+  "baseline_config": {
+    "id": "20261101-180123-d476",
+    "workload": "small",
+    "backend": "cuda",
+    "build": {
+      "llama_cpp_commit": "7bd18083082126c08d375cefaa6a5aa1c170ecde",
+      "llama_cpp_tag": "b12021",
+      "cmake_flags": [],
+      "patches": []
+    },
+    "runtime": {
+      "n_gpu_layers": 99,
+      "flash_attn": 1,
+      "cache_type_k": "f16",
+      "cache_type_v": "f16",
+      "batch_size": 2048,
+      "ubatch_size": 512,
+      "mmap": 1
+    },
+    "env": {},
+    "validated_utc": "2026-11-01T19:09:31+00:00",
+    "baseline_quality": {
+      "argv": [
+        "/home/red/1060/backends/builds/d2db58ba90808f32/build/bin/llama-perplexity",
+        "-m",
+        "/home/red/1060/models/Llama-3.2-3B-Instruct-Q4_K_M.gguf",
+        "-f",
+        "/home/red/1060/benchmarks/workloads/wikitext-2-test-slice.txt",
+        "--chunks",
+        "20",
+        "-c",
+        "512",
+        "--kl-divergence-base",
+        "/home/red/1060/models/llama-3.2-3b-q8_0.kld",
+        "--kl-divergence",
+        "-ngl",
+        "99",
+        "-fa",
+        "1",
+        "-ctk",
+        "f16",
+        "-ctv",
+        "f16",
+        "-b",
+        "2048",
+        "-ub",
+        "512"
+      ],
+      "returncode": 0,
+      "aborted": null,
+      "has_reference": true,
+      "mean_kld": 0.020753,
+      "ppl": 11.879274
+    },
+    "validated": true,
+    "promoted_utc": "2026-11-01T18:07:22+00:00",
+    "previous": "initial",
+    "metrics": {
+      "pp512_ts": 768.4155,
+      "pp2048_ts": 676.948,
+      "tg128_ts": 43.6595,
+      "ttft_s": 0.6901,
+      "vram_peak_mib": 2509.0,
+      "host_rss_peak_mb": 2214.1,
+      "tokens_per_joule": 0.6586,
+      "temp_max_c": 67.0
+    },
+    "evaluation_summary": {
+      "balanced_score": 1.0293,
+      "tradeoffs": []
+    }
+  },
+  "execution_environment": {
+    "workload": "small",
+    "hardware_profile": {
+      "audit_time": "2026-11-01T14:49:38+00:00",
+      "gpu": "NVIDIA GeForce GTX 1060 with Max-Q Design",
+      "vbios": "86.06.6F.00.46",
+      "driver": "550.163.01"
+    },
+    "power_state": {
+      "ac_online": true,
+      "battery_pct": 100.0,
+      "battery_status": "Full"
+    }
+  },
+  "results": {
+    "trials": {
+      "baseline": {
+        "pp512_ts": [
+          768.882,
+          769.024,
+          768.998,
+          765.942,
+          769.494,
+          768.949,
+          767.949,
+          764.536,
+          764.304,
+          765.415
+        ],
+        "pp2048_ts": [
+          679.735,
+          679.209,
+          676.225,
+          677.846,
+          678.139,
+          676.705,
+          676.791,
+          677.105,
+          675.436,
+          675.623
+        ],
+        "tg128_ts": [
+          43.7281,
+          43.6557,
+          43.6962,
+          43.6844,
+          43.6536,
+          43.642,
+          43.5707,
+          43.6672,
+          43.6633,
+          43.5271
+        ],
+        "ttft_s": [
+          0.6891524891372106,
+          0.6911343799844273
+        ],
+        "vram_peak_mib": [
+          2509.0,
+          2509.0
+        ],
+        "host_rss_peak_mb": [
+          2214.1,
+          2214.1
+        ],
+        "tokens_per_joule": [
+          0.6644901277760876,
+          0.6526118509651354
+        ],
+        "temp_max_c": [
+          66.0,
+          68.0
+        ]
+      }
+    }
+  },
+  "correctness": {
+    "baseline": {
+      "argv": [
+        "/home/red/1060/backends/builds/d2db58ba90808f32/build/bin/llama-perplexity",
+        "-m",
+        "/home/red/1060/models/Llama-3.2-3B-Instruct-Q4_K_M.gguf",
+        "-f",
+        "/home/red/1060/benchmarks/workloads/wikitext-2-test-slice.txt",
+        "--chunks",
+        "20",
+        "-c",
+        "512",
+        "--kl-divergence-base",
+        "/home/red/1060/models/llama-3.2-3b-q8_0.kld",
+        "--kl-divergence",
+        "-ngl",
+        "99",
+        "-fa",
+        "1",
+        "-ctk",
+        "f16",
+        "-ctv",
+        "f16",
+        "-b",
+        "2048",
+        "-ub",
+        "512"
+      ],
+      "returncode": 0,
+      "aborted": null,
+      "has_reference": true,
+      "mean_kld": 0.020753,
+      "ppl": 11.879274
+    }
+  },
+  "decode_correctness": {
+    "baseline": {
+      "argv": [
+        "/home/red/1060/backends/builds/d2db58ba90808f32/build/bin/llama-perplexity",
+        "-m",
+        "/home/red/1060/models/Llama-3.2-3B-Instruct-Q4_K_M.gguf",
+        "-f",
+        "/home/red/1060/benchmarks/workloads/wikitext-2-test-slice.txt",
+        "--chunks",
+        "2",
+        "-c",
+        "512",
+        "-ngl",
+        "99",
+        "-fa",
+        "1",
+        "-ctk",
+        "f16",
+        "-ctv",
+        "f16",
+        "-b",
+        "2048",
+        "-ub",
+        "1"
+      ],
+      "returncode": 0,
+      "aborted": null,
+      "duration_s": 13.07,
+      "ppl": 7.234
+    }
+  },
+  "kernel_check": {
+    "baseline": {
+      "complete": true,
+      "passed": 3023,
+      "failed": [],
+      "suites": [
+        {
+          "argv": [
+            "test",
+            "-b",
+            "CUDA0",
+            "-o",
+            "MUL_MAT",
+            "-p",
+            "type_a=(q4_K|q6_K|f16|f32),type_b=f32"
+          ],
+          "returncode": 0,
+          "aborted": null,
+          "duration_s": 24.62,
+          "passed": 752,
+          "failed": 0,
+          "not_supported": 0,
+          "complete": true
+        },
+        {
+          "argv": [
+            "test",
+            "-b",
+            "CUDA0",
+            "-o",
+            "FLASH_ATTN_EXT",
+            "-p",
+            "hsk=128,hsv=128"
+          ],
+          "returncode": 0,
+          "aborted": null,
+          "duration_s": 22.27,
+          "passed": 571,
+          "failed": 0,
+          "not_supported": 2,
+          "complete": true
+        },
+        {
+          "argv": [
+            "test",
+            "-b",
+            "CUDA0",
+            "-o",
+            "RMS_NORM,ROPE,SOFT_MAX,GET_ROWS,SWIGLU,ADD,MUL,CPY,SET_ROWS"
+          ],
+          "returncode": 0,
+          "aborted": null,
+          "duration_s": 88.06,
+          "passed": 1700,
+          "failed": 0,
+          "not_supported": 1050,
+          "complete": true
+        }
+      ],
+      "failed_total": 0
+    }
+  },
+  "stability": {
+    "errors": [],
+    "power_capped": []
+  },
+  "decision": "baseline_validated",
+  "finished_utc": "2026-11-01T19:09:31+00:00"
+}

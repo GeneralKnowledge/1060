@@ -28,8 +28,11 @@ LOCK = ROOT / "config" / "benchmark.lock"
 BENCH_FLAGS = {
     "n_gpu_layers": "-ngl", "flash_attn": "-fa", "cache_type_k": "-ctk",
     "cache_type_v": "-ctv", "batch_size": "-b", "ubatch_size": "-ub",
-    "threads": "-t", "mmap": "-mmp", "split_mode": "-sm", "main_gpu": "-mg",
+    "threads": "-t", "split_mode": "-sm", "main_gpu": "-mg",
 }
+# llama.cpp b12021 replaced llama-bench's -mmp 0|1 with -lm/--load-mode; the runtime
+# key stays "mmap" (0/1) and is translated here.
+LOAD_MODE = {0: "none", 1: "mmap"}
 # runtime key -> llama-perplexity flag (subset that affects numerics/fit)
 PPL_FLAGS = {
     "n_gpu_layers": "-ngl", "flash_attn": "-fa", "cache_type_k": "-ctk",
@@ -144,6 +147,8 @@ def bench_argv(bin_dir: Path, runtime: dict, wl: dict, defaults: dict) -> list[s
     for key, flag in BENCH_FLAGS.items():
         if runtime.get(key) is not None:
             argv += [flag, str(runtime[key])]
+    if runtime.get("mmap") is not None:
+        argv += ["-lm", LOAD_MODE[int(runtime["mmap"])]]
     return argv
 
 

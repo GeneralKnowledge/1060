@@ -4,6 +4,11 @@ import json, os, random, sys
 a = sys.argv[1:]
 def opt(flag, default=None):
     return a[a.index(flag) + 1] if flag in a else default
+# Mirror the pinned llama.cpp (b12021): -mmp was removed in favour of -lm.
+if "-mmp" in a:
+    print("error: invalid parameter for argument: -mmp", file=sys.stderr); sys.exit(1)
+if "-lm" in a and opt("-lm") not in ("auto", "none", "mmap", "mlock", "mmap+mlock", "dio"):
+    print("error: invalid parameter for argument: -lm", file=sys.stderr); sys.exit(1)
 if os.environ.get("FAKE_CRASH"):
     print("CUDA error: an illegal memory access was encountered", file=sys.stderr); sys.exit(1)
 pp_mult = 1.15 if opt("-fa") == "1" else 1.0

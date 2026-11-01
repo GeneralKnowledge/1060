@@ -291,3 +291,12 @@ def test_audit_accepts_g3_3779():
          "memory": {"total_bytes": {"value": 8_100_000_000}},
          "os": {"distribution": {"value": "Ubuntu 24.04.3 LTS"}}}
     assert ha.check_claims(p)["machine"]["result"] == "confirmed"
+
+
+def test_bench_argv_uses_load_mode_not_mmp():
+    wl = {"model_path": "m.gguf"}
+    d = {"n_prompt": [512], "n_gen": [128], "repetitions": 1}
+    a = bench.bench_argv(Path("/x"), {"mmap": 1, "n_gpu_layers": 99}, wl, d)
+    assert "-mmp" not in a and a[a.index("-lm") + 1] == "mmap"
+    a = bench.bench_argv(Path("/x"), {"mmap": 0}, wl, d)
+    assert a[a.index("-lm") + 1] == "none"

@@ -11,3 +11,4 @@ baseline-2026-11-01T190446+0000	2026-11-01T19:09:31+00:00	small	baseline	baselin
 20261101-194132-bea3	2026-11-01T19:50:50+00:00	small	software	inconclusive	1.0	0.9988	0.9983	0.9984	1.0	43.250299999999996	783.7715000000001	0.020753	With full offload, 2 CPU threads match the default and use less energy.
 20261101-195050-3b4f	2026-11-01T20:00:13+00:00	small	software	promote	1.0602	0.9964	1.0003	0.9997	1.0	43.281549999999996	785.1415	0.020753	Loading without mmap (load mode none) lowers host RSS without slowing inference.
 20261101-200013-49d5	2026-11-01T20:33:54+00:00	small	software	rejected	0.7426	0.9971	0.4785	0.487	0.9587	43.59935	380.817	0.019454	cuBLAS instead of MMQ for prompt batches (-DGGML_CUDA_FORCE_CUBLAS=ON) is slower on Pascal.
+baseline-2026-11-01T213540+0000	2026-11-01T21:43:59+00:00	qwen35-4b	baseline	baseline_validated									baseline validation

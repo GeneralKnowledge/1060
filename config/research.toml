@@ -1,6 +1,8 @@
 # Research agent configuration. Provider-independent: pick one [provider] kind.
 [provider]
-kind = "anthropic"          # anthropic | openai_compatible | command
+kind = "command"            # anthropic | openai_compatible | command
+argv = ["claude", "-p", "--tools", "", "--model", "claude-opus-5-5", "--effort", "high"]
+timeout_s = 900
 model = "claude-opus-5-5"
 effort = "high"
 max_tokens = 16000

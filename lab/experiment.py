@@ -34,6 +34,7 @@ class ExperimentSpec:
     workload: str | None = None
     benchmark_overrides: dict = field(default_factory=dict)  # only rounds/repetitions
     revisit_reason: str = ""                      # required to re-test a tested config
+    source: str = "manual"                        # manual | agent | sweep:<name>
     id: str = field(default_factory=new_id)
 
     @classmethod

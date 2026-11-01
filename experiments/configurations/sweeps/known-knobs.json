@@ -1,0 +1,56 @@
+{
+  "name": "known-knobs",
+  "description": "Settle the remaining well-known llama.cpp knobs on this card in one pass, cheapest first, each as a normal locked A/B against the current best. The build-changing step comes last. Vulkan is left out: it needs the Vulkan SDK on the laptop and its own kernel check.",
+  "steps": [
+    {
+      "hypothesis": "GGML_CUDA_GRAPH_OPT=1 changes balanced performance at full offload.",
+      "changes": {
+        "env": {
+          "GGML_CUDA_GRAPH_OPT": "1"
+        }
+      }
+    },
+    {
+      "hypothesis": "Capturing the whole graph as one CUDA graph (GGML_CUDA_GRAPH_CHUNK_SIZE=0) changes decode speed.",
+      "changes": {
+        "env": {
+          "GGML_CUDA_GRAPH_CHUNK_SIZE": "0"
+        }
+      }
+    },
+    {
+      "hypothesis": "ubatch 256 (from 512) changes prompt speed or VRAM.",
+      "changes": {
+        "runtime": {
+          "ubatch_size": 256
+        }
+      }
+    },
+    {
+      "hypothesis": "With full offload, 2 CPU threads match the default and use less energy.",
+      "changes": {
+        "runtime": {
+          "threads": 2
+        }
+      }
+    },
+    {
+      "hypothesis": "Loading without mmap (load mode none) lowers host RSS without slowing inference.",
+      "changes": {
+        "runtime": {
+          "mmap": 0
+        }
+      }
+    },
+    {
+      "hypothesis": "cuBLAS instead of MMQ for prompt batches (-DGGML_CUDA_FORCE_CUBLAS=ON) is slower on Pascal.",
+      "changes": {
+        "build": {
+          "cmake_flags": [
+            "-DGGML_CUDA_FORCE_CUBLAS=ON"
+          ]
+        }
+      }
+    }
+  ]
+}

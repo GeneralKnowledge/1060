@@ -182,7 +182,8 @@ class Controller:
                     sampler=sampler, log_path=log_dir / f"{name}-decode-quality.log", root=self.root)
                 kernels[name] = bench.run_kernel_check(b, c.get("env", {}), self.cfg,
                                                        limits=self.limits, sampler=sampler,
-                                                       log_dir=log_dir, name=name)
+                                                       log_dir=log_dir, name=name,
+                                                       backend=c["backend"])
         capped = sorted({f"{name}: {ev['detail']}" for name, rs in runs.items() for r in rs
                          for ev in r.get("safety_events", []) if ev.get("kind") == "power_capped"})
         # Short runs can finish between monitor ticks, so also check every sample
@@ -209,7 +210,8 @@ class Controller:
             raise ControllerError("candidate workload differs from the best config's; run it as a "
                                   "separate investigation with its own baseline")
         rec = {"id": spec.id, "hypothesis": spec.hypothesis, "research_objective": spec.objective,
-               "description": spec.description, "kind": spec.kind, "started_utc": now(),
+               "description": spec.description, "kind": spec.kind, "source": spec.source,
+               "started_utc": now(),
                "baseline_config": best, "benchmark": lock,
                "execution_environment": {"workload": best["workload"],
                                          "hardware_profile": _profile_digest(self.root)}}

@@ -46,6 +46,7 @@ max_ppl_ratio = 1.01
 # test-backend-ops compares each CUDA op with the CPU backend. A candidate fails if any
 # case fails that passes on the baseline build (known upstream failures don't block).
 # Suites cover the tensor types and head size of the pinned Llama-3.2-3B Q4_K_M model.
+# CUDA builds only for now; other backends are not checked.
 enabled = true
 backend = "CUDA0"
 

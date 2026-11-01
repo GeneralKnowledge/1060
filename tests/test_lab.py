@@ -334,6 +334,35 @@ def test_agent_step_and_session(lab):
     assert "Current best config" in provider.calls[0][1][0]["content"]
 
 
+def test_sweep_runs_steps_against_current_best(lab):
+    from lab.sweep import load_sweep, run_sweep
+    lab.validate_baseline()
+    f = lab.root / "experiments" / "configurations" / "sweeps" / "t.json"
+    f.parent.mkdir(parents=True, exist_ok=True)
+    f.write_text(json.dumps({"name": "t", "steps": [
+        {"hypothesis": "FA on", "changes": {"runtime": {"flash_attn": 1}}},
+        {"hypothesis": "partial offload", "changes": {"runtime": {"n_gpu_layers": 10}}},
+        {"hypothesis": "FA on again", "changes": {"runtime": {"flash_attn": 1}}}]}))
+    out = run_sweep(lab, load_sweep(f), log=lambda *a: None)
+    assert [r["decision"] for r in out["results"]] == ["promote", "discard", "duplicate"]
+    rec = json.loads((lab.root / "experiments" / "records" / f"{out['results'][1]['id']}.json").read_text())
+    assert rec["source"] == "sweep:t" and rec["baseline_config"]["runtime"]["flash_attn"] == 1
+
+
+def test_shipped_sweep_files_are_valid():
+    from lab.sweep import load_sweep
+    files = sorted((REPO / "experiments" / "configurations" / "sweeps").glob("*.json"))
+    assert files
+    for f in files:
+        load_sweep(f)
+
+
+def test_agent_context_includes_priors(lab):
+    agent = ResearchAgent(lab, provider=ScriptedProvider([]), root=lab.root)
+    ctx = agent.context()
+    assert "Prior knowledge (read first)" in ctx and "Open questions" in ctx
+
+
 def test_session_stop_file(lab):
     (lab.root / "experiments" / "STOP").write_text("")
     agent = ResearchAgent(lab, provider=ScriptedProvider([]), root=lab.root)

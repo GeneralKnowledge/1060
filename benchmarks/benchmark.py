@@ -359,9 +359,13 @@ def kernel_check_argvs(bin_dir: Path, cfg: dict) -> list[list[str]]:
 
 
 def run_kernel_check(bin_dir: Path, env: dict, cfg: dict, *, limits, sampler,
-                     log_dir: Path | None = None, name: str = "") -> dict | None:
-    """Every configured op compared with the CPU backend (NMSE), per test-backend-ops."""
+                     log_dir: Path | None = None, name: str = "",
+                     backend: str = "cuda") -> dict | None:
+    """Every configured op compared with the CPU backend (NMSE), per test-backend-ops.
+    CUDA builds only for now; other backends return None (no check)."""
     from lab.safety import run_guarded
+    if backend != "cuda":
+        return None
     argvs = kernel_check_argvs(bin_dir, cfg)
     if not argvs:
         return None

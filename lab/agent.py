@@ -38,12 +38,20 @@ How the lab works:
   llama.cpp goes in backends/experimental/<name>.patch (git diff format, applied at the pinned
   commit) and is referenced from build.patches.
 - runtime keys map to llama-bench flags: n_gpu_layers, flash_attn, cache_type_k, cache_type_v,
-  batch_size, ubatch_size, threads, mmap, split_mode. env sets environment variables (e.g.
-  GGML_CUDA_FORCE_MMQ=1).
+  batch_size, ubatch_size, threads, mmap, split_mode. env sets runtime environment variables
+  (e.g. GGML_CUDA_GRAPH_OPT=1). Compile options such as GGML_CUDA_FORCE_CUBLAS go in
+  build.cmake_flags (e.g. "-DGGML_CUDA_FORCE_CUBLAS=ON"); they have no effect as env.
+- Correctness gates: batched KL divergence, decode-path perplexity at ubatch 1, and
+  test-backend-ops (each CUDA op vs the CPU backend). A code change that breaks any op the
+  baseline passes is rejected.
 - Clock, power, fan, firmware, driver or any privileged change: set kind to "hardware" or
   "deep_hardware". It will be written up for a human to approve, not executed.
 
 Research discipline:
+- Start from the prior-knowledge file. Do not spend an experiment re-establishing a result it
+  lists as known or measured; knobs it lists as settled by sweep are not yours to re-test. If
+  you have new evidence against a prior, say so in revisit_reason.
+- Spend the budget on its open questions. Say which one an experiment addresses.
 - Prefer the smallest experiment that isolates one variable. Combine changes only once their
   individual effects are known.
 - Do not repeat a conclusively tested config. To revisit one, give revisit_reason with the new
@@ -130,6 +138,7 @@ class ResearchAgent:
             "## Editable paths\n" + json.dumps(self.research["permissions"]["editable"]),
             "## Experiment history (oldest first)\n" +
             "\n".join(json.dumps(record_summary(r), default=str) for r in records),
+            "## Prior knowledge (read first)\n" + _read(self.root / "research" / "priors.md", 9000),
             "## Hypotheses\n" + _read(self.root / "research" / "hypotheses.md"),
             "## Known limitations\n" + _read(self.root / "research" / "known_limitations.md", 3000),
             "## Research notes (latest)\n" + _read(self.notes),
@@ -160,7 +169,7 @@ class ResearchAgent:
         prop = self.propose()
         if prop.get("action") == "stop":
             return {"decision": "agent_stop", "reason": prop.get("reason", "")}
-        spec = ExperimentSpec.from_dict(prop)
+        spec = ExperimentSpec.from_dict({**prop, "source": "agent"})
         rec = self.c.run(spec)
         note = self.interpret(rec)
         rec["research_observations"] = note

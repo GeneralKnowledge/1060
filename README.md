@@ -15,6 +15,10 @@ and every attempt is in [`experiments/results.tsv`](experiments/results.tsv).
 So far the loop searches runtime flags, build flags and environment variables well. Source-level
 (kernel) changes are possible in principle through `backends/experimental/*.patch`, but the agent
 cannot yet read or compile llama.cpp source while it works, so it is not yet a practical route.
+M5 (in progress) builds that workbench. Done so far: a decode-path quality check and a per-op
+kernel check against the CPU backend, so kernel patches can be judged safely; known results in
+[`research/priors.md`](research/priors.md); and `python3 -m lab sweep` to settle known knobs
+without the research agent.
 
 See [`docs/assessment.md`](docs/assessment.md) for the technical assessment and
 [`docs/running.md`](docs/running.md) for the steps to run it on the hardware.
@@ -26,6 +30,7 @@ See [`docs/assessment.md`](docs/assessment.md) for the technical assessment and
 | M2 experiment controller | git-worktree isolation, interleaved A/B measurement, noise-aware multi-objective evaluator, winners + profiles, records + `results.tsv` |
 | M3 research agent | provider-independent (`anthropic`, `openai_compatible`, `command`), proposes and interprets experiments |
 | M4 continuous research | `python3 -m lab session` with experiment, time, failure and STOP-file limits |
+| M5 kernel research (in progress) | decode-path and per-op kernel correctness gates, prior knowledge, scripted sweeps (`python3 -m lab sweep`) |
 | Safety | independent limits (temperature, VRAM, host RAM, time, stale telemetry), command allow-list, hardware/privileged actions diverted to human-approval proposals |
 
 ## M0: hardware audit

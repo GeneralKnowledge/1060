@@ -73,6 +73,11 @@ tmux new -d -s research 'python3 -m lab session --max-hours 8 | tee -a experimen
 touch experiments/STOP              # ask a running session to stop after the current experiment
 ```
 
+Known knobs, without the research agent (each step is a normal locked A/B against the current best):
+```bash
+python3 -m lab sweep experiments/configurations/sweeps/known-knobs.json
+```
+
 Each experiment runs in `experiments/worktrees/<id>` on branch `exp/<id>`. It produces
 `experiments/records/<id>.json` (plus `.diff` when files changed) and a row in
 `experiments/results.tsv`. A promotion merges the branch, archives the previous winner to
@@ -81,3 +86,23 @@ Each experiment runs in `experiments/worktrees/<id>` on branch `exp/<id>`. It pr
 
 `scripts/restore_best.sh` removes stray worktrees and branches and resets `winners/` to the last
 commit. To roll back a promotion, use `git revert` on its merge commit.
+
+## Correctness gates (M5)
+
+Besides the batched KL-divergence check, every experiment now runs:
+
+- **Decode-path quality:** `llama-perplexity` at ubatch 1 over 2 chunks, so the batch-1 kernels
+  (MMVQ, flash-attention vec) produce the logits. The candidate's perplexity must stay within
+  1% of the baseline's decode run in the same session. No extra reference file is needed.
+- **Kernel check:** `test-backend-ops` compares the CUDA ops the model uses with the CPU backend.
+  A candidate is rejected if any case fails that passes on the baseline build.
+
+After pulling this change (human):
+```bash
+scripts/build_llama.sh                         # adds test-backend-ops to the existing build
+python3 -m lab approve-benchmark "M5 decode + kernel checks"
+python3 -m lab baseline                        # re-validates the best config with the new checks
+```
+Note the duration of the decode and kernel checks in the baseline record
+(`decode_correctness`, `kernel_check.*.suites[].duration_s`); each must finish within
+`experiment_time_budget_s` (300 s).

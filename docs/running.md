@@ -51,6 +51,9 @@ Any edit to `benchmarks/` or `config/benchmark.toml` invalidates the lock, and t
 refuses to run until a human re-approves it. This is what stops an experiment from changing the
 benchmark and then using it to declare success.
 
+Other workloads (model families) are set up the same way; see `docs/qwen35.md` for Qwen3.5-4B
+and the `--workload` option.
+
 ## 4. Baseline (M2)
 
 ```bash

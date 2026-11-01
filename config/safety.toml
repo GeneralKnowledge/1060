@@ -18,7 +18,7 @@ power_limit_min_w = 65             # a run whose GPU power limit drops below thi
 
 [policy]
 # Executables an experiment may launch (resolved basename). Everything else is refused.
-allowed_executables = ["llama-bench", "llama-perplexity", "llama-cli", "llama-server", "test-backend-ops",
+allowed_executables = ["llama-bench", "llama-perplexity", "llama-cli", "llama-completion", "llama-server", "test-backend-ops",
                        "cmake", "git", "nvidia-smi"]
 # Anything matching these needs explicit human approval (Mode 2/3) and is
 # written to experiments/proposals/ instead of being run.

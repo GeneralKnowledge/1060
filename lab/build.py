@@ -20,8 +20,8 @@ ROOT = Path(__file__).resolve().parents[1]
 UPSTREAM = "https://github.com/ggml-org/llama.cpp"
 SRC = ROOT / "backends" / "llama.cpp-src"
 BUILDS = ROOT / "backends" / "builds"
-TARGETS = ["llama-bench", "llama-perplexity", "llama-cli", "llama-server", "test-backend-ops"]
-REQUIRED = ["llama-bench", "llama-perplexity", "test-backend-ops"]
+TARGETS = ["llama-bench", "llama-perplexity", "llama-cli", "llama-completion", "llama-server", "test-backend-ops"]
+REQUIRED = ["llama-bench", "llama-perplexity", "llama-completion", "test-backend-ops"]
 
 BACKEND_FLAGS = {
     "cuda": ["-DGGML_CUDA=ON", "-DCMAKE_CUDA_ARCHITECTURES=61"],
@@ -81,7 +81,8 @@ def build(spec: dict, limits: Limits, patch_root: Path = ROOT, jobs: int = 2,
     work = BUILDS / key
     if all((out / t).exists() for t in ("llama-bench", "llama-perplexity")) and \
             (work / "build" / "CMakeCache.txt").exists():
-        # Built before test-backend-ops was required: add only the missing targets.
+        # Built before a required tool (test-backend-ops, llama-completion) was added: build only the
+        # missing targets.
         missing = [t for t in REQUIRED if not (out / t).exists()]
         r = run_guarded(["cmake", "--build", str(work / "build"), "--config", "Release",
                          f"-j{jobs}", "--target", *missing],

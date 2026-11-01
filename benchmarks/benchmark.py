@@ -344,12 +344,20 @@ def parse_backend_ops(text: str) -> dict:
     return {"passed": passed, "failed": failed, "not_supported": unsupported, "complete": complete}
 
 
-def kernel_check_argvs(bin_dir: Path, cfg: dict) -> list[list[str]]:
+def kernel_suites(cfg: dict, family: str | None = None) -> list[dict]:
+    """A family's own kernel_suites if it declares them, else the global [[kernel_check.suites]]."""
+    fam = (cfg.get("families") or {}).get(family or "", {})
+    if "kernel_suites" in fam:
+        return fam["kernel_suites"]
+    return (cfg.get("kernel_check") or {}).get("suites", [])
+
+
+def kernel_check_argvs(bin_dir: Path, cfg: dict, family: str | None = None) -> list[list[str]]:
     kc = cfg.get("kernel_check") or {}
     if not kc.get("enabled", False):
         return []
     out = []
-    for suite in kc.get("suites", []):
+    for suite in kernel_suites(cfg, family):
         argv = [str(bin_dir / "test-backend-ops"), "test", "-b", kc.get("backend", "CUDA0"),
                 "-o", suite["ops"]]
         if suite.get("params"):
@@ -360,13 +368,13 @@ def kernel_check_argvs(bin_dir: Path, cfg: dict) -> list[list[str]]:
 
 def run_kernel_check(bin_dir: Path, env: dict, cfg: dict, *, limits, sampler,
                      log_dir: Path | None = None, name: str = "",
-                     backend: str = "cuda") -> dict | None:
+                     backend: str = "cuda", family: str | None = None) -> dict | None:
     """Every configured op compared with the CPU backend (NMSE), per test-backend-ops.
     CUDA builds only for now; other backends return None (no check)."""
     from lab.safety import run_guarded
     if backend != "cuda":
         return None
-    argvs = kernel_check_argvs(bin_dir, cfg)
+    argvs = kernel_check_argvs(bin_dir, cfg, family)
     if not argvs:
         return None
     suites, failed, passed, complete = [], [], 0, True

@@ -19,6 +19,20 @@ sha256 = "6c1a2b41161032677be168d354123594c0e6e67d2b9227c84f296ad037c728ff"
 family = "llama-3.2-3b"
 ctx = 4096
 
+[workloads.qwen35-4b]
+# Qwen3.5-4B: hybrid architecture (24 Gated DeltaNet linear-attention layers + 8 full-attention
+# layers, head_dim 256). A separate model family with its own reference logits, kernel suites
+# and winners directory: its results are never compared with Llama's. See docs/qwen35.md.
+model = "models/Qwen3.5-4B-Q4_K_M.gguf"
+sha256 = ""              # pin after download (python3 -m lab hash); empty = refuse to benchmark
+family = "qwen3.5-4b"
+ctx = 4096
+winners = "winners/qwen35-4b"
+research_brief = "research/workloads/qwen35-4b.md"
+source = "https://huggingface.co/unsloth/Qwen3.5-4B-GGUF"
+source_revision = ""     # pin the Hugging Face commit the file was downloaded from
+arch = "qwen35"
+
 [workloads.capacity]
 model = "models/Llama-3.1-8B-Instruct-Q4_K_M.gguf"
 sha256 = ""
@@ -45,7 +59,8 @@ max_ppl_ratio = 1.01
 [kernel_check]
 # test-backend-ops compares each CUDA op with the CPU backend. A candidate fails if any
 # case fails that passes on the baseline build (known upstream failures don't block).
-# Suites cover the tensor types and head size of the pinned Llama-3.2-3B Q4_K_M model.
+# These suites cover the tensor types and head size of the Llama-3.2-3B Q4_K_M model. A family
+# can replace them with its own kernel_suites (see qwen3.5-4b).
 # CUDA builds only for now; other backends are not checked.
 enabled = true
 backend = "CUDA0"
@@ -63,6 +78,29 @@ ops = "RMS_NORM,ROPE,SOFT_MAX,GET_ROWS,SWIGLU,ADD,MUL,CPY,SET_ROWS"
 
 [families."llama-3.2-3b"]
 reference_logits = "models/llama-3.2-3b-q8_0.kld"
+
+[families."qwen3.5-4b"]
+reference_logits = "models/qwen3.5-4b-q8_0.kld"
+reference_model = "models/Qwen3.5-4B-Q8_0.gguf"
+# Kernel suites for this family replace [[kernel_check.suites]]. They follow the ops that
+# llama.cpp b12021 builds for qwen35 (src/models/qwen35.cpp, delta-net-base.cpp) on CUDA,
+# where the fused GATED_DELTA_NET path is used for both prompt and decode. See
+# docs/qwen35.md for the op list, what each suite covers and what it does not.
+[[families."qwen3.5-4b".kernel_suites]]
+ops = "MUL_MAT"
+params = "type_a=(q4_K|q5_K|q6_K|q8_0|f16|f32),type_b=f32"
+[[families."qwen3.5-4b".kernel_suites]]
+# Full-attention layers: 16 Q heads, 4 KV heads, head_dim 256.
+ops = "FLASH_ATTN_EXT"
+params = "hsk=256,hsv=256"
+[[families."qwen3.5-4b".kernel_suites]]
+# Linear-attention layers: fused recurrent/chunked DeltaNet and the causal conv over q/k/v.
+ops = "GATED_DELTA_NET,SSM_CONV,L2_NORM"
+[[families."qwen3.5-4b".kernel_suites]]
+# Unfused DeltaNet fallback (used only if the fused op is unsupported) and gating ops.
+ops = "CUMSUM,TRI,SOLVE_TRI,SIGMOID,SOFTPLUS,SILU,EXP,CONCAT,PAD"
+[[families."qwen3.5-4b".kernel_suites]]
+ops = "RMS_NORM,ROPE,SOFT_MAX,GET_ROWS,SWIGLU,ADD,MUL,CPY,SET_ROWS,SCALE"
 
 [families."llama-3.1-8b"]
 reference_logits = "models/llama-3.1-8b-q8_0.kld"

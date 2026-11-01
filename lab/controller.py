@@ -48,7 +48,8 @@ def default_builder(build_spec: dict, limits: Limits, patch_root: Path, log_dir:
 
 class Controller:
     def __init__(self, root: Path = ROOT, limits: Limits | None = None, builder=default_builder,
-                 telemetry_source=None, auto_commit: bool = True, use_telemetry: bool = True):
+                 telemetry_source=None, auto_commit: bool = True, use_telemetry: bool = True,
+                 workload: str | None = None):
         self.root = Path(root)
         self.limits = limits or load_limits(self.root / "config" / "safety.toml")
         self.cfg = bench.load_config(self.root / "config" / "benchmark.toml")
@@ -59,11 +60,33 @@ class Controller:
         self.auto_commit = auto_commit
         self.records = self.root / "experiments" / "records"
         self.logs = self.root / "experiments" / "logs"
-        self.best_path = self.root / "winners" / "best_config.json"
+        # Each workload (model family) keeps its own winners directory, so its best config,
+        # history and profiles are never compared with another model's.
+        self.workload = workload or self.research.get("session", {}).get("workload", "small")
+        if self.workload not in self.cfg.get("workloads", {}):
+            raise ControllerError(f"unknown workload {self.workload!r} in config/benchmark.toml")
+        self.winners_rel = self.cfg["workloads"][self.workload].get("winners", "winners")
+        self.winners = self.root / self.winners_rel
+        self.best_path = self.winners / "best_config.json"
 
     # ------------------------------------------------------------ state
     def best(self) -> dict:
-        return json.loads(self.best_path.read_text())
+        best = json.loads(self.best_path.read_text())
+        if best.get("workload") != self.workload:
+            raise ControllerError(f"{self.best_path} is for workload {best.get('workload')!r}, "
+                                  f"not {self.workload!r}")
+        return best
+
+    def environment(self, best: dict) -> dict:
+        """What every record must carry to be reproducible: workload identity, model hash,
+        runtime commit, backend, context and the hardware profile digest."""
+        wl = self.cfg["workloads"].get(best["workload"], {})
+        return {"workload": best["workload"], "family": wl.get("family"),
+                "model": best.get("model") or wl.get("model"), "model_sha256": wl.get("sha256"),
+                "model_source": wl.get("source"), "model_source_revision": wl.get("source_revision"),
+                "arch": wl.get("arch"), "ctx": wl.get("ctx"), "backend": best.get("backend"),
+                "llama_cpp_commit": (best.get("build") or {}).get("llama_cpp_commit"),
+                "hardware_profile": _profile_digest(self.root)}
 
     def tested_hashes(self) -> dict:
         return {r.get("candidate_config_hash"): r["id"] for r in load_records(self.records)
@@ -183,7 +206,8 @@ class Controller:
                 kernels[name] = bench.run_kernel_check(b, c.get("env", {}), self.cfg,
                                                        limits=self.limits, sampler=sampler,
                                                        log_dir=log_dir, name=name,
-                                                       backend=c["backend"])
+                                                       backend=c["backend"],
+                                                       family=wl["family"])
         capped = sorted({f"{name}: {ev['detail']}" for name, rs in runs.items() for r in rs
                          for ev in r.get("safety_events", []) if ev.get("kind") == "power_capped"})
         # Short runs can finish between monitor ticks, so also check every sample
@@ -213,8 +237,7 @@ class Controller:
                "description": spec.description, "kind": spec.kind, "source": spec.source,
                "started_utc": now(),
                "baseline_config": best, "benchmark": lock,
-               "execution_environment": {"workload": best["workload"],
-                                         "hardware_profile": _profile_digest(self.root)}}
+               "execution_environment": self.environment(best)}
 
         # Approval gate: hardware experiments and anything privileged go to a human.
         text = json.dumps(spec.changes) + "\n" + "\n".join(spec.files.values())
@@ -345,7 +368,7 @@ class Controller:
                 git(self.root, "merge", "--abort", check=False)
                 raise ControllerError(f"could not merge {branch}: {out.stderr.strip()}")
         old = self.best()
-        hist = self.root / "winners" / "history"
+        hist = self.winners / "history"
         hist.mkdir(parents=True, exist_ok=True)
         (hist / f"{old['id']}.json").write_text(json.dumps(old, indent=2) + "\n")
         new = dict(cand, validated=True, promoted_utc=now(), previous=old["id"],
@@ -354,17 +377,18 @@ class Controller:
         self.best_path.write_text(json.dumps(new, indent=2) + "\n")
         self.update_profiles(exp_id, cand, ev, trials, commit=False)
         if self.auto_commit:
-            self._commit(["winners"], f"winners: promote {exp_id}")
+            self._commit([self.winners_rel], f"winners: promote {exp_id}")
 
     def update_profiles(self, exp_id, cand, ev, trials, commit=True):
-        pdir = self.root / "winners" / "profiles"
+        pdir = self.winners / "profiles"
         pdir.mkdir(parents=True, exist_ok=True)
         for prof in ev["profile_wins"]:
             (pdir / f"{prof}.json").write_text(json.dumps(
                 dict(cand, profile=prof, from_experiment=exp_id, metrics=_medians(trials),
                      updated_utc=now()), indent=2) + "\n")
         if commit and self.auto_commit:
-            self._commit(["winners/profiles"], f"profiles: {exp_id} wins {ev['profile_wins']}")
+            self._commit([f"{self.winners_rel}/profiles"],
+                         f"profiles: {exp_id} wins {ev['profile_wins']}")
 
     def validate_baseline(self) -> dict:
         """Measure the current best config alone and mark it validated."""
@@ -376,8 +400,7 @@ class Controller:
         q = m["quality"]["baseline"]
         rec = {"id": exp_id, "hypothesis": "baseline validation", "kind": "baseline",
                "started_utc": now(), "baseline_config": best,
-               "execution_environment": {"workload": best["workload"],
-                                         "hardware_profile": _profile_digest(self.root)},
+               "execution_environment": self.environment(best),
                "results": {"trials": m["trials"]}, "correctness": {"baseline": q},
                "decode_correctness": m["decode"], "kernel_check": _trim_kernels(m["kernels"]),
                "stability": {"errors": errs}}
@@ -394,7 +417,8 @@ class Controller:
                         validated_utc=now(), baseline_quality=q)
             self.best_path.write_text(json.dumps(best, indent=2) + "\n")
             if self.auto_commit:
-                self._commit(["winners/best_config.json"], f"winners: validate baseline {exp_id}")
+                self._commit([f"{self.winners_rel}/best_config.json"],
+                             f"winners: validate baseline {exp_id}")
         rec["finished_utc"] = now()
         return self._finish(rec)
 

@@ -7,6 +7,8 @@ kld = 0.08 if ("-ctk" in a and a[a.index("-ctk") + 1] == "q4_0") else 0.004
 decode = "-ub" in a and a[a.index("-ub") + 1] == "1"
 # FAKE_DECODE_BROKEN: a kernel bug that only shows at batch size 1 (decode).
 ppl = 15.0 if (decode and os.environ.get("FAKE_DECODE_BROKEN")) else 7.5
+if "--kl-divergence-base" in a and "--kl-divergence" not in a:  # writing a reference file
+    open(a[a.index("--kl-divergence-base") + 1], "wb").write(b"fake reference logits")
 print(f"Final estimate: PPL = {ppl:.4f} +/- 0.10000")
 if "--kl-divergence" in a:
     print("Mean PPL(Q)                   :   7.512345 ±   0.1")

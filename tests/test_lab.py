@@ -224,6 +224,55 @@ def test_rewritten_patch_is_not_a_duplicate(lab):
     assert "note" not in second["experimental_config"]
 
 
+def test_parse_backend_ops():
+    out = subprocess.run([str(FAKE_BIN / "test-backend-ops"), "test", "-o", "MUL_MAT"],
+                         capture_output=True, text=True).stdout
+    r = bench.parse_backend_ops(out)
+    assert r["complete"] and r["passed"] == 2 and len(r["failed"]) == 1
+    assert r["failed"][0].startswith("MUL_MAT(type_a=f16")
+    assert not bench.parse_backend_ops("  MUL_MAT(x): OK\n")["complete"]  # cut off: no summary
+
+
+def test_decode_quality_runs_at_ubatch_1(lab):
+    wl = {"model_path": "m.gguf"}
+    a = bench.decode_quality_argv(Path("/x"), {"ubatch_size": 512, "flash_attn": 1}, wl, lab.cfg,
+                                  lab.root)
+    assert a[a.index("-ub") + 1] == "1" and "--kl-divergence" not in a
+    assert a[a.index("--chunks") + 1] == str(lab.cfg["quality"]["decode"]["chunks"])
+
+
+def test_known_baseline_kernel_failure_does_not_block(lab):
+    lab.validate_baseline()
+    rec = lab.run(ExperimentSpec(hypothesis="FA", objective="", description="",
+                                 changes={"runtime": {"flash_attn": 1}}))
+    assert rec["decision"] == "promote", rec.get("evaluation")
+    k = rec["kernel_check"]
+    assert k["baseline"]["failed_total"] == len(lab.cfg["kernel_check"]["suites"])  # one per suite
+    assert k["candidate"]["failed"] == k["baseline"]["failed"]
+    assert rec["decode_correctness"]["candidate"]["ppl"] == 7.5
+
+
+def test_decode_only_breakage_is_rejected(lab):
+    """Batched quality passes, but decode (ubatch 1) output is broken: must not promote."""
+    lab.validate_baseline()
+    rec = lab.run(ExperimentSpec(hypothesis="faster decode", objective="", description="",
+                                 changes={"runtime": {"flash_attn": 1},
+                                          "env": {"FAKE_DECODE_BROKEN": "1"}}))
+    assert rec["correctness"]["candidate"]["mean_kld"] < 0.03  # the old gate alone would pass
+    assert rec["decision"] == "rejected"
+    assert any("decode perplexity" in g for g in rec["evaluation"]["gate_failures"])
+    assert lab.best()["id"] == "initial"
+
+
+def test_new_kernel_failure_is_rejected(lab):
+    lab.validate_baseline()
+    rec = lab.run(ExperimentSpec(hypothesis="new mmvq", objective="", description="",
+                                 changes={"runtime": {"flash_attn": 1},
+                                          "env": {"FAKE_KERNEL_BROKEN": "1"}}))
+    assert rec["decision"] == "rejected"
+    assert any("kernel check" in g for g in rec["evaluation"]["gate_failures"])
+
+
 def test_regression_is_discarded_and_best_untouched(lab):
     before = lab.best()
     rec = lab.run(ExperimentSpec(hypothesis="partial offload", objective="", description="",
@@ -283,6 +332,35 @@ def test_agent_step_and_session(lab):
     assert "FA improved pp512" in notes and out["results"][0]["id"] in notes
     # The agent saw the history and the best config in its context.
     assert "Current best config" in provider.calls[0][1][0]["content"]
+
+
+def test_sweep_runs_steps_against_current_best(lab):
+    from lab.sweep import load_sweep, run_sweep
+    lab.validate_baseline()
+    f = lab.root / "experiments" / "configurations" / "sweeps" / "t.json"
+    f.parent.mkdir(parents=True, exist_ok=True)
+    f.write_text(json.dumps({"name": "t", "steps": [
+        {"hypothesis": "FA on", "changes": {"runtime": {"flash_attn": 1}}},
+        {"hypothesis": "partial offload", "changes": {"runtime": {"n_gpu_layers": 10}}},
+        {"hypothesis": "FA on again", "changes": {"runtime": {"flash_attn": 1}}}]}))
+    out = run_sweep(lab, load_sweep(f), log=lambda *a: None)
+    assert [r["decision"] for r in out["results"]] == ["promote", "discard", "duplicate"]
+    rec = json.loads((lab.root / "experiments" / "records" / f"{out['results'][1]['id']}.json").read_text())
+    assert rec["source"] == "sweep:t" and rec["baseline_config"]["runtime"]["flash_attn"] == 1
+
+
+def test_shipped_sweep_files_are_valid():
+    from lab.sweep import load_sweep
+    files = sorted((REPO / "experiments" / "configurations" / "sweeps").glob("*.json"))
+    assert files
+    for f in files:
+        load_sweep(f)
+
+
+def test_agent_context_includes_priors(lab):
+    agent = ResearchAgent(lab, provider=ScriptedProvider([]), root=lab.root)
+    ctx = agent.context()
+    assert "Prior knowledge (read first)" in ctx and "Open questions" in ctx
 
 
 def test_session_stop_file(lab):

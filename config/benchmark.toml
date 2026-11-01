@@ -33,6 +33,34 @@ chunks = 20
 max_mean_kld = 0.03      # candidate fails if mean KLD vs reference exceeds this
 max_ppl_ratio = 1.01     # ...or perplexity rises more than 1% vs baseline
 
+[quality.decode]
+# Decode-path check: the same text with one token per ubatch, so the batch-1 kernels
+# (MMVQ, flash-attention vec) produce the logits. The batched run above never runs
+# them. Compared with the baseline's decode perplexity in the same session.
+enabled = true
+chunks = 2
+ubatch_size = 1
+max_ppl_ratio = 1.01
+
+[kernel_check]
+# test-backend-ops compares each CUDA op with the CPU backend. A candidate fails if any
+# case fails that passes on the baseline build (known upstream failures don't block).
+# Suites cover the tensor types and head size of the pinned Llama-3.2-3B Q4_K_M model.
+# CUDA builds only for now; other backends are not checked.
+enabled = true
+backend = "CUDA0"
+
+[[kernel_check.suites]]
+ops = "MUL_MAT"
+params = "type_a=(q4_K|q6_K|f16|f32),type_b=f32"
+
+[[kernel_check.suites]]
+ops = "FLASH_ATTN_EXT"
+params = "hsk=128,hsv=128"
+
+[[kernel_check.suites]]
+ops = "RMS_NORM,ROPE,SOFT_MAX,GET_ROWS,SWIGLU,ADD,MUL,CPY,SET_ROWS"
+
 [families."llama-3.2-3b"]
 reference_logits = "models/llama-3.2-3b-q8_0.kld"
 

@@ -8,6 +8,7 @@
   run SPEC.json             run one manually written experiment
   agent-step                let the research agent propose and run one experiment
   session [--max-experiments N] [--max-hours H]   unattended research
+  sweep FILE.json           run a scripted list of known knobs (no research agent)
   status                    best config, recent results, pending proposals
   restore                   discard stray worktrees, reset winners/ to the last commit
 """
@@ -42,6 +43,8 @@ def main(argv=None) -> int:
     p = sub.add_parser("session")
     p.add_argument("--max-experiments", type=int)
     p.add_argument("--max-hours", type=float)
+    p = sub.add_parser("sweep")
+    p.add_argument("file")
     sub.add_parser("status")
     sub.add_parser("restore")
     args = ap.parse_args(argv)
@@ -79,6 +82,10 @@ def main(argv=None) -> int:
     elif args.cmd == "agent-step":
         from lab.agent import ResearchAgent
         rec = ResearchAgent(c).step()
+    elif args.cmd == "sweep":
+        from lab.sweep import load_sweep, run_sweep
+        print(json.dumps(run_sweep(c, load_sweep(Path(args.file))), indent=2))
+        return 0
     elif args.cmd == "session":
         from lab.agent import ResearchAgent, run_session
         print(json.dumps(run_session(ResearchAgent(c), max_experiments=args.max_experiments,

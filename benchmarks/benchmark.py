@@ -281,6 +281,111 @@ def run_quality(bin_dir: Path, runtime: dict, env: dict, wl: dict, cfg: dict, *,
     return out
 
 
+# ------------------------------------------------------------ decode-path quality
+
+def decode_quality_argv(bin_dir: Path, runtime: dict, wl: dict, cfg: dict,
+                        root: Path = ROOT) -> list[str] | None:
+    """llama-perplexity with one token per ubatch, so batch-1 (decode) kernels make the logits.
+
+    The batched quality run above uses 512-token ubatches, which only exercises the
+    prompt-processing kernels (MMQ, flash-attention tile). Decode uses different
+    kernels (MMVQ, flash-attention vec), so a patch could break generation and still
+    pass. No reference logits: in --kl-divergence mode llama-perplexity always
+    replays every chunk in the reference file, which is too slow at ubatch 1, so the
+    check compares perplexity with the baseline's own decode run instead."""
+    d = (cfg.get("quality") or {}).get("decode") or {}
+    if not d.get("enabled", False):
+        return None
+    rt = dict(runtime, ubatch_size=int(d.get("ubatch_size", 1)))
+    return ppl_argv(bin_dir, rt, wl, dict(cfg["quality"], chunks=int(d.get("chunks", 2))),
+                    None, root)
+
+
+def run_decode_quality(bin_dir: Path, runtime: dict, env: dict, wl: dict, cfg: dict, *, limits,
+                       sampler, log_path: Path | None = None, root: Path = ROOT) -> dict | None:
+    from lab.safety import run_guarded
+    argv = decode_quality_argv(bin_dir, runtime, wl, cfg, root)
+    if argv is None:
+        return None
+    res = run_guarded(argv, limits=limits, sampler=sampler, budget_s=limits.experiment_time_budget_s,
+                      env=env, gpu_expected=runtime.get("n_gpu_layers", 0) not in (0, None),
+                      log_path=log_path)
+    out = {"argv": argv, "returncode": res.returncode, "aborted": res.aborted,
+           "duration_s": res.duration_s}
+    if res.returncode == 0 and not res.aborted:
+        out.update(parse_ppl(res.stdout + res.stderr))
+    return out
+
+
+# ------------------------------------------------------------ kernel check
+
+_ANSI = re.compile(r"\x1b\[[0-9;]*m")
+_CASE = re.compile(r"^\s+([A-Za-z0-9_]+)\((.*)\): (.*)$")
+
+
+def parse_backend_ops(text: str) -> dict:
+    """test-backend-ops console output -> passed count, failed case names, completion."""
+    passed, failed, unsupported, complete = 0, [], 0, False
+    for raw in text.splitlines():
+        line = _ANSI.sub("", raw).rstrip()
+        if re.search(r"\d+/\d+ tests passed", line):
+            complete = True
+            continue
+        m = _CASE.match(line)
+        if not m:
+            continue
+        tail = m.group(3)
+        if tail.endswith("FAIL"):
+            failed.append(f"{m.group(1)}({m.group(2)})")
+        elif tail.endswith("OK"):
+            passed += 1
+        elif tail.startswith("not supported"):
+            unsupported += 1
+    return {"passed": passed, "failed": failed, "not_supported": unsupported, "complete": complete}
+
+
+def kernel_check_argvs(bin_dir: Path, cfg: dict) -> list[list[str]]:
+    kc = cfg.get("kernel_check") or {}
+    if not kc.get("enabled", False):
+        return []
+    out = []
+    for suite in kc.get("suites", []):
+        argv = [str(bin_dir / "test-backend-ops"), "test", "-b", kc.get("backend", "CUDA0"),
+                "-o", suite["ops"]]
+        if suite.get("params"):
+            argv += ["-p", suite["params"]]
+        out.append(argv)
+    return out
+
+
+def run_kernel_check(bin_dir: Path, env: dict, cfg: dict, *, limits, sampler,
+                     log_dir: Path | None = None, name: str = "",
+                     backend: str = "cuda") -> dict | None:
+    """Every configured op compared with the CPU backend (NMSE), per test-backend-ops.
+    CUDA builds only for now; other backends return None (no check)."""
+    from lab.safety import run_guarded
+    if backend != "cuda":
+        return None
+    argvs = kernel_check_argvs(bin_dir, cfg)
+    if not argvs:
+        return None
+    suites, failed, passed, complete = [], [], 0, True
+    for i, argv in enumerate(argvs):
+        res = run_guarded(argv, limits=limits, sampler=sampler,
+                          budget_s=limits.experiment_time_budget_s, env=env, gpu_expected=True,
+                          log_path=(log_dir / f"{name}-kernels-{i}.log") if log_dir else None)
+        r = parse_backend_ops(res.stdout)
+        ok = r["complete"] and not res.aborted
+        complete = complete and ok
+        failed += r["failed"]
+        passed += r["passed"]
+        suites.append({"argv": argv[1:], "returncode": res.returncode, "aborted": res.aborted,
+                       "duration_s": res.duration_s, "passed": r["passed"],
+                       "failed": len(r["failed"]), "not_supported": r["not_supported"],
+                       "complete": ok})
+    return {"complete": complete, "passed": passed, "failed": sorted(set(failed)), "suites": suites}
+
+
 # ------------------------------------------------------------ top level
 
 def benchmark_context(cfg: dict) -> dict:

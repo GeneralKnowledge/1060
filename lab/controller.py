@@ -145,7 +145,7 @@ class Controller:
         if not ok:
             raise ControllerError(f"power preflight failed: {why}")
         runs = {name: [] for name in arms}
-        quality = {}
+        quality, decode, kernels = {}, {}, {}
         sampler = self._sampler()
         ctx = sampler if sampler else _Null()
         with ctx:
@@ -177,6 +177,13 @@ class Controller:
                                                   limits=self.limits, sampler=sampler,
                                                   log_path=log_dir / f"{name}-quality.log",
                                                   root=self.root)
+                decode[name] = bench.run_decode_quality(
+                    b, c["runtime"], c.get("env", {}), wl, self.cfg, limits=self.limits,
+                    sampler=sampler, log_path=log_dir / f"{name}-decode-quality.log", root=self.root)
+                kernels[name] = bench.run_kernel_check(b, c.get("env", {}), self.cfg,
+                                                       limits=self.limits, sampler=sampler,
+                                                       log_dir=log_dir, name=name,
+                                                       backend=c["backend"])
         capped = sorted({f"{name}: {ev['detail']}" for name, rs in runs.items() for r in rs
                          for ev in r.get("safety_events", []) if ev.get("kind") == "power_capped"})
         # Short runs can finish between monitor ticks, so also check every sample
@@ -188,7 +195,8 @@ class Controller:
             if low:
                 capped = sorted(set(capped) | {f"sampler: GPU power limit {min(low):.0f} W "
                                                f"< {floor:.0f} W in {len(low)} sample(s)"})
-        return {"runs": runs, "quality": quality, "idle_temp_c": idle,
+        return {"runs": runs, "quality": quality, "decode": decode, "kernels": kernels,
+                "idle_temp_c": idle,
                 "power_state": power_state, "power_capped": capped,
                 "trials": {n: bench.derive_metrics(r, defaults) for n, r in runs.items()},
                 "defaults": defaults,
@@ -202,7 +210,8 @@ class Controller:
             raise ControllerError("candidate workload differs from the best config's; run it as a "
                                   "separate investigation with its own baseline")
         rec = {"id": spec.id, "hypothesis": spec.hypothesis, "research_objective": spec.objective,
-               "description": spec.description, "kind": spec.kind, "started_utc": now(),
+               "description": spec.description, "kind": spec.kind, "source": spec.source,
+               "started_utc": now(),
                "baseline_config": best, "benchmark": lock,
                "execution_environment": {"workload": best["workload"],
                                          "hardware_profile": _profile_digest(self.root)}}
@@ -251,6 +260,8 @@ class Controller:
                               "telemetry": {n: [r.get("telemetry") for r in rs]
                                             for n, rs in m["runs"].items()}}
             rec["correctness"] = m["quality"]
+            rec["decode_correctness"] = m["decode"]
+            rec["kernel_check"] = _trim_kernels(m["kernels"])
             errors = [e for r in m["runs"]["candidate"] for e in r["errors"]]
             aborts = [r["aborted"] for r in m["runs"]["candidate"] if r.get("aborted")]
             base_errors = [e for r in m["runs"]["baseline"] for e in r["errors"]]
@@ -270,7 +281,11 @@ class Controller:
             ev = evaluator.evaluate(m["trials"]["baseline"], m["trials"]["candidate"],
                                     base_quality=m["quality"].get("baseline"),
                                     cand_quality=m["quality"].get("candidate"),
-                                    errors=errors, safety_aborts=aborts, cfg=self.cfg)
+                                    errors=errors, safety_aborts=aborts, cfg=self.cfg,
+                                    base_decode=m["decode"].get("baseline"),
+                                    cand_decode=m["decode"].get("candidate"),
+                                    base_kernels=m["kernels"].get("baseline"),
+                                    cand_kernels=m["kernels"].get("candidate"))
             rec["evaluation"] = ev
             rec["decision"] = ev["decision"]
             if ev["decision"] == "promote":
@@ -364,10 +379,14 @@ class Controller:
                "execution_environment": {"workload": best["workload"],
                                          "hardware_profile": _profile_digest(self.root)},
                "results": {"trials": m["trials"]}, "correctness": {"baseline": q},
+               "decode_correctness": m["decode"], "kernel_check": _trim_kernels(m["kernels"]),
                "stability": {"errors": errs}}
         rec["execution_environment"]["power_state"] = m["power_state"]
         rec["stability"]["power_capped"] = m["power_capped"]
-        ok = not errs and q.get("returncode") == 0 and not m["power_capped"]
+        d = m["decode"].get("baseline")
+        k = m["kernels"].get("baseline")
+        ok = (not errs and q.get("returncode") == 0 and not m["power_capped"]
+              and (d is None or "ppl" in d) and (k is None or k.get("complete")))
         rec["decision"] = "baseline_validated" if ok else "baseline_failed"
         if ok:
             best.pop("note", None)  # e.g. "not yet measured": no longer true once validated
@@ -378,6 +397,17 @@ class Controller:
                 self._commit(["winners/best_config.json"], f"winners: validate baseline {exp_id}")
         rec["finished_utc"] = now()
         return self._finish(rec)
+
+
+def _trim_kernels(k: dict) -> dict:
+    """Records keep at most 50 failing case names per arm; counts stay exact."""
+    out = {}
+    for arm, v in (k or {}).items():
+        if v is None:
+            out[arm] = None
+            continue
+        out[arm] = dict(v, failed_total=len(v["failed"]), failed=v["failed"][:50])
+    return out
 
 
 class _Stop(Exception):

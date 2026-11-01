@@ -251,3 +251,39 @@ def test_session_stop_file(lab):
     (lab.root / "experiments" / "STOP").write_text("")
     agent = ResearchAgent(lab, provider=ScriptedProvider([]), root=lab.root)
     assert run_session(agent, log=lambda *a: None)["stopped_because"] == "stop_file"
+
+
+# ---------------------------------------------------------------- power state
+
+def test_power_capped_run_is_invalid(lab):
+    """Firmware power throttling (e.g. worn Dell battery) must not produce a result."""
+    lab.use_telemetry = True
+    lab.limits.power_limit_min_w = 65
+    lab.telemetry_source = lambda: Sample(t=time.time(), gpu_ok=True, temp_c=50, power_w=50,
+                                          power_limit_w=55.0, vram_used_mib=1000,
+                                          vram_total_mib=6144, ac_online=True, battery_pct=40)
+    rec = lab.run(ExperimentSpec(hypothesis="FA", objective="", description="",
+                                 changes={"runtime": {"flash_attn": 1}}))
+    assert rec["decision"] == "invalid_power_state", rec.get("error")
+    assert lab.best()["id"] == "initial"
+
+
+def test_power_preflight_refuses_battery(lab, monkeypatch):
+    import benchmarks.telemetry as tel
+    monkeypatch.setattr(tel, "read_power_supply",
+                        lambda: {"ac_online": False, "battery_pct": 80, "battery_status": "Discharging"})
+    lab.limits.require_ac = True
+    rec = lab.run(ExperimentSpec(hypothesis="FA", objective="", description="",
+                                 changes={"runtime": {"flash_attn": 1}}))
+    assert rec["decision"] == "failed" and "battery power" in rec["error"]
+
+
+def test_audit_accepts_g3_3779():
+    from lab import hardware_audit as ha
+    p = {"machine": {"dmi": {"value": {"product_name": "G3 3779"}}},
+         "gpu": {"name": {"value": "NVIDIA GeForce GTX 1060 with Max-Q Design"},
+                 "cuda_device_attributes": {"value": None}, "architecture": {"value": "Pascal"},
+                 "compute_capability": {"value": "6.1"}, "vram_total_mib": {"value": 6144}},
+         "memory": {"total_bytes": {"value": 8_100_000_000}},
+         "os": {"distribution": {"value": "Ubuntu 24.04.3 LTS"}}}
+    assert ha.check_claims(p)["machine"]["result"] == "confirmed"

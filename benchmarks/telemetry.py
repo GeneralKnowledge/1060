@@ -15,7 +15,7 @@ import time
 from dataclasses import asdict, dataclass, field
 
 GPU_FIELDS = ("temperature.gpu,utilization.gpu,memory.used,memory.total,clocks.sm,"
-              "clocks.mem,power.draw,pstate,clocks_event_reasons.active")
+              "clocks.mem,power.draw,pstate,clocks_event_reasons.active,power.limit")
 
 
 @dataclass
@@ -33,6 +33,9 @@ class Sample:
     event_reasons: str | None = None
     host_mem_available_mb: float | None = None
     load1: float | None = None
+    power_limit_w: float | None = None
+    ac_online: bool | None = None
+    battery_pct: float | None = None
     error: str | None = None
 
 
@@ -42,6 +45,28 @@ def _f(s: str):
         return float(s)
     except ValueError:
         return None
+
+
+def read_power_supply() -> dict:
+    """AC and battery state from /sys/class/power_supply (laptops only)."""
+    out = {"ac_online": None, "battery_pct": None, "battery_status": None}
+    base = "/sys/class/power_supply"
+    try:
+        names = os.listdir(base)
+    except OSError:
+        return out
+    for n in names:
+        try:
+            kind = open(f"{base}/{n}/type").read().strip()
+            if kind == "Mains":
+                online = open(f"{base}/{n}/online").read().strip() == "1"
+                out["ac_online"] = bool(out["ac_online"]) or online
+            elif kind == "Battery":
+                out["battery_pct"] = float(open(f"{base}/{n}/capacity").read().strip())
+                out["battery_status"] = open(f"{base}/{n}/status").read().strip()
+        except (OSError, ValueError):
+            continue
+    return out
 
 
 def read_host(sample: Sample) -> None:
@@ -54,6 +79,8 @@ def read_host(sample: Sample) -> None:
         sample.load1 = os.getloadavg()[0]
     except OSError:
         pass
+    ps = read_power_supply()
+    sample.ac_online, sample.battery_pct = ps["ac_online"], ps["battery_pct"]
 
 
 class NvidiaSmiSource:
@@ -85,6 +112,7 @@ class NvidiaSmiSource:
         (s.temp_c, s.util_pct, s.vram_used_mib, s.vram_total_mib, s.sm_mhz,
          s.mem_mhz, s.power_w) = (_f(c) for c in cols[:7])
         s.pstate, s.event_reasons = cols[7], cols[8]
+        s.power_limit_w = _f(cols[9]) if len(cols) > 9 else None
         s.gpu_ok = True
         return s
 
@@ -140,7 +168,7 @@ def summarize(samples: list[Sample]) -> dict:
         if v:
             out[name] = {"min": min(v), "max": max(v), "mean": round(sum(v) / len(v), 2)}
 
-    for n in ("temp_c", "util_pct", "vram_used_mib", "sm_mhz", "mem_mhz", "power_w"):
+    for n in ("temp_c", "util_pct", "vram_used_mib", "sm_mhz", "mem_mhz", "power_w", "power_limit_w"):
         stats(n)
     hm = [s.host_mem_available_mb for s in samples if s.host_mem_available_mb is not None]
     if hm:
@@ -150,6 +178,12 @@ def summarize(samples: list[Sample]) -> dict:
         if s.event_reasons and s.event_reasons not in ("0x0000000000000000", "Not Active"):
             reasons[s.event_reasons] = reasons.get(s.event_reasons, 0) + 1
     out["clock_event_reasons_seen"] = reasons
+    ac = [s.ac_online for s in samples if s.ac_online is not None]
+    if ac:
+        out["ac_online_all"] = all(ac)
+    bat = [s.battery_pct for s in samples if s.battery_pct is not None]
+    if bat:
+        out["battery_pct"] = {"min": min(bat), "max": max(bat)}
     if len(ok) >= 2 and all(s.power_w is not None for s in ok):
         # Trapezoidal energy estimate over the window.
         out["energy_j"] = round(sum((b.t - a.t) * (a.power_w + b.power_w) / 2

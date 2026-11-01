@@ -10,6 +10,11 @@ experiment_time_budget_s = 300     # cheap software experiments
 build_time_budget_s = 3600         # compilation
 telemetry_stale_s = 15             # nvidia-smi silent this long = driver unhealthy
 max_consecutive_failures = 3       # session stops after this many crashes/aborts
+# Power state (laptop). A worn battery makes Dell firmware cap the GPU (seen: 55 W
+# instead of 70 W, memory 3000 instead of 3800 MHz) or cut power under load.
+require_ac = true                  # refuse to start a measurement on battery
+battery_min_pct = 10               # refuse to start below this charge (0 disables)
+power_limit_min_w = 65             # a run whose GPU power limit drops below this is rejected
 
 [policy]
 # Executables an experiment may launch (resolved basename). Everything else is refused.

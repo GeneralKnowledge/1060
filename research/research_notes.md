@@ -104,3 +104,62 @@ At benchmark context lengths (≤2048), decode on this card is bound by weight s
    - Mixed q8_0/f16 is not a default-compiled FA vec type pair (hypothesis: this needs `GGML_CUDA_FA_ALL_QUANTS=ON`, a second variable).
 
    For humans: this benchmark cannot show the capacity value of KV quantisation. Answering that needs a long-context workload, which is a benchmark change outside this agent's remit.
+
+### 20261101-181719-662f: Raising ubatch_size from 512 to 1024 (batch_size stays 2048, FA=1, f16 KV) changes prefill throughput only where a promp
+_Decision: **discard** (record experiments/records/20261101-181719-662f.json). Agent interpretation below; only the record's numbers are measurements._
+
+### Result
+
+**Decision: discard** (balanced score 0.988 against a 0.01 threshold). The pp2048 gain was real but small. The VRAM cost was larger and is weighted more heavily under the balanced rule.
+
+| Metric | Baseline (ub=512) | Candidate (ub=1024) | Ratio | Noise | Significant |
+|---|---|---|---|---|---|
+| pp512 t/s | 770.08 | 769.38 | 0.9991 | 0.0023 | no |
+| pp2048 t/s | 678.36 | 687.92 | **1.0141** | 0.0032 | **yes** |
+| tg128 t/s | 43.671 | 43.638 | 0.9993 | 0.0011 | no |
+| TTFT s | 0.6877 | 0.6886 | 0.9987 | 0.0019 | no (n=2) |
+| VRAM peak MiB | 2509 | 2797 | 0.897 (+288 MiB) | 0.0 | **yes** |
+| Host RSS MB | 2214.05 | 2214.05 | 1.0 | 0.0 | no |
+| tokens/J | 0.6667 | 0.6632 | 0.9947 | 0.0138 | no (n=2) |
+
+Quality was identical in both arms: KLD 0.020753, PPL 11.879274. The quality run uses `-c 512`, though, so it never ran a 1024-token ubatch. This is a check that nothing broke, not evidence that the ub=1024 path is numerically equivalent.
+
+There were no stability errors and no safety events. Both arms showed the clock-event reason `0x4` (software power cap) at similar counts (19/17 for baseline, 15/20 for candidate). Mean SM clock was about 1.7% lower in the candidate (1504.6 and 1511.3 MHz, against 1533.4 and 1533.5 MHz). Candidate round 1 also had one dip (SM minimum 1265 MHz, utilisation minimum 0%). pp2048 improved despite the lower clock.
+
+### Hypothesis status: supported on every predicted point
+
+- **(a) pp512 unchanged:** supported, with a ratio of 0.9991 inside the noise.
+- **(b) pp2048 small gain under 3%:** supported, at +1.41% and significant.
+- **(c) tg128 unchanged:** supported.
+- **(d) TTFT unchanged:** supported, with a caveat. The record does not state the TTFT prompt length. 0.688 s × ~770 t/s ≈ 530 tokens, which is consistent with a prompt of about 512 tokens. That is an inference, not a measurement.
+- **(e) VRAM rises by 30–300 MiB:** supported, at +288 MiB. This is close to the top of the range, which points at the large-term explanation (below).
+- **(f) Quality unchanged:** supported, but trivially so, for the reason given above.
+
+### What it says about the bottleneck
+
+**Prefill.** Per-token prefill cost was 1.299 ms at pp512, 1.474 ms at pp2048 with ub=512, and 1.454 ms at pp2048 with ub=1024.
+
+- Halving the ubatch count, from 4 to 2, recovered about 0.020 ms/token. That is about 11% of the 0.175 ms/token gap between pp512 and pp2048.
+- In wall time the saving is about 42 ms for 2 fewer ubatches. If it comes entirely from fixed per-ubatch cost, that cost is roughly 20 ms per ubatch. *Hypothesis:* the record cannot separate launch/fixed overhead from FA tile efficiency.
+- *Hypothesis:* the remaining ~89% of the pp2048 slowdown depends on context length, most likely attention over a longer KV, rather than on how the batch is split.
+
+Implications for throughput work:
+- Ubatch size is a real but weak prefill lever on this card.
+- ub=2048 would remove only one more ubatch. By the same estimate that is roughly +0.7%, for probably another ~290 MiB. *Hypothesis:* it is not worth running.
+- Future pp2048 work should target the attention path, not the ubatch split.
+
+**VRAM.** The +288 MiB delta implies that the ubatch-dependent part of the CUDA compute buffer is about 288 MiB at ub=512, assuming it scales linearly. That accounts for roughly 11% of the 2509 MiB peak.
+
+*Hypothesis:* most of it is the worst-case output reserve. 512 extra rows × 128256 vocab × 4 B = 250.5 MiB, which leaves about 37 MiB for FFN and attention intermediates.
+
+Host RSS did not change. That is consistent with the host-side logits buffer being sized by `batch_size` (unchanged at 2048) rather than by `ubatch_size`. This is also a hypothesis.
+
+### Follow-ups
+
+1. **ub=256 for the `best_model_capacity` profile.** Change one variable, `runtime.ubatch_size 512 → 256`. The interpretation plan said the VRAM delta would decide whether this is worth testing, and 288 MiB means it is.
+   - Predicted VRAM: about −144 MiB if scaling is linear. If the delta comes in well below that, the buffer has a fixed component.
+   - Predicted pp2048: about −1.5 to −3% (8 ubatches instead of 4).
+   - Predicted pp512: now spans 2 ubatches, so expect a small drop.
+   - Predicted tg128: unchanged.
+   - Taken with this experiment, the result gives two points on the ubatch→VRAM line.
+2. **Attribute the compute buffer before any code change.** If the controller keeps the llama.cpp load logs for these two runs, compare the reported CUDA compute-buffer sizes for ub=512 and ub=1024. This costs no new benchmark. It would confirm or refute the logits-reserve hypothesis before anyone writes a patch to shrink the worst-case output reserve, and such a patch would also need to keep `llama-perplexity` working, since it needs logits for every token.

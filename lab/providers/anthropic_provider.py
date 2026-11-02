@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import os
 
-from lab.providers import Provider, ProviderError
+from lab.providers import Provider, ProviderError, UsageLimitError
 
 
 class AnthropicProvider(Provider):
@@ -35,7 +35,12 @@ class AnthropicProvider(Provider):
             else:
                 resp = self.client.messages.create(**kwargs)
         except self.anthropic.RateLimitError as e:
-            raise ProviderError(f"rate limited: {e}") from e
+            retry = None
+            try:
+                retry = float(e.response.headers.get("retry-after"))
+            except (AttributeError, TypeError, ValueError):
+                pass
+            raise UsageLimitError(f"rate limited: {e}", retry) from e
         except self.anthropic.APIStatusError as e:
             raise ProviderError(f"API error {e.status_code}: {e.message}") from e
         except self.anthropic.APIConnectionError as e:

@@ -75,6 +75,11 @@ python3 -m lab agent-step
 tmux new -d -s research 'python3 -m lab session --max-hours 8 | tee -a experiments/session.log'
 touch experiments/STOP              # ask a running session to stop after the current experiment
 ```
+If the provider reports a usage or rate limit (for example the `claude -p` 5-hour limit), the
+session logs it and waits for the stated reset time plus 2 minutes, or 30 minutes if no time is
+given. It does not count this as a failure. It stops with `usage_limit` only if the reset falls after
+`--max-hours`. A STOP file still ends a wait within a minute. Provider errors now include the CLI's
+stdout, because `claude -p` prints its errors there.
 
 Known knobs, without the research agent (each step is a normal locked A/B against the current best):
 ```bash

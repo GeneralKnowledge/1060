@@ -38,6 +38,14 @@ INITIAL_BEST = {
 }
 
 
+@pytest.fixture(autouse=True)
+def _ac_power(monkeypatch):
+    """Tests must not depend on the real charger: report AC online unless a test overrides it."""
+    import benchmarks.telemetry as tel
+    monkeypatch.setattr(tel, "read_power_supply",
+                        lambda: {"ac_online": True, "battery_pct": 100, "battery_status": "Full"})
+
+
 @pytest.fixture
 def lab(tmp_path):
     root = tmp_path / "lab"

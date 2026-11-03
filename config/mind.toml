@@ -31,3 +31,20 @@ temperature = 0.05
 json_schema = false          # thinking model: let it reason, then read the last JSON object
 idle_unload_s = 600
 min_free_mb = 1500           # do not load it when less RAM than this is free
+
+# Deep tier (A3): Qwen3.5-4B on the GPU with the lab's winning settings. Loaded only when
+# recruited and only if no other process uses the GPU; unloaded after 10 idle minutes.
+# The model file comes from the lab checkout (symlink models/Qwen3.5-4B-Q4_K_M.gguf in a worktree).
+[tiers.deep]
+model = "models/Qwen3.5-4B-Q4_K_M.gguf"
+port = 8113
+gpu = true
+ngl = 99
+threads = 4
+ctx = 8192
+extra_args = ["-fa", "on", "-b", "2048", "-ub", "256", "-lm", "none"]
+max_tokens = 2048
+temperature = 0.3
+json_schema = false
+idle_unload_s = 600
+min_free_mb = 1500

@@ -37,6 +37,16 @@ def mem_available_mb():
     return None
 
 
+def gpu_busy() -> bool:
+    """True if any other process holds a CUDA context (lab or WSP experiment)."""
+    try:
+        out = subprocess.run(["nvidia-smi", "--query-compute-apps=pid", "--format=csv,noheader"],
+                             capture_output=True, text=True, timeout=10).stdout.strip()
+    except (OSError, subprocess.SubprocessError):
+        return True
+    return bool(out)
+
+
 def parse_json(text: str):
     """The last JSON object in a reply (thinking models may write before it)."""
     if not text:
@@ -90,9 +100,12 @@ class Tier:
         free = mem_available_mb()
         if free is not None and free < self.cfg.get("min_free_mb", 1500):
             return False
+        if self.cfg.get("gpu") and gpu_busy():
+            return False   # experiments always win the GPU
         port = self.url.rsplit(":", 1)[1]
         args = [str(self.server_bin), "-m", str(self.model), "--port", port, "-ngl", str(self.cfg.get("ngl", 0)),
-                "-t", str(self.cfg.get("threads", 2)), "-c", str(self.cfg.get("ctx", 4096)), "-np", "1"]
+                "-t", str(self.cfg.get("threads", 2)), "-c", str(self.cfg.get("ctx", 4096)), "-np", "1",
+                *self.cfg.get("extra_args", [])]
         self.proc = subprocess.Popen(["nice", "-n", "10", *args], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         t0 = time.time()
         while time.time() - t0 < timeout:
@@ -119,6 +132,8 @@ class Tier:
         body = {"messages": [{"role": "user", "content": prompt}],
                 "max_tokens": max_tokens or self.cfg.get("max_tokens", 512),
                 "temperature": self.cfg.get("temperature", 0.3)}
+        if self.cfg.get("chat_template_kwargs"):
+            body["chat_template_kwargs"] = self.cfg["chat_template_kwargs"]
         if schema and self.cfg.get("json_schema", True):
             body["response_format"] = {"type": "json_schema", "json_schema": {"name": "answer", "schema": schema}}
         req = urllib.request.Request(self.url + "/v1/chat/completions", json.dumps(body).encode(),

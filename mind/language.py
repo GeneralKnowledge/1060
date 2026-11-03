@@ -62,7 +62,8 @@ def _beliefs_text(m, limit=6):
 
 
 def dream(m, t):
-    if not m.tiers.has("reflective") or not _allowed(m, "dream"):
+    tier = m.cfg.get("dream_tier", "reflective")
+    if not m.tiers.has(tier) or not _allowed(m, "dream"):
         return
     items = []
     for _ in range(12):
@@ -78,7 +79,7 @@ def dream(m, t):
         "Relations already known:", *(_beliefs_text(m) or ["- none"]), "",
         "Propose up to 3 new relations between the numbered items. " + PAIR_FORMAT + " Answer with JSON only, "
         'for example: {"proposals": [{"a": 3, "b": 7, "lag": 2}]}'])
-    m.tiers.submit("reflective", "dream", prompt, DREAM_SCHEMA, dict(items=items))
+    m.tiers.submit(tier, "dream", prompt, DREAM_SCHEMA, dict(items=items))
     m.store.log(t, "tier_ask", m.state, dict(kind="dream", items=items))
 
 

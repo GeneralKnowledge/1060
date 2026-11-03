@@ -4,8 +4,8 @@
 #   scripts/mind/a2_compare.sh [TICKS] [SEEDS...]
 set -uo pipefail
 cd "$(dirname "$0")/../.."
-TICKS=${1:-20000}; shift || true
-SEEDS=${@:-11 22 33}
+TICKS=${1:-12000}; shift || true
+SEEDS=${@:-11}
 OUT=$HOME/mind-experiments/a2-$(date -u +%Y%m%dT%H%M)
 mkdir -p "$OUT"
 DOC=docs/mind-a2.md

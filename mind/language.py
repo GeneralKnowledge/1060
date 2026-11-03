@@ -66,7 +66,7 @@ def dream(m, t):
         return
     items = []
     for _ in range(12):
-        r = m.store.random_percept(m.rng)
+        r = m.store.random_percept(m.tier_rng)
         if r and r[0] not in items:
             items.append(r[0])
     if len(items) < 4:
@@ -160,16 +160,24 @@ def _test_proposals(m, t, props, origin, items):
     return out
 
 
+EXPECTED = {"dream": "proposals", "reflect": "note", "interpret": "keywords"}
+
+
+def _usable(r):
+    j = r.get("json")
+    return isinstance(j, dict) and EXPECTED.get(r["kind"], "") in j
+
+
 def collect(m, t):
     wait = m.cfg["tier_wait_s"] if (m.fast_mode and m.tiers.pending) else 0.0
     for r in m.tiers.drain(wait):
         m.store.log(t, "tier_call", m.state, dict(tier=r["tier"], kind=r["kind"], seconds=r.get("seconds"),
                                                   tokens=r.get("tokens"), reasoning_chars=r.get("reasoning_chars"),
-                                                  parsed=r.get("json") is not None, error=r.get("error"),
+                                                  parsed=_usable(r), error=r.get("error"),
                                                   reply=(r.get("content") or "")[-1500:]),
                     cost=r.get("seconds") or 0.0)
         j = r.get("json")
-        if r.get("error") or not isinstance(j, dict):
+        if r.get("error") or not _usable(r):
             continue
         if r["kind"] == "dream":
             _test_proposals(m, t, j.get("proposals"), "dream_llm", r["context"].get("items", []))

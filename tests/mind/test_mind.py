@@ -148,6 +148,7 @@ def _fake_pool():
 def test_parse_json_takes_last_object_after_thinking():
     assert parse_json('<think>{"x": 1}</think> answer: {"a": {"b": 2}}') == {"a": {"b": 2}}
     assert parse_json("no json") is None
+    assert parse_json('{"proposals": [{"a": 3, "b": 5, "lag": 2}}}') is None   # malformed: no inner fragment
 
 
 def test_tiers_dream_reflect_and_read(tmp_path):

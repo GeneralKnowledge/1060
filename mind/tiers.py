@@ -55,9 +55,9 @@ def parse_json(text: str):
             break
         try:
             found = json.loads(text[start:end + 1])
-            i = end + 1
         except ValueError:
-            i = start + 1
+            pass   # a malformed object is skipped whole: never fall back to a fragment inside it
+        i = end + 1
     return found
 
 

@@ -71,6 +71,7 @@ class Mind:
         self.win = ck.get("win", dict(s=0.0, n=0, steps=0))
         self.curiosity = ck.get("curiosity", 0.0)
         self.rng = random.Random(self.identity["seed"] * 7919 + self.boots)
+        self.tier_rng = random.Random(self.identity["seed"] * 104729 + self.boots)   # tier processes only
         self.steps_used = 0
         self.ws_seen = ck.get("ws_seen", {})               # focus -> tick it was noticed
         self.store.set_thought_status("active", "suspended")   # thoughts interrupted by the restart

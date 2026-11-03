@@ -1,0 +1,59 @@
+{
+ "started": "2026-11-03T22:12:18Z",
+ "cpu": 12,
+ "tiers": {
+  "LFM2.5-350M-Q8_0.gguf": {
+   "size_mb": 379,
+   "t2": {
+    "pp_tok_s": 1649.5,
+    "tg_tok_s": 55.0,
+    "prompt_tokens": 480,
+    "rss_mb": 722,
+    "json_schema_ok": true,
+    "load_s": 1.5
+   },
+   "t4": {
+    "pp_tok_s": 2206.8,
+    "tg_tok_s": 65.6,
+    "prompt_tokens": 480,
+    "rss_mb": 722,
+    "json_schema_ok": true,
+    "load_s": 0.5
+   }
+  },
+  "LFM2.5-1.2B-Thinking-Q4_K_M.gguf": {
+   "size_mb": 731,
+   "t2": {
+    "pp_tok_s": 833.0,
+    "tg_tok_s": 24.5,
+    "prompt_tokens": 480,
+    "rss_mb": 1073,
+    "json_schema_ok": true,
+    "load_s": 3.5
+   },
+   "t4": {
+    "pp_tok_s": 1075.1,
+    "tg_tok_s": 31.8,
+    "prompt_tokens": 480,
+    "rss_mb": 1073,
+    "json_schema_ok": true,
+    "load_s": 0.5,
+    "thinking": {
+     "completion_tokens": 1480,
+     "reasoning_chars": 5079,
+     "answer_chars": 1791
+    }
+   }
+  }
+ },
+ "qwen": {
+  "pp_tok_s": 510.6,
+  "tg_tok_s": 29.0,
+  "prompt_tokens": 578,
+  "rss_mb": 1172,
+  "json_schema_ok": true,
+  "load_s": 2.1,
+  "vram_mib": 3035,
+  "unload_s": 0.28
+ }
+}

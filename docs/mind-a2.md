@@ -67,3 +67,25 @@ Tiers arm only at a2c7a41, GPU tier, 737.5 s. `config/mind.toml` was temporarily
 
 Current self-tuned settings: think_threshold=0.5, wake_threshold=0.63, sleep_fatigue=0.62, ws_decay=0.85, interest_rate=0.020000000000000004, dream_walk=5, lift_min=3.5, forget_surprise=1.0
 
+
+## Qwen3.5-4B as dreamer, no thinking, seed 11, 6000 ticks
+
+Tiers arm only at 503bdaa, GPU tier, about 2 min. `config/mind.toml` was temporarily set to `max_tier_calls_per_window = 3`, `llm_dream_every = 2`, `reflect_every = 1000000`, `dream_tier = "deep"` for this run only (not committed). Of 90 proposals, 75 were valid and none passed the memory test. One seed. The process raised an AttributeError in `Tier.stop` during shutdown, after all 6000 ticks and the shutdown record were written.
+
+| measure | value |
+|---|---|
+| delayed causes in the world / believed correctly | 4 / 0 |
+| cycles in the world / found | 3 / 3 |
+| cause beliefs by status (n, matching a true rule) | belief: 4 (0), hypothesis: 2 (1), rejected: 4 (0) |
+| dream pairs passing the memory test vs random-pair control | 0.029 (171) vs 0.045 (67) |
+| dream hypotheses that are true rules | 1 |
+| language-tier dream proposals passing (n) / reflection questions passing (n) | 0.0 (90) / None (0) |
+| language-tier hypotheses that are true rules | 0 |
+| tier calls | deep/dream: 30 (0 errors, 0 unparsed, 103.9 s) |
+| mean surprise, first window / last window (bits) | 2.335 / 0.7873 |
+| self-tuning changes kept / tried | 5 / 19 |
+| thoughts started / attention entries | 44 / 214 |
+| state entries | awake 2, background 104, deep_sleep 21, dreaming 10, resting 95 |
+
+Current self-tuned settings: think_threshold=0.5, wake_threshold=0.63, sleep_fatigue=0.62, ws_decay=0.85, interest_rate=0.020000000000000004, dream_walk=5, lift_min=3.5, forget_surprise=1.0
+

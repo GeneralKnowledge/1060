@@ -175,7 +175,8 @@ def collect(m, t):
         m.store.log(t, "tier_call", m.state, dict(tier=r["tier"], kind=r["kind"], seconds=r.get("seconds"),
                                                   tokens=r.get("tokens"), reasoning_chars=r.get("reasoning_chars"),
                                                   parsed=_usable(r), error=r.get("error"),
-                                                  reply=(r.get("content") or "")[-1500:]),
+                                                  reply=(r.get("content") or "")[-1500:],
+                                                  reasoning_tail=r.get("reasoning", ""), finish=r.get("finish")),
                     cost=r.get("seconds") or 0.0)
         j = r.get("json")
         if r.get("error") or not _usable(r):

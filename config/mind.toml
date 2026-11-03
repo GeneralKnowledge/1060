@@ -43,7 +43,8 @@ ngl = 99
 threads = 4
 ctx = 8192
 extra_args = ["-fa", "on", "-b", "2048", "-ub", "256", "-lm", "none"]
-max_tokens = 2048
+max_tokens = 512
+chat_template_kwargs = { enable_thinking = false }   # with thinking, 10/10 dream calls ran out at 2048 tokens
 temperature = 0.3
 json_schema = false
 idle_unload_s = 600

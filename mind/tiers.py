@@ -147,7 +147,9 @@ class Tier:
         content = msg.get("content") or ""
         return dict(content=content, json=parse_json(content), seconds=round(time.time() - t0, 2),
                     tokens=data.get("usage", {}).get("completion_tokens"),
-                    reasoning_chars=len(msg.get("reasoning_content") or ""))
+                    reasoning_chars=len(msg.get("reasoning_content") or ""),
+                    reasoning=(msg.get("reasoning_content") or "")[-1500:],
+                    finish=data["choices"][0].get("finish_reason"))
 
 
 class TierPool:

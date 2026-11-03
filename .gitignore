@@ -9,3 +9,5 @@ experiments/worktrees/
 experiments/logs/
 experiments/.hashcache.json
 experiments/STOP
+mind/state/
+mind/STOP

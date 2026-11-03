@@ -1,0 +1,11 @@
+# The continuous mind (python3 -m mind). Hard limits only: everything the mind
+# may tune for itself lives in mind/params.py and is adjusted by the mind.
+[mind]
+tick_s = 5.0                 # real seconds per tick when living in real time
+tracker_capacity = 300       # regularities it can follow at once
+max_steps_per_window = 400   # compute cap per self-tuning window
+param_window = 300           # ticks between self-tuning decisions
+checkpoint_every = 12        # ticks between checkpoints (one minute at 5 s)
+forget_age = 3000            # ticks before unsurprising percepts may fade
+dream_control = 0.5          # share of dreams paired with a random control (evaluation only)
+min_forward = 8              # forward observations before a hypothesis can become a belief

@@ -147,7 +147,7 @@ def main():
         args = ["-ngl", str(best["n_gpu_layers"]), "-fa", "on" if best["flash_attn"] else "off",
                 "-b", str(best["batch_size"]), "-ub", str(best["ubatch_size"]), "-c", "8192", "-np", "1"]
         if not best.get("mmap", 1):
-            args.append("--no-mmap")
+            args += ["-lm", "none"]  # b12021 replaced --no-mmap with --load-mode
         before = vram_used()
         log("measuring Qwen3.5-4B on the GPU")
         p, load_s = server(QWEN, args)

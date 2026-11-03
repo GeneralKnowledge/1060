@@ -14,8 +14,19 @@ progress; thoughts start only on what wins its workspace.
 
 ## Status
 
-A1 (core without language models) is done. A0 (`scripts/mind/a0_feasibility.py`) measures the
-LFM2.5 tiers and Qwen on the laptop. A2 to A6 follow the plan.
+- A1 (core without language models) is done. The permanent mind was born on the laptop at
+  2026-11-03T22:04:48Z (id `adcf2f6f`); state in `~/mind-state`, code in the `~/1060-mind` worktree,
+  tmux session `mind`.
+- A0 (`scripts/mind/a0_feasibility.py`) measures the LFM2.5 tiers and Qwen on the laptop.
+- A2 (language tiers, `mind/tiers.py`, `mind/language.py`): llama-server tiers recruited by processes,
+  run in a background worker so perception never stops, with a hard cap on calls per window.
+  - dream: the reflective tier proposes relations between its own memories; each proposal goes through
+    the same memory test as graph-walk dreams and the random control
+  - reflect: in rest it writes a short note on recent changes; notes are kept and shown back to it
+  - interpret: the fast tier turns incoming text into keyword percepts
+  A missing model file means the tier is absent and the mind uses its algorithms.
+  `scripts/mind/a2_compare.sh` lives the same seeded worlds with and without tiers.
+- A3 to A6 follow the plan.
 
 ## Commands
 

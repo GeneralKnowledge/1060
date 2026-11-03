@@ -15,11 +15,11 @@ md(){ echo "$*" >> $DOC; }
 
 log "start"
 # ---- step 3b: 4B Q8_0
-/usr/bin/time -v $Q/llama-quantize $M/qwen3.5-4b-f16.gguf $M/qwen3.5-4b-q8_0.gguf Q8_0 > $L/quant-4b.log 2>&1; log "quant4b exit=$?"
-q4=$(grep -E "quant size" $L/quant-4b.log | sed 's/.*= *//'); qrss=$(grep "Maximum resident" $L/quant-4b.log | awk '{printf "%.2f GB", $NF/1048576}')
+[ -f $M/qwen3.5-4b-q8_0.gguf ] || /usr/bin/time -v $Q/llama-quantize $M/qwen3.5-4b-f16.gguf $M/qwen3.5-4b-q8_0.gguf Q8_0 > $L/quant-4b.log 2>&1; log "quant4b exit=$?"
+q4=done-earlier
 c4=$(grep "Maximum resident" $L/conv-4b.log | awk '{printf "%.2f GB", $NF/1048576}'); ct4=$(grep "Elapsed" $L/conv-4b.log | awk '{print $NF}')
 f4=$(ls -l $M/qwen3.5-4b-f16.gguf | awk '{printf "%.2f GB", $5/1e9}')
-sed -i "s|@4B_ROW@|| Qwen3.5-4B | 9.32 GB | $f4 (convert peak RSS $c4, $ct4) | $q4 (quantize peak RSS $qrss) ||" $DOC
+
 
 # ---- step 5: llama-server throughput
 md ""; md "## 5. llama-server throughput (Q8_0, 256 generated tokens per request, ignore_eos, greedy)"; md ""

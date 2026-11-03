@@ -83,3 +83,40 @@ MASE scale is the one-step naive error, which is why the values are large.
 
 Overall, 28M matches 209M closely on this set, at 2.6× lower latency for B=1, 4.8× lower for B=16, and about 1/7 of
 the VRAM.
+
+## First Timestral-28M weight-edit experiment (rank-1, 2026-11-03)
+Script `scripts/wsp/timestral_edit.py`. Optuna DB, trial specs and splits are in `.wsp/results/edit-v1/` on the laptop.
+
+- **Data:** up to 300 series per dataset from the same 5 chronos_datasets (seed 0), split 40/40/20 into
+  optimisation/validation/holdout. Series ids are saved in `splits.json`. Validation n: 120 for m4_hourly,
+  electricity and traffic, 40 for nn5, 3 for exchange_rate.
+- **Edit:** W ← W + α u uᵀ W on one matrix, either the MLP output `mlp.w3` or the block's last attention `wO`, in
+  one of 12 layers, with α ∈ [-1, 1].
+  - Structured arm: u is one of the top-8 left singular vectors of W, or the layer's residual mean-difference
+    direction (m4_hourly minus other datasets, measured on the optimisation split).
+  - Random arm: u is one of 9 seeded random unit vectors per matrix, the same search-space size.
+- **Search and checks:** 200 TPE trials per arm. Objective = relative m4_hourly H64 WQL gain − 1.0 × mean relative
+  WQL regression over the other 8 dataset/horizon cells, all against the unedited 28M on the optimisation split.
+  Validation uses paired per-series bootstrap (2000 resamples, 95% CI). The checkpoint's sha256 was verified before
+  and after and is unchanged. Each trial is stored only as (layer, matrix, dir, α).
+
+Each arm took about 12 min, at about 3.7 s per trial on the 1060.
+
+| arm | best edit | opt: target WQL gain / objective | val m4_hourly H64: ΔWQL [95% CI] | ΔMASE [95% CI] |
+|---|---|---|---|---|
+| structured | layer 6 MLP, mean-diff dir, α = −0.97 | +3.0% / +0.025 | **+1.8% worse** [−0.2%, +3.9%] | +7.2% worse [+5.2%, +9.7%] |
+| random | layer 10 attn, random dir 6, α = −1.00 | +0.35% / +0.003 | −0.7% (better) [−1.3%, +0.4%] | +0.2% [−0.4%, +0.7%] |
+
+On validation, the structured edit also regresses m4_hourly H256 (WQL +3.2%), electricity H256 (+0.6%),
+exchange_rate H64 and nn5 H64 (+0.3%). It improves monash_traffic H256 (−0.6%). The random edit's changes are all
+within ±0.3% everywhere.
+
+**Result:** neither arm's validation CI excludes zero improvement on the target, so the holdout was not run.
+- The structured arm overfit: a 3% gain on the optimisation split turned into a loss on validation.
+- Rank-1 output-space edits found by black-box search don't close the 28M → 209M m4_hourly gap, which is about
+  10% WQL.
+
+Next options:
+- Optimise on a larger split, or regularise with α-shrinkage.
+- Use gradient-based low-rank deltas instead of TPE over discrete directions.
+- Treat this as a negative baseline for W3.

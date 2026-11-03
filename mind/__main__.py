@@ -34,6 +34,8 @@ def main(argv=None):
     ap.add_argument("--fast", type=int, metavar="TICKS", help="run this many ticks without waiting")
     ap.add_argument("--progress", type=int, default=0, help="print a line every N ticks")
     ap.add_argument("--repo", type=Path, default=ROOT, help="lab checkout whose results it may watch")
+    ap.add_argument("--no-tiers", action="store_true", help="algorithms only, no language tiers")
+    ap.add_argument("--seed", type=int, help="world seed for a NEW mind (experiments only; ignored after birth)")
     a = ap.parse_args(argv)
     cfg = load_cfg()
     stop = a.state / "STOP"
@@ -78,7 +80,12 @@ def main(argv=None):
     first = not (a.state / "mind.sqlite").exists()
     real = a.fast is None
     senses = []
-    mind = Mind(a.state, senses, cfg.get("mind", {}))
+    pool = None
+    if cfg.get("tiers") and not a.no_tiers:
+        from mind.tiers import TierPool
+        pool = TierPool(cfg["tiers"], ROOT, a.repo)
+        print("tiers:", {n: t.available() for n, t in pool.tiers.items()})
+    mind = Mind(a.state, senses, {**cfg.get("mind", {}), **({"birth_seed": a.seed} if a.seed else {})}, tiers=pool)
     senses += S.build(a.state, mind.identity["seed"], real=real, repo=a.repo)
     if first:
         print(f"born: {mind.identity['id']}")
@@ -97,6 +104,8 @@ def main(argv=None):
     t0 = time.time()
     mind.run(ticks=a.fast, tick_s=float(cfg.get("mind", {}).get("tick_s", 5.0)), fast=not real,
              stop_file=stop, on_tick=progress)
+    if pool:
+        pool.close()
     print(f"stopped at tick {mind.tick} after {time.time() - t0:.1f}s")
     return 0
 

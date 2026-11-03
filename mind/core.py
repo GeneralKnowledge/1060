@@ -20,6 +20,7 @@ import time
 import uuid
 from pathlib import Path
 
+from mind import language
 from mind.params import Params
 from mind.predict import MAX_LAG, Predictor, fv
 from mind.store import Store
@@ -35,16 +36,23 @@ DEFAULTS = dict(
     checkpoint_every=50,
     forget_age=3000,             # ticks before unsurprising percepts may fade
     dream_control=0.5,           # share of dreams paired with a random-pair control (for evaluation only)
+    llm_dream_every=15,          # every Nth dream tick asks the reflective tier for proposals (if present)
+    reflect_every=40,            # every Nth resting tick asks the reflective tier to reflect (if present)
+    tier_wait_s=600,
+    max_tier_calls_per_window=8,  # hard cap on language-tier calls per param window (not self-tunable)             # fast mode only: wait this long for a tier answer (keeps runs reproducible)
     min_forward=8,               # forward observations before a hypothesis can become a belief
 )
 
 
 class Mind:
-    def __init__(self, state_dir: Path, senses: list, cfg: dict | None = None):
+    def __init__(self, state_dir: Path, senses: list, cfg: dict | None = None, tiers=None):
         self.cfg = {**DEFAULTS, **(cfg or {})}
         self.state_dir = state_dir
         self.store = Store(state_dir / "mind.sqlite")
         self.senses = senses
+        self.tiers = tiers                                # mind.tiers.TierPool or None (algorithms only)
+        self.fast_mode = False
+        self.extra_percepts: list[tuple[str, str]] = []   # percepts produced by tiers (e.g. read text)
         self._identity()
         self.pred = Predictor(self.cfg["tracker_capacity"])
         if (p := self.store.get("predictor")):
@@ -74,7 +82,7 @@ class Mind:
         now = time.time()
         if not ident:
             ident = dict(id=str(uuid.uuid4()), born=dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"),
-                         seed=random.SystemRandom().randrange(1, 2 ** 31))
+                         seed=self.cfg.get("birth_seed") or random.SystemRandom().randrange(1, 2 ** 31))
             self.store.put("identity", ident)
             self.store.log(0, "birth", "background", ident)
         self.identity = ident
@@ -88,7 +96,10 @@ class Mind:
     def step(self):
         self.tick += 1
         t = self.tick
-        percepts = [(s.name, c) for s in self.senses for c in s.poll(t)]
+        percepts = [(s.name, c) for s in self.senses for c in s.poll(t)] + self.extra_percepts
+        self.extra_percepts = []
+        if self.tiers:
+            language.interpret(self, t, [c for src, c in percepts if src == "inbox" and c.startswith("m0.w=")])
         concepts = sorted({c for _, c in percepts})
         scores, missing = self.pred.observe(t, concepts)
         for src, c in percepts:
@@ -102,6 +113,8 @@ class Mind:
         self._drives(scores, entering)
         self._choose_state(t)
         self._run_processes(t)
+        if self.tiers:
+            language.collect(self, t)
         if t % self.cfg["param_window"] == 0:
             self._self_tune(t)
         if t % self.cfg["checkpoint_every"] == 0:
@@ -109,6 +122,7 @@ class Mind:
 
     def run(self, ticks=None, tick_s=5.0, fast=False, stop_file: Path | None = None, on_tick=None):
         n = 0
+        self.fast_mode = fast
         try:
             while ticks is None or n < ticks:
                 t0 = time.time()
@@ -376,6 +390,9 @@ class Mind:
     def _replay(self, t):
         if not self._budget():
             return
+        self.rest_ticks = getattr(self, "rest_ticks", 0) + 1
+        if self.tiers and self.rest_ticks % self.cfg["reflect_every"] == 0:
+            language.reflect(self, t)
         r = self.store.random_percept(self.rng)
         if r:
             c, tick = r
@@ -411,6 +428,9 @@ class Mind:
     def _dream(self, t):
         if not self._budget(2):
             return
+        self.dream_ticks = getattr(self, "dream_ticks", 0) + 1
+        if self.tiers and self.dream_ticks % self.cfg["llm_dream_every"] == 0:
+            language.dream(self, t)
         r = self.store.random_percept(self.rng)
         if not r:
             return

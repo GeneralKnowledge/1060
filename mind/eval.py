@@ -24,6 +24,18 @@ def _cause_truth(rules):
     return truth
 
 
+def _tier_calls(st):
+    out = {}
+    for (d,) in st.db.execute("SELECT data FROM stream WHERE kind='tier_call'"):
+        d = json.loads(d)
+        k = out.setdefault(f"{d['tier']}/{d['kind']}", dict(n=0, errors=0, unparsed=0, seconds=0.0))
+        k["n"] += 1
+        k["errors"] += bool(d.get("error"))
+        k["unparsed"] += (not d.get("parsed")) and not d.get("error")
+        k["seconds"] = round(k["seconds"] + (d.get("seconds") or 0), 1)
+    return out
+
+
 def evaluate(state_dir: Path) -> dict:
     rules = json.loads((state_dir / "world" / "rules.json").read_text())["rules"]
     st = Store(state_dir / "mind.sqlite")
@@ -67,7 +79,11 @@ def evaluate(state_dir: Path) -> dict:
         causes_in_world=len(truth), causes_believed_correctly=len(found),
         cause_beliefs_by_status=by_status,
         cycles_in_world=len(cycles), cycles_found=cyc_found, cycle_beliefs=len(cyc_beliefs),
-        dream=rate("dream"), dream_control=rate("dream_control"), dream_hypotheses_true=dream_true,
+        dream=rate("dream"), dream_control=rate("dream_control"), dream_llm=rate("dream_llm"),
+        questions=rate("question"), dream_hypotheses_true=dream_true,
+        llm_hypotheses_true=sum(1 for r in cause_rows if r["origin"] in ("dream_llm", "reflection") and r["true_rule"]),
+        tier_calls=_tier_calls(st), reflections=[json.loads(d)["note"] for (d,) in st.db.execute(
+            "SELECT data FROM stream WHERE kind='reflection' ORDER BY id DESC LIMIT 5")],
         surprise_by_window=surprise, events=states, state_entries=occupancy,
         params=(st.get("params") or {}).get("values"),
         param_changes_kept=sum(1 for h in (st.get("params") or {}).get("history", []) if h.get("kept")),
@@ -90,6 +106,11 @@ def report_md(r: dict) -> str:
         f"| dream pairs passing the memory test vs random-pair control | "
         f"{r['dream']['rate']} ({r['dream']['n']}) vs {r['dream_control']['rate']} ({r['dream_control']['n']}) |",
         f"| dream hypotheses that are true rules | {r['dream_hypotheses_true']} |",
+        f"| language-tier dream proposals passing (n) / reflection questions passing (n) | "
+        f"{r['dream_llm']['rate']} ({r['dream_llm']['n']}) / {r['questions']['rate']} ({r['questions']['n']}) |",
+        f"| language-tier hypotheses that are true rules | {r['llm_hypotheses_true']} |",
+        f"| tier calls | " + (", ".join(f"{k}: {v['n']} ({v['errors']} errors, {v['unparsed']} unparsed, {v['seconds']} s)"
+                                     for k, v in r['tier_calls'].items()) or "none") + " |",
         f"| mean surprise, first window / last window (bits) | "
         f"{s[0] if s else '-'} / {s[-1] if s else '-'} |",
         f"| self-tuning changes kept / tried | {r['param_changes_kept']} / {r['param_changes_tried']} |",
@@ -97,4 +118,6 @@ def report_md(r: dict) -> str:
         f"| state entries | " + ", ".join(f"{k} {v}" for k, v in sorted(r['state_entries'].items())) + " |",
         "", "Current self-tuned settings: " + ", ".join(f"{k}={v}" for k, v in (r["params"] or {}).items()),
     ]
+    if r.get("reflections"):
+        lines += ["", "Latest reflections (its own notes):", *[f"- {n}" for n in r["reflections"]]]
     return "\n".join(lines) + "\n"

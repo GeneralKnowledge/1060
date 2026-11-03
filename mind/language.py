@@ -16,23 +16,30 @@ from __future__ import annotations
 
 from mind.predict import MAX_LAG, fv
 
-PAIR = {"type": "object", "properties": {"a": {"type": "string"}, "b": {"type": "string"},
+PAIR = {"type": "object", "properties": {"a": {"type": "integer"}, "b": {"type": "integer"},
                                          "lag": {"type": "integer"}}, "required": ["a", "b", "lag"]}
 DREAM_SCHEMA = {"type": "object", "properties": {"proposals": {"type": "array", "items": PAIR, "maxItems": 3}},
                 "required": ["proposals"]}
 REFLECT_SCHEMA = {"type": "object", "properties": {"note": {"type": "string"},
                                                    "questions": {"type": "array", "items": PAIR, "maxItems": 3}},
                   "required": ["note"]}
+PAIR_FORMAT = (f'Refer to items only by their number. Each relation means: item a happens, then item b happens '
+               f'lag ticks later (lag 1 to {MAX_LAG}).')
 READ_SCHEMA = {"type": "object", "properties": {"keywords": {"type": "array", "items": {"type": "string"},
                                                              "maxItems": 5}}, "required": ["keywords"]}
 
 
-def _allowed(m):
-    """Hard cap on tier calls per self-tuning window (config, not self-tunable)."""
-    if m.tiers.pending or m.win.get("tier", 0) >= m.cfg["max_tier_calls_per_window"]:
+def _allowed(m, kind):
+    """Hard cap on tier calls per self-tuning window, per kind (config, not self-tunable)."""
+    key = "tier_" + kind
+    if m.tiers.pending or m.win.get(key, 0) >= m.cfg["max_tier_calls_per_window"]:
         return False
-    m.win["tier"] = m.win.get("tier", 0) + 1
+    m.win[key] = m.win.get(key, 0) + 1
     return True
+
+
+def _numbered(items):
+    return [f"{i}. {c}" for i, c in enumerate(items, 1)]
 
 
 def _notes(m, n=3):
@@ -55,7 +62,7 @@ def _beliefs_text(m, limit=6):
 
 
 def dream(m, t):
-    if not m.tiers.has("reflective") or not _allowed(m):
+    if not m.tiers.has("reflective") or not _allowed(m, "dream"):
         return
     items = []
     for _ in range(12):
@@ -64,16 +71,15 @@ def dream(m, t):
             items.append(r[0])
     if len(items) < 4:
         return
-    lines = [f"- {c} (seen {m.pred.count.get(c, 0)} times; often near: {', '.join(_neighbours(m, c)) or 'nothing yet'})"
-             for c in items]
+    lines = [f"{i}. {c} (seen {m.pred.count.get(c, 0)} times; often near: "
+             f"{', '.join(_neighbours(m, c)) or 'nothing yet'})" for i, c in enumerate(items, 1)]
     prompt = "\n".join([
-        "Items from a memory, written as feature=value:", *lines, "",
+        "Numbered items from a memory (feature=value):", *lines, "",
         "Relations already known:", *(_beliefs_text(m) or ["- none"]), "",
-        *(["Earlier notes:", *[f"- {n}" for n in _notes(m)], ""] if _notes(m) else []),
-        f"Propose up to 3 new relations of the form: item a happens, then item b happens lag ticks later "
-        f"(lag 1 to {MAX_LAG}). Use items exactly as written. Answer with JSON only: "
-        '{"proposals": [{"a": "...", "b": "...", "lag": 1}]}'])
+        "Propose up to 3 new relations between the numbered items. " + PAIR_FORMAT + " Answer with JSON only, "
+        'for example: {"proposals": [{"a": 3, "b": 7, "lag": 2}]}'])
     m.tiers.submit("reflective", "dream", prompt, DREAM_SCHEMA, dict(items=items))
+    m.store.log(t, "tier_ask", m.state, dict(kind="dream", items=items))
 
 
 def reflect(m, t):
@@ -81,25 +87,35 @@ def reflect(m, t):
         return
     recent = m.store.stream(kinds=["belief_belief", "belief_doubted", "belief_rejected", "thought_end",
                                    "hypothesis"], limit=10)
-    if not recent or recent[0]["tick"] <= (m.store.get("last_reflect_tick") or 0) or not _allowed(m):
+    if not recent or recent[0]["tick"] <= (m.store.get("last_reflect_tick") or 0) or not _allowed(m, "reflect"):
         return   # nothing new since the last reflection
     m.store.put("last_reflect_tick", t)
-    lines = []
+    lines, items = [], []
+
+    def ref(c):
+        if c and c not in items:
+            items.append(c)
+        return f"[{items.index(c) + 1}]" if c else "?"
+
     for e in reversed(recent):
         d = e["data"]
         if e["kind"] == "thought_end":
-            lines.append(f"- tick {e['tick']}: thought about {d.get('focus')} ended: {d.get('outcome')}")
+            focus = str(d.get("focus", ""))
+            lines.append(f"- tick {e['tick']}: thought about {ref(focus.removeprefix('missing:'))} ended: "
+                         f"{d.get('outcome')}")
         else:
-            lines.append(f"- tick {e['tick']}: {e['kind'].replace('belief_', '')}: {d.get('a')} then {d.get('b')} "
-                         f"after {d.get('lag')} ticks")
+            lines.append(f"- tick {e['tick']}: {e['kind'].replace('belief_', '')}: {ref(d.get('a'))} then "
+                         f"{ref(d.get('b'))} after {d.get('lag')} ticks")
+    last = _notes(m, 1)
     prompt = "\n".join([
-        "Recent changes in a memory:", *lines, "",
+        "Numbered items:", *_numbered(items), "",
+        "Recent changes in a memory (items in brackets):", *lines, "",
         "Relations currently held:", *(_beliefs_text(m) or ["- none"]), "",
-        *(["Earlier notes:", *[f"- {n}" for n in _notes(m)], ""] if _notes(m) else []),
-        "Write a short note (one or two sentences) about what these changes suggest, and up to 3 questions in the "
-        "form of relations worth testing. Answer with JSON only: "
-        '{"note": "...", "questions": [{"a": "...", "b": "...", "lag": 1}]}'])
-    m.tiers.submit("reflective", "reflect", prompt, REFLECT_SCHEMA)
+        *(["Previous note: " + last[0], ""] if last else []),
+        "Write a short note (one or two sentences) about what these specific changes suggest, and up to 3 "
+        "relations between the numbered items worth testing. " + PAIR_FORMAT + " Answer with JSON only, "
+        'for example: {"note": "...", "questions": [{"a": 1, "b": 2, "lag": 3}]}'])
+    m.tiers.submit("reflective", "reflect", prompt, REFLECT_SCHEMA, dict(items=items))
 
 
 def interpret(m, t, words):
@@ -111,12 +127,20 @@ def interpret(m, t, words):
     m.tiers.submit("fast", "interpret", prompt, READ_SCHEMA)
 
 
-def _test_proposals(m, t, props, origin):
+def _item(items, x):
+    try:
+        i = int(x)
+    except (TypeError, ValueError):
+        return str(x or "").strip()   # a name instead of a number: validated below like anything else
+    return items[i - 1] if 1 <= i <= len(items) else f"#{i}"
+
+
+def _test_proposals(m, t, props, origin, items):
     out = []
     for p in (props or [])[:3]:
         if not isinstance(p, dict):
             continue
-        a, b = str(p.get("a", "")).strip(), str(p.get("b", "")).strip()
+        a, b = _item(items, p.get("a")), _item(items, p.get("b"))
         try:
             lag = int(p.get("lag", 0))
         except (TypeError, ValueError):
@@ -141,20 +165,21 @@ def collect(m, t):
     for r in m.tiers.drain(wait):
         m.store.log(t, "tier_call", m.state, dict(tier=r["tier"], kind=r["kind"], seconds=r.get("seconds"),
                                                   tokens=r.get("tokens"), reasoning_chars=r.get("reasoning_chars"),
-                                                  parsed=r.get("json") is not None, error=r.get("error")),
+                                                  parsed=r.get("json") is not None, error=r.get("error"),
+                                                  reply=(r.get("content") or "")[-1500:]),
                     cost=r.get("seconds") or 0.0)
         j = r.get("json")
         if r.get("error") or not isinstance(j, dict):
             continue
         if r["kind"] == "dream":
-            _test_proposals(m, t, j.get("proposals"), "dream_llm")
+            _test_proposals(m, t, j.get("proposals"), "dream_llm", r["context"].get("items", []))
         elif r["kind"] == "reflect":
             note = str(j.get("note", "")).strip()[:400]
             if note:
                 notes = (m.store.get("notes") or []) + [note]
                 m.store.put("notes", notes[-20:])
                 m.store.log(t, "reflection", m.state, dict(note=note))
-            _test_proposals(m, t, j.get("questions"), "reflection")
+            _test_proposals(m, t, j.get("questions"), "reflection", r["context"].get("items", []))
         elif r["kind"] == "interpret":
             kws = [str(k).strip().lower()[:24] for k in (j.get("keywords") or [])][:5]
             m.extra_percepts += [("inbox", f"m0.k={k}") for k in kws if k]

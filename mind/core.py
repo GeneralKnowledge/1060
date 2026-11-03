@@ -38,8 +38,8 @@ DEFAULTS = dict(
     dream_control=0.5,           # share of dreams paired with a random-pair control (for evaluation only)
     llm_dream_every=15,          # every Nth dream tick asks the reflective tier for proposals (if present)
     reflect_every=40,            # every Nth resting tick asks the reflective tier to reflect (if present)
-    tier_wait_s=600,
-    max_tier_calls_per_window=8,  # hard cap on language-tier calls per param window (not self-tunable)             # fast mode only: wait this long for a tier answer (keeps runs reproducible)
+    tier_wait_s=600,             # fast mode only: wait this long for a tier answer (keeps runs reproducible)
+    max_tier_calls_per_window=8,  # hard cap per kind (dream, reflect) per param window (not self-tunable)
     min_forward=8,               # forward observations before a hypothesis can become a belief
 )
 

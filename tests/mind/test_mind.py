@@ -121,10 +121,10 @@ class _Fake(BaseHTTPRequestHandler):
         body = _json.loads(self.rfile.read(int(self.headers["Content-Length"])))
         prompt = body["messages"][0]["content"]
         _Fake.prompts.append(prompt)
-        items = _re.findall(r"^- (\S+=\S+) \(seen", prompt, flags=_re.M)
+        items = _re.findall(r"^\d+\. (\S+=\S+) \(seen", prompt, flags=_re.M)
         if "proposals" in prompt and len(items) >= 2:
-            content = "<think>hmm</think> " + _json.dumps({"proposals": [{"a": items[0], "b": items[1], "lag": 2},
-                                                                         {"a": "nope=x", "b": items[0], "lag": 1}]})
+            content = "<think>hmm</think> " + _json.dumps({"proposals": [{"a": 1, "b": 2, "lag": 2},
+                                                                         {"a": 99, "b": 1, "lag": 1}]})
         elif "note" in prompt:
             content = _json.dumps({"note": "things that come before others keep coming before them",
                                    "questions": []})

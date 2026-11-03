@@ -86,3 +86,12 @@ def test_a_short_life_learns_its_world(tmp_path):
     assert r["surprise_by_window"][-1] < r["surprise_by_window"][0]
     states = set(r["state_entries"])
     assert {"deep_sleep", "dreaming"} <= states
+
+
+def test_backup_is_a_readable_copy(tmp_path):
+    m = make(tmp_path / "s")
+    m.run(ticks=50, fast=True)
+    m.store.backup(tmp_path / "b" / "x.sqlite")
+    st = Store(tmp_path / "b" / "x.sqlite")
+    assert st.get("identity") == m.identity
+    st.close()

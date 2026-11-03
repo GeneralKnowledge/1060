@@ -4,7 +4,7 @@
   run --fast N   live N ticks as fast as possible on the generated world only (quick look)
   status         identity, state, workspace, recent life stream
   report         measures against the world's hidden rules; writes mind/reports/<date>-<tick>.md
-  stop           ask a running mind to shut down cleanly (touches mind/STOP)
+  stop           ask a running mind to shut down cleanly (touches <state>/STOP)
 
 --state DIR picks a different mind (default mind/state). A mind is never recreated:
 deleting its state directory is the only way to end one, and no code here does that.
@@ -33,9 +33,10 @@ def main(argv=None):
     ap.add_argument("--state", type=Path, default=ROOT / "mind" / "state")
     ap.add_argument("--fast", type=int, metavar="TICKS", help="run this many ticks without waiting")
     ap.add_argument("--progress", type=int, default=0, help="print a line every N ticks")
+    ap.add_argument("--repo", type=Path, default=ROOT, help="lab checkout whose results it may watch")
     a = ap.parse_args(argv)
     cfg = load_cfg()
-    stop = ROOT / "mind" / "STOP"
+    stop = a.state / "STOP"
 
     if a.cmd == "stop":
         stop.touch()
@@ -78,13 +79,17 @@ def main(argv=None):
     real = a.fast is None
     senses = []
     mind = Mind(a.state, senses, cfg.get("mind", {}))
-    senses += S.build(a.state, mind.identity["seed"], real=real, repo=ROOT)
+    senses += S.build(a.state, mind.identity["seed"], real=real, repo=a.repo)
     if first:
         print(f"born: {mind.identity['id']}")
     if stop.exists():
         stop.unlink()
 
     def progress(m):
+        if real and m.tick % 720 == 0:      # hourly at 5 s ticks; 24 rolling hourly + 14 daily copies
+            m.store.backup(a.state / "backups" / f"hourly-{(m.tick // 720) % 24:02d}.sqlite")
+            if m.tick % (720 * 24) == 0:
+                m.store.backup(a.state / "backups" / f"daily-{(m.tick // (720 * 24)) % 14:02d}.sqlite")
         if a.progress and m.tick % a.progress == 0:
             print(f"tick {m.tick:>6} {m.state:<11} arousal {m.arousal:.2f} fatigue {m.fatigue:.2f} "
                   f"trackers {len(m.pred.trackers):>3} ws {len(m.workspace)}", flush=True)

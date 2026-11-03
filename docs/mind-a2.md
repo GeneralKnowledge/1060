@@ -89,3 +89,23 @@ Tiers arm only at 503bdaa, GPU tier, about 2 min. `config/mind.toml` was tempora
 
 Current self-tuned settings: think_threshold=0.5, wake_threshold=0.63, sleep_fatigue=0.62, ws_decay=0.85, interest_rate=0.020000000000000004, dream_walk=5, lift_min=3.5, forget_surprise=1.0
 
+
+## Qwen dreamer, 5 seeds
+
+Seeds 21 to 25, 6000 ticks each, tiers arm only at 1859d2d, GPU tier without thinking, about 10 min in total. `config/mind.toml` was temporarily set to `max_tier_calls_per_window = 3`, `llm_dream_every = 2`, `reflect_every = 1000000`, `dream_tier = "deep"` for this run only (not committed). All five runs shut down cleanly. 135 calls, median 3.33 s, none unparsed, no errors, no reasoning.
+
+| source | proposed | tested (valid) | passed | pass rate of tested | median lift | true rules |
+|---|---|---|---|---|---|---|
+| dream_llm (Qwen) | 405 | 357 | 8 | 0.022 | 1.68 | 1 |
+| dream (graph walk) | 802 | 802 | 35 | 0.044 | 4.67 | 5 |
+| dream_control (random pairs) | 355 | 355 | 11 | 0.031 | 4.16 | not recorded |
+
+| seed | dream_llm tested / passed | dream n / passed | control n / passed | true rules llm / dream |
+|---|---|---|---|---|
+| 21 | 75 / 4 | 158 / 14 | 68 / 3 | 0 / 2 |
+| 22 | 80 / 0 | 184 / 4 | 88 / 1 | 0 / 0 |
+| 23 | 69 / 1 | 155 / 7 | 78 / 3 | 1 / 1 |
+| 24 | 61 / 0 | 143 / 2 | 55 / 0 | 0 / 0 |
+| 25 | 72 / 3 | 162 / 8 | 66 / 4 | 0 / 2 |
+
+Qwen's pass rate is not better than random pairs (one-sided Fisher p = 0.32 for lower), and neither is the graph walk clearly better than random pairs (one-sided p = 0.20 for higher). Passes are pooled across seeds and few, so these are rough.

@@ -78,6 +78,7 @@ class Tier:
         self.model = (repo / cfg["model"]) if cfg.get("model") else None
         self.server_bin = (lab or repo) / cfg.get("llama_server", "backends/builds/d2db58ba90808f32/build/bin/llama-server")
         self.proc = None
+        self.lock = threading.Lock()
         self.last_used = 0.0
         self.calls = 0
 
@@ -119,13 +120,15 @@ class Tier:
         return False
 
     def stop(self):
-        if self.proc:
-            self.proc.terminate()
+        with self.lock:   # called from the worker (idle unload) and the main thread (close)
+            proc, self.proc = self.proc, None
+        if proc:
+            proc.terminate()
             try:
-                self.proc.wait(20)
+                proc.wait(20)
             except subprocess.TimeoutExpired:
-                self.proc.kill()
-            self.proc = None
+                proc.kill()
+                proc.wait(10)
 
     # -- one question, one answer
     def ask(self, prompt: str, schema: dict | None = None, max_tokens: int | None = None) -> dict:
@@ -214,5 +217,6 @@ class TierPool:
 
     def close(self):
         self._stop = True
+        self.thread.join(5)
         for t in self.tiers.values():
             t.stop()

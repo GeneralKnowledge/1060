@@ -120,3 +120,33 @@ Next options:
 - Optimise on a larger split, or regularise with α-shrinkage.
 - Use gradient-based low-rank deltas instead of TPE over discrete directions.
 - Treat this as a negative baseline for W3.
+
+## 5. llama-server throughput (Q8_0, 256 generated tokens per request, ignore_eos, greedy)
+
+| model | -np | aggregate gen tok/s | per-slot tok/s | VRAM used (MiB) |
+|---|---|---|---|---|
+| 0.8b | 1 | 79.79 | [81.48] | 919 |
+| 0.8b | 2 | 172.66 | [90.96, 91.0] | 965 |
+| 0.8b | 4 | 242.55 | [62.4, 62.43, 62.41, 62.44] | 1061 |
+| 4b | 1 | 23.57 | [23.95] | 4535 |
+| 4b | 2 | 46.75 | [24.06, 24.06] | 4649 |
+| 4b | 4 | 71.6 | [18.35, 18.35, 18.35, 18.35] | 4877 |
+
+## 6. PyTorch on sm_61 + transformers hook
+
+torch 2.14.1+cu126 (pip, cu126 index): wheel arch list has sm_60 (not sm_61) and runs on the 1060: 2048² fp32 matmul max abs err vs CPU 4.6e-4, about 2.9 TFLOPS fp32.
+Qwen3.5-0.8B fp32, 512-token forward, forward hook on `model.layers[15].mlp`:
+
+```
+{"class": "Qwen3_5ForCausalLM", "layer15_type": "Qwen3_5DecoderLayer", "load_s": 71.2, "vram_after_load_mib": 2870, "forward0_s": 17.99, "forward1_s": 0.373, "forward2_s": 0.373, "tokens": 512, "hook_shape": [1, 512, 1024], "hook_norm": 38.975, "peak_vram_mib": 3918, "logits_finite": true}
+```
+
+## 7. Loop audit: GSM8K train[0:32], thinking on, T=0.6 top-p 0.95 top-k 20, max 8192 tokens
+
+Loop = some 12-word n-gram repeats >= 5 times in the last 3000 words of reasoning+answer. Accuracy is from the last \\boxed{} in the final answer.
+
+**0.8b** (-np 4, 19 min): `{"n": 32, "accuracy": 0.0, "hit_cap": 32, "loop_ge5": 32, "loop_or_cap": 32, "mean_tokens": 8192.0}`
+
+**4b** (-np 2, 56 min): `{"n": 32, "accuracy": 0.6875, "hit_cap": 10, "loop_ge5": 6, "loop_or_cap": 14, "mean_tokens": 4624.8125}`
+
+Per-problem records: `.wsp/results/audit-*.jsonl` on the laptop (not committed).

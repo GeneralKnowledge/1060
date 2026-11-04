@@ -17,6 +17,7 @@ Tiers
 from __future__ import annotations
 
 import json
+import os
 import queue
 import re
 import subprocess
@@ -107,7 +108,11 @@ class Tier:
         args = [str(self.server_bin), "-m", str(self.model), "--port", port, "-ngl", str(self.cfg.get("ngl", 0)),
                 "-t", str(self.cfg.get("threads", 2)), "-c", str(self.cfg.get("ctx", 4096)), "-np", "1",
                 *self.cfg.get("extra_args", [])]
-        self.proc = subprocess.Popen(["nice", "-n", "10", *args], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        env = dict(os.environ)
+        if not self.cfg.get("gpu"):
+            env["CUDA_VISIBLE_DEVICES"] = ""   # CPU tiers must not hold a CUDA context (it reads as "GPU busy")
+        self.proc = subprocess.Popen(["nice", "-n", "10", *args], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                                     env=env)
         t0 = time.time()
         while time.time() - t0 < timeout:
             if self.proc.poll() is not None:

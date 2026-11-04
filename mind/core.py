@@ -36,8 +36,9 @@ DEFAULTS = dict(
     checkpoint_every=50,
     forget_age=3000,             # ticks before unsurprising percepts may fade
     dream_control=0.5,           # share of dreams paired with a random-pair control (for evaluation only)
-    llm_dream_every=15,          # every Nth dream tick asks the reflective tier for proposals (if present)
-    reflect_every=40,            # every Nth resting tick asks the reflective tier to reflect (if present)
+    llm_dream_every=0,           # every Nth dream tick asks a tier for proposals; 0 = off (A2: no better than random)
+    reflect_every=0,             # every Nth resting tick asks the reflective tier to reflect; 0 = off
+    pulse_every=1,               # ticks between "pulse" stream events (drives and workspace, for the dashboard)
     tier_wait_s=600,             # fast mode only: wait this long for a tier answer (keeps runs reproducible)
     max_tier_calls_per_window=8,  # hard cap per kind (dream, reflect) per param window (not self-tunable)
     min_forward=8,               # forward observations before a hypothesis can become a belief
@@ -116,6 +117,12 @@ class Mind:
         self._run_processes(t)
         if self.tiers:
             language.collect(self, t)
+        if self.cfg["pulse_every"] and t % self.cfg["pulse_every"] == 0:
+            world = [scores[c] for src, c in percepts if src == "world"]
+            self.store.log(t, "pulse", self.state, dict(
+                a=round(self.arousal, 3), f=round(self.fatigue, 3), c=round(self.curiosity, 3),
+                s=round(sum(world) / len(world), 3) if world else None, n=len(concepts),
+                ws={k: round(v, 2) for k, v in sorted(self.workspace.items(), key=lambda kv: -kv[1])}))
         if t % self.cfg["param_window"] == 0:
             self._self_tune(t)
         if t % self.cfg["checkpoint_every"] == 0:
@@ -392,7 +399,7 @@ class Mind:
         if not self._budget():
             return
         self.rest_ticks = getattr(self, "rest_ticks", 0) + 1
-        if self.tiers and self.rest_ticks % self.cfg["reflect_every"] == 0:
+        if self.tiers and self.cfg["reflect_every"] and self.rest_ticks % self.cfg["reflect_every"] == 0:
             language.reflect(self, t)
         r = self.store.random_percept(self.rng)
         if r:
@@ -430,7 +437,7 @@ class Mind:
         if not self._budget(2):
             return
         self.dream_ticks = getattr(self, "dream_ticks", 0) + 1
-        if self.tiers and self.dream_ticks % self.cfg["llm_dream_every"] == 0:
+        if self.tiers and self.cfg["llm_dream_every"] and self.dream_ticks % self.cfg["llm_dream_every"] == 0:
             language.dream(self, t)
         r = self.store.random_percept(self.rng)
         if not r:

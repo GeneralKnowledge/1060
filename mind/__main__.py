@@ -1,10 +1,11 @@
-"""python3 -m mind run | status | report | stop
+"""python3 -m mind run | status | report | stop | dashboard
 
   run            live in real time (tick_s from config/mind.toml), with real signals; runs until STOP
   run --fast N   live N ticks as fast as possible on the generated world only (quick look)
   status         identity, state, workspace, recent life stream
   report         measures against the world's hidden rules; writes mind/reports/<date>-<tick>.md
   stop           ask a running mind to shut down cleanly (touches <state>/STOP)
+  dashboard      serve a live read-only page on 127.0.0.1:--port (default 8090)
 
 --state DIR picks a different mind (default mind/state). A mind is never recreated:
 deleting its state directory is the only way to end one, and no code here does that.
@@ -29,12 +30,13 @@ def load_cfg():
 
 def main(argv=None):
     ap = argparse.ArgumentParser(prog="mind")
-    ap.add_argument("cmd", choices=["run", "status", "report", "stop"])
+    ap.add_argument("cmd", choices=["run", "status", "report", "stop", "dashboard"])
     ap.add_argument("--state", type=Path, default=ROOT / "mind" / "state")
     ap.add_argument("--fast", type=int, metavar="TICKS", help="run this many ticks without waiting")
     ap.add_argument("--progress", type=int, default=0, help="print a line every N ticks")
     ap.add_argument("--repo", type=Path, default=ROOT, help="lab checkout whose results it may watch")
     ap.add_argument("--no-tiers", action="store_true", help="algorithms only, no language tiers")
+    ap.add_argument("--port", type=int, default=8090, help="dashboard port (bound to 127.0.0.1)")
     ap.add_argument("--seed", type=int, help="world seed for a NEW mind (experiments only; ignored after birth)")
     a = ap.parse_args(argv)
     cfg = load_cfg()
@@ -43,6 +45,15 @@ def main(argv=None):
     if a.cmd == "stop":
         stop.touch()
         print("STOP requested")
+        return 0
+
+    if a.cmd == "dashboard":
+        from mind.dashboard import serve
+        srv = serve(a.state, a.port)
+        try:
+            srv.serve_forever()
+        except KeyboardInterrupt:
+            pass
         return 0
 
     if a.cmd == "report":
@@ -71,7 +82,7 @@ def main(argv=None):
         print(f"mind {ident['id']}  born {ident['born']}  boots {st.get('boots')}  tick {ck.get('tick')}")
         print(f"state {ck.get('state')}  arousal {ck.get('arousal', 0):.2f}  fatigue {ck.get('fatigue', 0):.2f}")
         print("workspace:", json.dumps({k: round(v, 2) for k, v in (ck.get("workspace") or {}).items()}))
-        for e in reversed(st.stream(limit=15)):
+        for e in reversed(st.stream(limit=15, exclude=("pulse",))):
             print(f"  {e['tick']:>7} {e['state'] or '':<11} {e['kind']:<15} {json.dumps(e['data'])[:110]}")
         st.close()
         return 0

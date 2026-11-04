@@ -17,6 +17,7 @@ Tiers
 from __future__ import annotations
 
 import json
+import os
 import queue
 import re
 import subprocess
@@ -78,6 +79,7 @@ class Tier:
         self.model = (repo / cfg["model"]) if cfg.get("model") else None
         self.server_bin = (lab or repo) / cfg.get("llama_server", "backends/builds/d2db58ba90808f32/build/bin/llama-server")
         self.proc = None
+        self.lock = threading.Lock()
         self.last_used = 0.0
         self.calls = 0
 
@@ -106,7 +108,11 @@ class Tier:
         args = [str(self.server_bin), "-m", str(self.model), "--port", port, "-ngl", str(self.cfg.get("ngl", 0)),
                 "-t", str(self.cfg.get("threads", 2)), "-c", str(self.cfg.get("ctx", 4096)), "-np", "1",
                 *self.cfg.get("extra_args", [])]
-        self.proc = subprocess.Popen(["nice", "-n", "10", *args], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        env = dict(os.environ)
+        if not self.cfg.get("gpu"):
+            env["CUDA_VISIBLE_DEVICES"] = ""   # CPU tiers must not hold a CUDA context (it reads as "GPU busy")
+        self.proc = subprocess.Popen(["nice", "-n", "10", *args], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                                     env=env)
         t0 = time.time()
         while time.time() - t0 < timeout:
             if self.proc.poll() is not None:
@@ -119,13 +125,15 @@ class Tier:
         return False
 
     def stop(self):
-        if self.proc:
-            self.proc.terminate()
+        with self.lock:   # called from the worker (idle unload) and the main thread (close)
+            proc, self.proc = self.proc, None
+        if proc:
+            proc.terminate()
             try:
-                self.proc.wait(20)
+                proc.wait(20)
             except subprocess.TimeoutExpired:
-                self.proc.kill()
-            self.proc = None
+                proc.kill()
+                proc.wait(10)
 
     # -- one question, one answer
     def ask(self, prompt: str, schema: dict | None = None, max_tokens: int | None = None) -> dict:
@@ -147,7 +155,9 @@ class Tier:
         content = msg.get("content") or ""
         return dict(content=content, json=parse_json(content), seconds=round(time.time() - t0, 2),
                     tokens=data.get("usage", {}).get("completion_tokens"),
-                    reasoning_chars=len(msg.get("reasoning_content") or ""))
+                    reasoning_chars=len(msg.get("reasoning_content") or ""),
+                    reasoning=(msg.get("reasoning_content") or "")[-1500:],
+                    finish=data["choices"][0].get("finish_reason"))
 
 
 class TierPool:
@@ -212,5 +222,6 @@ class TierPool:
 
     def close(self):
         self._stop = True
+        self.thread.join(5)
         for t in self.tiers.values():
             t.stop()

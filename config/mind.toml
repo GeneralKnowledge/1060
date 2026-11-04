@@ -20,6 +20,7 @@ ctx = 4096
 max_tokens = 128
 temperature = 0.1
 json_schema = true
+idle_unload_s = 300                # unload 5 min after the last message
 
 [tiers.reflective]
 model = "models/mind/LFM2.5-1.2B-Thinking-Q4_K_M.gguf"
@@ -43,7 +44,8 @@ ngl = 99
 threads = 4
 ctx = 8192
 extra_args = ["-fa", "on", "-b", "2048", "-ub", "256", "-lm", "none"]
-max_tokens = 2048
+max_tokens = 512
+chat_template_kwargs = { enable_thinking = false }   # with thinking, 10/10 dream calls ran out at 2048 tokens
 temperature = 0.3
 json_schema = false
 idle_unload_s = 600

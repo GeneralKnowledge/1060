@@ -14,6 +14,8 @@ memories, beliefs and earlier notes.
 """
 from __future__ import annotations
 
+import re
+
 from mind.predict import MAX_LAG, fv
 
 PAIR = {"type": "object", "properties": {"a": {"type": "integer"}, "b": {"type": "integer"},
@@ -123,9 +125,9 @@ def interpret(m, t, words):
     if not words or not m.tiers.has("fast"):
         return
     text = " ".join(w.split("=", 1)[1] for w in words)
-    prompt = ("Text: " + text + "\nList up to 5 short lowercase keywords for what this text is about. "
+    prompt = ("Text: " + text + "\nList up to 5 short keywords for what this text is about. "
               'Answer with JSON only: {"keywords": ["..."]}')
-    m.tiers.submit("fast", "interpret", prompt, READ_SCHEMA)
+    m.tiers.submit("fast", "interpret", prompt, READ_SCHEMA, dict(prompt=prompt, text=text))
 
 
 def _item(items, x):
@@ -175,7 +177,8 @@ def collect(m, t):
         m.store.log(t, "tier_call", m.state, dict(tier=r["tier"], kind=r["kind"], seconds=r.get("seconds"),
                                                   tokens=r.get("tokens"), reasoning_chars=r.get("reasoning_chars"),
                                                   parsed=_usable(r), error=r.get("error"),
-                                                  reply=(r.get("content") or "")[-1500:]),
+                                                  reply=(r.get("content") or "")[-1500:],
+                                                  reasoning_tail=r.get("reasoning", ""), finish=r.get("finish")),
                     cost=r.get("seconds") or 0.0)
         j = r.get("json")
         if r.get("error") or not _usable(r):
@@ -190,5 +193,9 @@ def collect(m, t):
                 m.store.log(t, "reflection", m.state, dict(note=note))
             _test_proposals(m, t, j.get("questions"), "reflection", r["context"].get("items", []))
         elif r["kind"] == "interpret":
+            # a keyword that only echoes the instruction (e.g. "text", "keywords") is not about the message
+            own = set(r["context"].get("text", "").lower().split())
+            task = set(re.findall(r"[a-z]+", r["context"].get("prompt", "").lower())) - own
             kws = [str(k).strip().lower()[:24] for k in (j.get("keywords") or [])][:5]
+            kws = [k for k in kws if k not in task]
             m.extra_percepts += [("inbox", f"m0.k={k}") for k in kws if k]

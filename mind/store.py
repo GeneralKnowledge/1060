@@ -66,11 +66,14 @@ class Store:
         self.db.execute("INSERT INTO stream(tick, t, kind, state, data, cost) VALUES(?,?,?,?,?,?)",
                         (tick, time.time(), kind, state, json.dumps(data or {}), cost))
 
-    def stream(self, kinds=None, limit=50):
-        q, args = "SELECT id, tick, t, kind, state, data, cost FROM stream", []
+    def stream(self, kinds=None, limit=50, exclude=()):
+        q, args = "SELECT id, tick, t, kind, state, data, cost FROM stream WHERE 1", []
         if kinds:
-            q += f" WHERE kind IN ({','.join('?' * len(kinds))})"
-            args = list(kinds)
+            q += f" AND kind IN ({','.join('?' * len(kinds))})"
+            args += list(kinds)
+        if exclude:
+            q += f" AND kind NOT IN ({','.join('?' * len(exclude))})"
+            args += list(exclude)
         q += " ORDER BY id DESC LIMIT ?"
         rows = self.db.execute(q, (*args, limit)).fetchall()
         return [dict(id=r[0], tick=r[1], t=r[2], kind=r[3], state=r[4], data=json.loads(r[5]), cost=r[6])

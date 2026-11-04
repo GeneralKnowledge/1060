@@ -183,3 +183,46 @@ def test_missing_tiers_fall_back_to_algorithms(tmp_path):
     m.run(ticks=3000, fast=True)
     assert m.store.count("tier_call") == 0
     pool.close()
+
+
+# ---------------------------------------------------------------- A4: dashboard
+import urllib.request as _ur
+
+
+def test_dashboard_reads_a_live_mind_and_delivers_messages(tmp_path):
+    from mind.dashboard import serve
+    m = make(tmp_path)
+    m.run(ticks=3000, fast=True)          # still open: the dashboard reads alongside the writer
+    srv = serve(tmp_path, port=0)
+    threading.Thread(target=srv.serve_forever, daemon=True).start()
+    base = f"http://127.0.0.1:{srv.server_port}"
+    get = lambda p: _json.load(_ur.urlopen(base + p))
+    assert b"Life stream" in _ur.urlopen(base + "/").read()
+    now = get("/api/now")
+    assert now["id"] == m.identity["id"] and now["tick"] == 3000 and now["state"] in ("awake", "background",
+                                                                                       "resting", "dreaming", "deep_sleep")
+    pul = get("/api/pulses?seconds=100000&points=50")
+    assert 0 < len(pul["points"]) <= 60 and pul["bands"]
+    ev = get("/api/stream?limit=20")
+    assert ev and all(e["kind"] != "pulse" for e in ev)
+    assert get(f"/api/stream?after={ev[-1]['id']}") == []
+    b = get("/api/beliefs")
+    assert b["hidden_rules"]["causes"] >= 1 and all("true" in r for r in b["rows"])
+    assert set(get("/api/dreams")) >= {"dream", "dream_control", "recent"}
+    req = _ur.Request(base + "/api/message", _json.dumps({"text": "hello there"}).encode(),
+                      {"Content-Type": "application/json"})
+    assert _json.load(_ur.urlopen(req))["ok"]
+    assert [p.read_text() for p in (tmp_path / "inbox").glob("*.txt")] == ["hello there"]
+    srv.shutdown()
+    m.store.close()
+
+
+def test_llm_dreaming_and_reflection_are_off_by_default(tmp_path):
+    srv, pool = _fake_pool()
+    ss = []
+    m = Mind(tmp_path, ss, {}, tiers=pool)
+    ss += S.build(tmp_path, m.identity["seed"], real=False, repo=tmp_path)
+    m.run(ticks=4000, fast=True)
+    assert m.store.count("tier_call") == 0 and m.store.count("pulse") == 4000
+    pool.close()
+    srv.shutdown()

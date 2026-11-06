@@ -163,3 +163,8 @@ Host RSS did not change. That is consistent with the host-side logits buffer bei
    - Predicted tg128: unchanged.
    - Taken with this experiment, the result gives two points on the ubatch→VRAM line.
 2. **Attribute the compute buffer before any code change.** If the controller keeps the llama.cpp load logs for these two runs, compare the reported CUDA compute-buffer sizes for ub=512 and ub=1024. This costs no new benchmark. It would confirm or refute the logits-reserve hypothesis before anyone writes a patch to shrink the worst-case output reserve, and such a patch would also need to keep `llama-perplexity` working, since it needs logits for every token.
+
+### 20261101-220021-2039: On this card, flash attention at head_dim 256 (tile kernel for prompt batches, vec kernel for decode, no tensor cores) i
+_Decision: **inconclusive** (record experiments/records/20261101-220021-2039.json). Agent interpretation below; only the record's numbers are measurements._
+
+(interpretation unavailable: claude exit 1: )

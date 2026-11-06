@@ -12,6 +12,15 @@ class ProviderError(Exception):
     pass
 
 
+class UsageLimitError(ProviderError):
+    """The provider refused because of a rate or usage limit. Not a failure of the lab:
+    the session waits until retry_after_s has passed instead of counting it."""
+
+    def __init__(self, msg: str, retry_after_s: float | None = None):
+        super().__init__(msg)
+        self.retry_after_s = retry_after_s
+
+
 class Provider:
     name = "base"
 

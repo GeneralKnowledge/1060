@@ -16,7 +16,7 @@ from pathlib import Path
 
 from lab.controller import Controller
 from lab.experiment import ExperimentSpec, load_records, now, save_record
-from lab.providers import Provider, ProviderError, make_provider
+from lab.providers import Provider, ProviderError, UsageLimitError, make_provider
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -205,34 +205,55 @@ class ResearchAgent:
         return rec
 
 
+LIMIT_WAIT_DEFAULT_S = 1800   # usage limit with no reset time given
+LIMIT_WAIT_MARGIN_S = 120     # added after a stated reset time
+LIMIT_POLL_S = 60             # how often a wait checks the STOP file
+
+
 def run_session(agent: ResearchAgent, *, max_experiments: int | None = None,
-                max_hours: float | None = None, log=print) -> dict:
+                max_hours: float | None = None, log=print, sleep=time.sleep,
+                clock=time.time) -> dict:
     """M4: unattended research with hard limits. Stops on: experiment count,
-    wall-clock, STOP file, agent stop, or repeated failures."""
+    wall-clock, STOP file, agent stop, or repeated failures. A provider usage or rate
+    limit is not a failure: the session waits for the reset (within max_hours)."""
     s = agent.research["session"]
     max_experiments = max_experiments or s["max_experiments"]
     max_hours = max_hours or s["max_hours"]
     stop_file = agent.root / s["stop_file"]
     limit_fail = agent.c.limits.max_consecutive_failures
-    t0 = time.time()
-    done, fails, results = 0, 0, []
+    t0 = clock()
+    done, fails, results, limit_waits = 0, 0, [], 0
     reason = "max_experiments"
     while done < max_experiments:
         if stop_file.exists():
             reason = "stop_file"
             break
-        if (time.time() - t0) / 3600 >= max_hours:
+        if (clock() - t0) / 3600 >= max_hours:
             reason = "max_hours"
             break
         try:
             rec = agent.step()
+        except UsageLimitError as e:
+            wait = (e.retry_after_s + LIMIT_WAIT_MARGIN_S) if e.retry_after_s is not None \
+                else LIMIT_WAIT_DEFAULT_S
+            left = max_hours * 3600 - (clock() - t0)
+            if wait >= left:
+                log(f"[{now()}] usage limit, reset is after the session end: {e}")
+                reason = "usage_limit"
+                break
+            limit_waits += 1
+            log(f"[{now()}] usage limit, waiting {wait / 60:.0f} min for the reset: {e}")
+            until = clock() + wait
+            while clock() < until and not stop_file.exists():
+                sleep(min(LIMIT_POLL_S, max(until - clock(), 0)))
+            continue
         except ProviderError as e:
             fails += 1
             log(f"[{now()}] provider error: {e}")
             if fails >= limit_fail:
                 reason = "provider_failures"
                 break
-            time.sleep(min(60 * fails, 300))
+            sleep(min(60 * fails, 300))
             continue
         if rec.get("decision") == "agent_stop":
             reason = "agent_stop: " + rec.get("reason", "")
@@ -246,6 +267,6 @@ def run_session(agent: ResearchAgent, *, max_experiments: int | None = None,
             reason = "consecutive_failures"
             break
         if done < max_experiments:
-            time.sleep(s.get("pause_between_s", 0))
+            sleep(s.get("pause_between_s", 0))
     return {"experiments": done, "stopped_because": reason, "results": results,
-            "hours": round((time.time() - t0) / 3600, 3)}
+            "usage_limit_waits": limit_waits, "hours": round((clock() - t0) / 3600, 3)}

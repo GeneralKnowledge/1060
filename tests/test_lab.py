@@ -38,6 +38,14 @@ INITIAL_BEST = {
 }
 
 
+@pytest.fixture(autouse=True)
+def _ac_power(monkeypatch):
+    """Tests must not depend on the real charger: report AC online unless a test overrides it."""
+    import benchmarks.telemetry as tel
+    monkeypatch.setattr(tel, "read_power_supply",
+                        lambda: {"ac_online": True, "battery_pct": 100, "battery_status": "Full"})
+
+
 @pytest.fixture
 def lab(tmp_path):
     root = tmp_path / "lab"
@@ -69,6 +77,8 @@ def lab(tmp_path):
     (root / "config" / "benchmark.toml").write_text(cfg)
     rs = (root / "config" / "research.toml").read_text().replace("pause_between_s = 30",
                                                                     "pause_between_s = 0")
+    # The fixture's fake model is the small workload's; pin it whatever the repo default is.
+    rs = re.sub(r'^workload = ".*"$', 'workload = "small"', rs, flags=re.M)
     (root / "config" / "research.toml").write_text(rs)
     bench.approve("test", root)
     sh(root, "git", "init", "-q", "-b", "research")
@@ -367,6 +377,68 @@ def test_session_stop_file(lab):
     (lab.root / "experiments" / "STOP").write_text("")
     agent = ResearchAgent(lab, provider=ScriptedProvider([]), root=lab.root)
     assert run_session(agent, log=lambda *a: None)["stopped_because"] == "stop_file"
+
+
+def test_command_provider_reports_stdout_and_usage_limit(tmp_path):
+    from lab.providers import ProviderError, UsageLimitError
+    from lab.providers.command import CommandProvider
+    cli = tmp_path / "fakecli"
+    cli.write_text("#!/bin/sh\necho \"You've hit your 5-hour limit \xc2\xb7 resets 1:50am (UTC)\"\nexit 1\n")
+    cli.chmod(0o755)
+    with pytest.raises(UsageLimitError) as e:
+        CommandProvider({"argv": [str(cli)]}).complete("s", [{"role": "user", "content": "x"}])
+    assert "5-hour limit" in str(e.value) and e.value.retry_after_s is not None
+    bad = tmp_path / "badcli"
+    bad.write_text("#!/bin/sh\necho 'model not found'\nexit 1\n")
+    bad.chmod(0o755)
+    with pytest.raises(ProviderError) as e2:
+        CommandProvider({"argv": [str(bad)]}).complete("s", [{"role": "user", "content": "x"}])
+    assert "model not found" in str(e2.value) and not isinstance(e2.value, UsageLimitError)
+
+
+def test_reset_wait_parsing():
+    from datetime import datetime, timezone
+    from lab.providers.command import reset_wait_s
+    now = datetime(2026, 11, 1, 22, 14, tzinfo=timezone.utc)
+    assert reset_wait_s("resets 1:50am (UTC)", now) == (3 * 60 + 36) * 60
+    assert reset_wait_s("resets 11pm (UTC)", now) == 46 * 60
+    assert reset_wait_s("no time here", now) is None
+
+
+class _LimitAgent:
+    """Raises a usage limit once, then asks to stop."""
+
+    def __init__(self, root, retry):
+        from lab.safety import Limits
+        self.root, self.retry, self.calls = root, retry, 0
+        self.research = {"session": {"max_experiments": 5, "max_hours": 8,
+                                     "stop_file": "experiments/STOP"}}
+        self.c = type("C", (), {"limits": Limits()})()
+
+    def step(self):
+        from lab.providers import UsageLimitError
+        self.calls += 1
+        if self.calls == 1:
+            raise UsageLimitError("hit your limit", self.retry)
+        return {"decision": "agent_stop", "reason": "done"}
+
+
+def test_session_waits_out_usage_limit(tmp_path):
+    now = [0.0]
+    agent = _LimitAgent(tmp_path, retry=3600)
+    out = run_session(agent, log=lambda *a: None, clock=lambda: now[0],
+                      sleep=lambda d: now.__setitem__(0, now[0] + d))
+    assert out["stopped_because"].startswith("agent_stop")
+    assert out["usage_limit_waits"] == 1 and agent.calls == 2
+    assert now[0] >= 3600
+
+
+def test_session_stops_when_limit_resets_after_end(tmp_path):
+    now = [0.0]
+    agent = _LimitAgent(tmp_path, retry=9 * 3600)
+    out = run_session(agent, log=lambda *a: None, clock=lambda: now[0],
+                      sleep=lambda d: now.__setitem__(0, now[0] + d))
+    assert out["stopped_because"] == "usage_limit" and agent.calls == 1
 
 
 # ---------------------------------------------------------------- power state

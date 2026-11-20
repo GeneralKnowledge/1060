@@ -1,0 +1,32 @@
+{
+  "Qwen3.5-4B-Q4_K_M": {
+    "math_correct": 17,
+    "math_n": 30,
+    "code_pass": 6,
+    "code_n": 8,
+    "hit_max_tokens": 14,
+    "gen_tokens": 27267,
+    "median_gen_tps": 28.49,
+    "wall_s": 1012.5
+  },
+  "Ternary-Bonsai-2-4B-Q2_0": {
+    "math_correct": 16,
+    "math_n": 30,
+    "code_pass": 5,
+    "code_n": 8,
+    "hit_max_tokens": 15,
+    "gen_tokens": 25402,
+    "median_gen_tps": 48.8,
+    "wall_s": 556.2
+  },
+  "Ternary-Bonsai-2-9B-Q2_0": {
+    "math_correct": 18,
+    "math_n": 30,
+    "code_pass": 5,
+    "code_n": 8,
+    "hit_max_tokens": 12,
+    "gen_tokens": 25319,
+    "median_gen_tps": 28.22,
+    "wall_s": 977.0
+  }
+}

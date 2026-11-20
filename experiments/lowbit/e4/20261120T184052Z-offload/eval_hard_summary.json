@@ -1,0 +1,12 @@
+{
+  "Ternary-Bonsai-2-27B-Q2_0": {
+    "math_correct": 2,
+    "math_n": 6,
+    "code_pass": 3,
+    "code_n": 3,
+    "hit_max_tokens": 4,
+    "gen_tokens": 6532,
+    "median_gen_tps": 4.9,
+    "wall_s": 1592.7
+  }
+}

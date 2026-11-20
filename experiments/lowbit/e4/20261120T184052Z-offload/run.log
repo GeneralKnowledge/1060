@@ -1,0 +1,38 @@
+[18:40:56] MemAvailable 6662 MiB
+[18:40:56] bench ngl=36
+  n_prompt 512 n_gen 0 avg_ts 54.5
+  n_prompt 0 n_gen 64 avg_ts 3.61
+[18:45:07] swap used 580 MiB
+[18:45:07] bench ngl=42
+  n_prompt 512 n_gen 0 avg_ts 53.59
+  n_prompt 0 n_gen 64 avg_ts 4.14
+[18:49:12] swap used 622 MiB
+[18:49:12] bench ngl=46
+  n_prompt 512 n_gen 0 avg_ts 54.0
+  n_prompt 0 n_gen 64 avg_ts 4.41
+[18:55:34] swap used 634 MiB
+[18:55:34] bench ngl=50
+  n_prompt 512 n_gen 0 avg_ts 59.48
+  n_prompt 0 n_gen 64 avg_ts 5.05
+[19:01:01] swap used 681 MiB
+[19:01:01] bench ngl=54
+[19:04:21] ngl=54 failed (see bench_ngl54.log)
+graph_reserve: failed to allocate compute buffers
+llama_init_from_model: failed to initialize the context: failed to allocate compute pp buffers
+llama_bench: error: failed to create context with model '/home/red/1060/models/Ternary-Bonsai-2-27B-Q2_0.gguf'
+[19:04:21] largest working ngl: 50
+[19:04:21] smoke ngl=50
+0.03.151.807 I llama_model_loader: - kv   0:                       general.architecture str              = qwen35
+0.03.848.302 I load_tensors: offloaded 50/65 layers to GPU
+0.04.202.392 I llama_model_loader: - kv   0:                       general.architecture str              = qwen35
+1.01.509.114 I load_tensors: offloaded 50/65 layers to GPU
+2.28.713.441 I common_perf_print:        load time =  116390.32 ms
+2.28.713.442 I common_perf_print: prompt eval time =    8691.74 ms /     9 tokens (  965.75 ms per token,     1.04 tokens per second)
+2.28.713.443 I common_perf_print:        eval time =   14187.42 ms /    63 runs   (  225.20 ms per token,     4.44 tokens per second)
+	Maximum resident set size (kbytes): 7012536
+[19:07:30] hard eval subset at ngl=50
+    raise RuntimeError(f"llama-server exited with {proc.returncode}")
+[19:11:57] done: /home/red/1060-e1/experiments/lowbit/e4/20261120T184052Z-offload
+[19:15:28] eval subset failed: llama-server (4 slots) OOM allocating 449 MiB recurrent-state cache at ngl=50; rerun by hand with -np 1 (eval_tasks.py, same items)
+Ternary-Bonsai-2-27B-Q2_0 {"math_correct": 2, "math_n": 6, "code_pass": 3, "code_n": 3, "hit_max_tokens": 4, "gen_tokens": 6532, "median_gen_tps": 4.9, "wall_s": 1592.7}
+[19:42:26] done (np1 eval)

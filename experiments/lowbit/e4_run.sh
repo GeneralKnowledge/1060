@@ -61,7 +61,7 @@ elif [ "$MODE" = offload ]; then
   grep -E "offloaded|general.architecture|model size|Maximum resident|load time|eval time|out of memory" "$OUT/smoke.log" | tee -a "$OUT/run.log"
   log "hard eval subset at ngl=$best"; mark eval
   python3 "$ROOT/experiments/lowbit/eval_tasks.py" --bin "$BIN" --out "$OUT" "${HARD[@]}" \
-    --math-limit "${MATH_N:-6}" --code-limit "${CODE_N:-3}" --server-args "-ngl $best ${RT[*]}" --models "$M" > "$OUT/eval_progress.log" 2>&1
+    --math-limit "${MATH_N:-6}" --code-limit "${CODE_N:-3}" --server-args "-ngl $best -np 1 ${RT[*]}" --models "$M" > "$OUT/eval_progress.log" 2>&1
   grep '^.* {' "$OUT/eval_progress.log" | tee -a "$OUT/run.log"
 fi
 log "done: $OUT"

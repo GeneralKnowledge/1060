@@ -74,7 +74,7 @@ def main():
     ap.add_argument("--max-tokens", type=int, default=MAX_TOKENS)
     ap.add_argument("--math-limit", type=int, default=0, help="only the first N maths items (0 = all)")
     ap.add_argument("--code-limit", type=int, default=0, help="only the first N coding tasks (0 = all)")
-    ap.add_argument("--server-args", default=" ".join(rp.RT),
+    ap.add_argument("--server-args", default=" ".join(rp.RT + ["-np", "1"]),
                     help="llama-server runtime flags (default: the qwen35-4b winner flags)")
     ap.add_argument("--ctx", type=int, default=4096)
     ap.add_argument("--tag", default="", help="suffix for output files, e.g. hard")

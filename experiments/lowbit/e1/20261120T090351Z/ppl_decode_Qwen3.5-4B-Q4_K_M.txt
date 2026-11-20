@@ -1,0 +1,11 @@
+0.00.087.622 W DEPRECATED: argument '-ub' specified multiple times, use comma-separated values instead (only last value will be used)
+0.07.720.109 I cmn          init: llama threadpool init, n_threads = 6
+0.07.809.016 I 
+0.07.809.091 I system_info: n_threads = 6 (n_threads_batch = 6) / 12 | CUDA : ARCHS = 610 | USE_GRAPHS = 1 | FA_QUANTS = q4_0-q4_0,q8_0-q8_0,f16-f16,bf16-bf16 | CPU : SSE3 = 1 | SSSE3 = 1 | AVX = 1 | AVX2 = 1 | F16C = 1 | FMA = 1 | BMI2 = 1 | LLAMAFILE = 1 | OPENMP = 1 | REPACK = 1 | 
+0.07.809.102 I perplexity: tokenizing the input ..
+0.07.902.412 I perplexity: tokenization took 93.304 ms
+0.07.902.472 I perplexity: calculating perplexity over 2 chunks, n_ctx=512, batch_size=2048, n_seq=4
+0.25.484.057 I perplexity: 17.58 seconds per pass - ETA 0.13 minutes
+[1]6.0262,[2]8.5711,
+0.25.693.889 I Final estimate: PPL = 8.5711 +/- 1.10713
+

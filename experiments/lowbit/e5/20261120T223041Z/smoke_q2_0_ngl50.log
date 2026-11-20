@@ -1,0 +1,48 @@
+0.00.012.073 I llama_completion: llama backend init
+0.00.012.100 I llama_completion: load the model and apply lora adapter, if any
+0.00.641.387 W common_fit_params: failed to fit params to free device memory: n_gpu_layers already set by user to 50, abort
+3.24.623.792 I cmn          init: llama threadpool init, n_threads = 6
+4.17.212.362 I 
+4.17.237.493 I system_info: n_threads = 6 (n_threads_batch = 6) / 12 | CUDA : ARCHS = 610 | USE_GRAPHS = 1 | FA_QUANTS = q4_0-q4_0,q8_0-q8_0,f16-f16,bf16-bf16 | CPU : SSE3 = 1 | SSSE3 = 1 | AVX = 1 | AVX2 = 1 | F16C = 1 | FMA = 1 | BMI2 = 1 | LLAMAFILE = 1 | OPENMP = 1 | REPACK = 1 | 
+4.17.237.507 I 
+4.18.870.417 I sampler seed: 4294967295
+4.18.870.483 I sampler params: 
+	repeat_last_n = 64, repeat_penalty = 1.000, frequency_penalty = 0.000, presence_penalty = 0.000
+	dry_multiplier = 0.000, dry_base = 1.750, dry_allowed_length = 2, dry_penalty_last_n = 64
+	top_k = 20, top_p = 0.950, min_p = 0.050, xtc_probability = 0.000, xtc_threshold = 0.100, typical_p = 1.000, top_n_sigma = -1.000, temp = 0.000
+	mirostat = 0, mirostat_lr = 0.100, mirostat_ent = 5.000, adaptive_target = -1.000, adaptive_decay = 0.900
+4.18.870.514 I sampler chain: logits -> ?penalties -> ?dry -> ?top-n-sigma -> top-k -> ?typical -> top-p -> min-p -> ?xtc -> temp-ext -> greedy 
+4.18.870.520 I generate: n_ctx = 4096, n_batch = 2048, n_predict = 64, n_keep = 0
+4.18.870.523 I 
+4.36.415.836 I common_perf_print:    sampling time =      43.02 ms
+4.36.415.837 I common_perf_print:    samplers time =       0.14 ms /    73 tokens
+4.36.415.840 I common_perf_print:        load time =  255290.40 ms
+4.36.415.842 I common_perf_print: prompt eval time =    6007.18 ms /     9 tokens (  667.46 ms per token,     1.50 tokens per second)
+4.36.415.843 I common_perf_print:        eval time =   11115.67 ms /    63 runs   (  176.44 ms per token,     5.67 tokens per second)
+4.36.415.843 I common_perf_print:       total time =   19203.49 ms /    72 tokens
+4.36.415.844 I common_perf_print: unaccounted time =    2037.61 ms /  10.6 %      (total - sampling - prompt eval - eval) / (total)
+4.36.415.845 I common_perf_print:    graphs reused =         62
+4.36.415.845 I common_perf_print:   graph reallocs =          0    /     0        (same size) / (changed size)
+	Command being timed: "/home/red/1060/backends/builds/prism-d7b289683/bin/llama-completion -m /home/red/1060/models/Ternary-Bonsai-2-27B-Q2_0.gguf -ngl 50 -fa 1 -ctk f16 -ctv f16 -b 2048 -ub 256 -p The three most important ideas in computer science are -n 64 -c 4096 --temp 0 --seed 1 -no-cnv"
+	User time (seconds): 62.14
+	System time (seconds): 19.79
+	Percent of CPU this job got: 27%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 4:57.63
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 6970836
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 8587
+	Minor (reclaiming a frame) page faults: 362227
+	Voluntary context switches: 78471
+	Involuntary context switches: 547
+	Swaps: 0
+	File system inputs: 19282368
+	File system outputs: 40
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0

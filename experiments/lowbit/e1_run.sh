@@ -8,7 +8,7 @@ BIN="${BIN:-$ROOT/backends/builds/d2db58ba90808f32/build/bin}"
 CAND="$1"
 BASE="${BASE:-$ROOT/models/Qwen3.5-4B-Q4_K_M.gguf}"
 REF="${REF:-$ROOT/models/qwen3.5-4b-q8_0.kld}"
-DATA="$ROOT/benchmarks/workloads/wikitext-2-test-slice.txt"
+DATA="${DATA:-$ROOT/benchmarks/workloads/wikitext-2-test-slice.txt}"  # git-ignored; copy from ~/1060
 OUT="$ROOT/experiments/lowbit/e1/$(date -u +%Y%m%dT%H%M%SZ)"
 mkdir -p "$OUT"
 # Same runtime flags as winners/qwen35-4b/best_config.json
@@ -34,7 +34,7 @@ if [ -n "$busy" ]; then log "GPU busy, aborting: $busy"; exit 2; fi
 
 # --- GPU telemetry sampler (VRAM, util, power, temp every 0.5 s)
 nvidia-smi --query-gpu=timestamp,memory.used,utilization.gpu,power.draw,temperature.gpu,clocks.sm,clocks.mem \
-  --format=csv,noheader -lms 500 > "$OUT/gpu.csv" &
+  --format=csv,noheader -lms 500 >> "$OUT/gpu.csv" &
 SMI=$!
 trap 'kill $SMI 2>/dev/null' EXIT
 mark() { echo "MARK,$(date -u +%FT%T),$1" >> "$OUT/gpu.csv"; }
@@ -51,7 +51,7 @@ for m in "$CAND" "$BASE"; do
   tag=$(basename "$m" .gguf)
   log "step 2: smoke $tag"
   mark "smoke-$tag"
-  /usr/bin/time -v "$BIN/llama-completion" -m "$m" -p "The three most important ideas in computer science are" \
+  /usr/bin/time -v "$BIN/llama-completion" -v -m "$m" -p "The three most important ideas in computer science are" \
     -n 96 -c 4096 --temp 0 --seed 1 -no-cnv "${RT[@]}" > "$OUT/smoke_$tag.txt" 2> "$OUT/smoke_$tag.log"
   grep -E "offloaded|n_vocab|general.architecture|file type|model size|Maximum resident|Elapsed|eval time|load time" "$OUT/smoke_$tag.log" | tee -a "$OUT/run.log"
 done

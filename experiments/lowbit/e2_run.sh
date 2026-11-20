@@ -32,18 +32,23 @@ SMI=$!
 trap 'kill $SMI 2>/dev/null' EXIT
 mark() { echo "MARK,$(date -u +%FT%T),$1" >> "$OUT/gpu.csv"; }
 
-# --- step 1: add the quantize and imatrix tools to the existing build (no reconfigure, no full rebuild)
-if [ ! -x "$BIN/llama-quantize" ] || [ ! -x "$BIN/llama-imatrix" ]; then
-  log "step 1: build llama-quantize llama-imatrix"
-  cmake --build "$BIN/.." -j2 --target llama-quantize llama-imatrix > "$OUT/build_tools.log" 2>&1 || { log "build failed"; exit 3; }
-fi
+# --- step 1: quantize/imatrix tools. They live in a separate CPU-only build (TOOLS_BIN) so the pinned
+#             CUDA build is never rebuilt: adding targets to it triggers a full rebuild since the
+#             2026-11-05 glibc header update. Build them with (same source commit 7bd1808):
+#   cmake -S <llama.cpp src> -B ~/1060/backends/builds/e2-tools -DGGML_CUDA=OFF -DCMAKE_BUILD_TYPE=Release
+#   cmake --build ~/1060/backends/builds/e2-tools -j4 --target llama-quantize llama-imatrix
+TOOLS_BIN="${TOOLS_BIN:-$BIN}"
+for t in llama-quantize llama-imatrix; do
+  [ -x "$TOOLS_BIN/$t" ] || { log "missing $TOOLS_BIN/$t (set TOOLS_BIN)"; exit 3; }
+done
+"$TOOLS_BIN/llama-quantize" --help 2>&1 | head -1 >> "$OUT/env.txt"
 
 # --- step 2: importance matrix from the Q8_0 (calibrated on the same WikiText slice the PPL uses:
 #             this flatters IQ2 on PPL/KLD, so the task scores are the fair comparison)
 IMAT="$MODELS/qwen3.5-4b-q8_0.imatrix"
 if [ ! -f "$IMAT" ]; then
   log "step 2: imatrix"; mark imatrix
-  "$BIN/llama-imatrix" -m "$Q8" -f "$DATA" -c 512 -ngl 99 -o "$IMAT" > "$OUT/imatrix.log" 2>&1 || { log "imatrix failed"; exit 4; }
+  "$TOOLS_BIN/llama-imatrix" -m "$Q8" -f "$DATA" -c 512 --chunks 40 -t 6 -o "$IMAT" > "$OUT/imatrix.log" 2>&1 || { log "imatrix failed"; exit 4; }
 fi
 
 # --- step 3: quantise (requantised from Q8_0; no F16 on the laptop)
@@ -52,7 +57,7 @@ for t in IQ2_XXS IQ2_M; do
   q="$MODELS/Qwen3.5-4B-$t.gguf"
   if [ ! -f "$q" ]; then
     log "step 3: quantize $t"
-    "$BIN/llama-quantize" --allow-requantize --imatrix "$IMAT" "$Q8" "$q" "$t" > "$OUT/quantize_$t.log" 2>&1 || { log "quantize $t failed"; continue; }
+    "$TOOLS_BIN/llama-quantize" --allow-requantize --imatrix "$IMAT" "$Q8" "$q" "$t" > "$OUT/quantize_$t.log" 2>&1 || { log "quantize $t failed"; continue; }
   fi
   QUANTS+=("$q")
 done

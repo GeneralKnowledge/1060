@@ -48,7 +48,7 @@ done
 IMAT="$MODELS/qwen3.5-4b-q8_0.imatrix"
 if [ ! -f "$IMAT" ]; then
   log "step 2: imatrix"; mark imatrix
-  "$TOOLS_BIN/llama-imatrix" -m "$Q8" -f "$DATA" -c 512 --chunks 40 -t 6 -o "$IMAT" > "$OUT/imatrix.log" 2>&1 || { log "imatrix failed"; exit 4; }
+  "$TOOLS_BIN/llama-imatrix" -m "$Q8" -f "$DATA" -c 512 -b 512 --chunks 40 -t 6 -o "$IMAT" > "$OUT/imatrix.log" 2>&1 || { log "imatrix failed"; exit 4; }
 fi
 
 # --- step 3: quantise (requantised from Q8_0; no F16 on the laptop)

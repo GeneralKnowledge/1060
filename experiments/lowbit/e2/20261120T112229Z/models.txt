@@ -1,0 +1,8 @@
+/home/red/1060/models/Qwen3.5-4B-Q4_K_M.gguf 2740937888
+00fe7986ff5f6b463e62455821146049db6f9313603938a70800d1fb69ef11a4  /home/red/1060/models/Qwen3.5-4B-Q4_K_M.gguf
+/home/red/1060/models/Ternary-Bonsai-2-4B-Q2_0.gguf 1212103520
+64a5183b44921bdb5ac4a6f5f92007821d6ebe5c66997d3c147fd214ab9433d4  /home/red/1060/models/Ternary-Bonsai-2-4B-Q2_0.gguf
+/home/red/1060/models/Qwen3.5-4B-IQ2_XXS.gguf 1538393280
+e7d0834e48cb27fc3d9261044eed8af027f629e8cdc6e16df43d7608a9b91bad  /home/red/1060/models/Qwen3.5-4B-IQ2_XXS.gguf
+/home/red/1060/models/Qwen3.5-4B-IQ2_M.gguf 1741554880
+8427e2c128c09ebadcebc4f384a9de4e12b3ba4405b664aa337fa469a8b794f9  /home/red/1060/models/Qwen3.5-4B-IQ2_M.gguf

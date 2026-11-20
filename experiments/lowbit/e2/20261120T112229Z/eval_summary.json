@@ -1,0 +1,42 @@
+{
+  "Qwen3.5-4B-Q4_K_M": {
+    "math_correct": 46,
+    "math_n": 50,
+    "code_pass": 10,
+    "code_n": 10,
+    "hit_max_tokens": 4,
+    "gen_tokens": 15496,
+    "median_gen_tps": 28.56,
+    "wall_s": 641.2
+  },
+  "Ternary-Bonsai-2-4B-Q2_0": {
+    "math_correct": 44,
+    "math_n": 50,
+    "code_pass": 10,
+    "code_n": 10,
+    "hit_max_tokens": 3,
+    "gen_tokens": 13980,
+    "median_gen_tps": 49.12,
+    "wall_s": 356.1
+  },
+  "Qwen3.5-4B-IQ2_XXS": {
+    "math_correct": 13,
+    "math_n": 50,
+    "code_pass": 3,
+    "code_n": 10,
+    "hit_max_tokens": 52,
+    "gen_tokens": 27871,
+    "median_gen_tps": 30.49,
+    "wall_s": 998.1
+  },
+  "Qwen3.5-4B-IQ2_M": {
+    "math_correct": 40,
+    "math_n": 50,
+    "code_pass": 6,
+    "code_n": 10,
+    "hit_max_tokens": 13,
+    "gen_tokens": 16435,
+    "median_gen_tps": 28.45,
+    "wall_s": 681.7
+  }
+}

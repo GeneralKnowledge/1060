@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "/home/red/1060-e1/experiments/lowbit/eval_tasks.py", line 136, in <module>
+    main()
+  File "/home/red/1060-e1/experiments/lowbit/eval_tasks.py", line 101, in main
+    rp.wait_ready(proc, timeout=600)
+  File "/home/red/1060-e1/experiments/lowbit/run_prompts.py", line 31, in wait_ready
+    raise RuntimeError(f"llama-server exited with {proc.returncode}")
+RuntimeError: llama-server exited with 1

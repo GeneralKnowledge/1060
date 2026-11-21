@@ -1,0 +1,35 @@
+[09:03:54] step 1: test-backend-ops
+  MUL_MAT(type_a=tq2_0,type_b=f32,m=64,n=16,k=256,bs=[3,2],nr=[2,1],per=[0,1,2,3],k_v=0,o=1,src_overlap=0,m_v=0,pad=0): not supported [CUDA0] 
+  MUL_MAT(type_a=tq2_0,type_b=f32,m=16,n=1,k=256,bs=[1,1],nr=[1,1],per=[0,1,2,3],k_v=0,o=1,src_overlap=0,m_v=0,pad=0): not supported [CUDA0] 
+  MUL_MAT(type_a=tq2_0,type_b=f32,m=1,n=64,k=256,bs=[1,1],nr=[1,1],per=[0,1,2,3],k_v=0,o=1,src_overlap=0,m_v=0,pad=0): not supported [CUDA0] 
+  303/303 tests passed
+2/2 backends passed
+[09:04:16] step 2: smoke Ternary-Bonsai-2-4B-Q2_0
+0.03.711.327 I common_perf_print:        load time =     896.27 ms
+0.03.711.328 I common_perf_print: prompt eval time =     317.34 ms /     9 tokens (   35.26 ms per token,    28.36 tokens per second)
+0.03.711.329 I common_perf_print:        eval time =    1895.70 ms /    95 runs   (   19.95 ms per token,    50.11 tokens per second)
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:03.97
+	Maximum resident set size (kbytes): 1504964
+[09:04:20] step 2: smoke Qwen3.5-4B-Q4_K_M
+0.27.376.593 I common_perf_print:        load time =   23265.59 ms
+0.27.376.595 I common_perf_print: prompt eval time =     251.90 ms /     9 tokens (   27.99 ms per token,    35.73 tokens per second)
+0.27.376.597 I common_perf_print:        eval time =    3196.42 ms /    95 runs   (   33.65 ms per token,    29.72 tokens per second)
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:27.55
+	Maximum resident set size (kbytes): 2997928
+[09:04:48] step 3: bench round 1 Qwen3.5-4B-Q4_K_M
+[09:06:00] step 3: bench round 1 Ternary-Bonsai-2-4B-Q2_0
+[09:07:00] step 3: bench round 2 Qwen3.5-4B-Q4_K_M
+[09:08:12] step 3: bench round 2 Ternary-Bonsai-2-4B-Q2_0
+[09:09:23] step 4: perplexity Ternary-Bonsai-2-4B-Q2_0
+/home/red/1060-e1/experiments/lowbit/e1/20261120T090351Z/kld_Ternary-Bonsai-2-4B-Q2_0.txt:Mean    KLD:   0.509384 ±   0.009740
+/home/red/1060-e1/experiments/lowbit/e1/20261120T090351Z/ppl_Ternary-Bonsai-2-4B-Q2_0.txt:0.39.847.041 I Final estimate: PPL = 18.4097 +/- 0.82732
+/home/red/1060-e1/experiments/lowbit/e1/20261120T090351Z/ppl_decode_Ternary-Bonsai-2-4B-Q2_0.txt:0.16.541.447 I Final estimate: PPL = 16.6966 +/- 2.59135
+[09:11:16] step 4: perplexity Qwen3.5-4B-Q4_K_M
+/home/red/1060-e1/experiments/lowbit/e1/20261120T090351Z/kld_Qwen3.5-4B-Q4_K_M.txt:Mean    KLD:   0.024235 ±   0.001476
+/home/red/1060-e1/experiments/lowbit/e1/20261120T090351Z/ppl_Qwen3.5-4B-Q4_K_M.txt:0.55.284.018 I Final estimate: PPL = 10.2405 +/- 0.39411
+/home/red/1060-e1/experiments/lowbit/e1/20261120T090351Z/ppl_decode_Qwen3.5-4B-Q4_K_M.txt:0.25.693.889 I Final estimate: PPL = 8.5711 +/- 1.10713
+[09:13:55] step 5: prompts
+Qwen3.5-4B-Q4_K_M fact-1 ok
+Qwen3.5-4B-Q4_K_M multi-1 ok
+wrote /home/red/1060-e1/experiments/lowbit/e1/20261120T090351Z/prompts.md
+[09:15:06] done: /home/red/1060-e1/experiments/lowbit/e1/20261120T090351Z

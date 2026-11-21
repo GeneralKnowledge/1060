@@ -1,0 +1,33 @@
+[22:55:06] MemAvailable 6723 MiB
+[22:55:06] bench ngl=50
+  n_prompt 512 n_gen 0 avg_ts 40.91
+  n_prompt 0 n_gen 64 avg_ts 4.91
+[23:00:00] swap used 642 MiB
+[23:00:00] bench ngl=54
+  n_prompt 512 n_gen 0 avg_ts 47.77
+  n_prompt 0 n_gen 64 avg_ts 5.97
+[23:01:06] swap used 639 MiB
+[23:01:06] bench ngl=58
+  n_prompt 512 n_gen 0 avg_ts 48.6
+  n_prompt 0 n_gen 64 avg_ts 7.13
+[23:01:58] swap used 639 MiB
+[23:01:58] bench ngl=62
+  n_prompt 512 n_gen 0 avg_ts 49.64
+  n_prompt 0 n_gen 64 avg_ts 8.77
+[23:02:46] swap used 639 MiB
+[23:02:46] bench ngl=65
+[23:02:59] ngl=65 failed (see bench_ngl65.log)
+  cuMemCreate(&handle, reserve_size, &prop, 0)
+/home/red/1060/backends/src/prism-llama.cpp/ggml/src/ggml-cuda/ggml-cuda.cu:111: CUDA error
+timeout: the monitored command dumped core
+[23:02:59] largest working ngl: 62
+[23:02:59] smoke ngl=62
+0.00.179.089 I llama_model_loader: - kv   0:                       general.architecture str              = qwen35
+0.00.478.748 I load_tensors: offloaded 62/65 layers to GPU
+0.00.642.254 I llama_model_loader: - kv   0:                       general.architecture str              = qwen35
+0.01.186.636 I load_tensors: offloaded 62/65 layers to GPU
+0.02.675.531 E CUDA error: out of memory
+	Maximum resident set size (kbytes): 6130240
+[23:03:06] hard eval subset at ngl=62
+Ternary-Bonsai-2-27B-PTQ1_0 {"math_correct": 1, "math_n": 3, "code_pass": 1, "code_n": 1, "hit_max_tokens": 2, "gen_tokens": 3082, "median_gen_tps": 8.68, "wall_s": 380.4}
+[23:09:27] done: /home/red/1060-e1/experiments/lowbit/e4/20261120T225505Z-offload

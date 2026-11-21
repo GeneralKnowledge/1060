@@ -1,0 +1,10 @@
+Ternary-Bonsai-2-27B-Q2_0 test/prealgebra/1139.json WRONG
+Ternary-Bonsai-2-27B-Q2_0 test/number_theory/737.json WRONG
+Ternary-Bonsai-2-27B-Q2_0 test/algebra/1837.json ok
+Ternary-Bonsai-2-27B-Q2_0 test/algebra/2427.json WRONG
+Ternary-Bonsai-2-27B-Q2_0 test/counting_and_probability/525.json WRONG
+Ternary-Bonsai-2-27B-Q2_0 test/counting_and_probability/134.json ok
+Ternary-Bonsai-2-27B-Q2_0 hcode-lru_cache pass
+Ternary-Bonsai-2-27B-Q2_0 hcode-dijkstra pass
+Ternary-Bonsai-2-27B-Q2_0 hcode-calc pass
+Ternary-Bonsai-2-27B-Q2_0 {"math_correct": 2, "math_n": 6, "code_pass": 3, "code_n": 3, "hit_max_tokens": 4, "gen_tokens": 6532, "median_gen_tps": 4.9, "wall_s": 1592.7}

@@ -1,0 +1,12 @@
+[16:11:36] smoke
+0.00.148.875 I llama_model_loader: - kv   0:                       general.architecture str              = qwen35
+0.00.423.995 I print_info: n_vocab               = 248320
+0.00.429.637 I load_tensors: offloaded 33/33 layers to GPU
+0.00.642.161 I llama_model_loader: - kv   0:                       general.architecture str              = qwen35
+0.00.829.131 I print_info: n_vocab               = 248320
+0.00.967.906 I load_tensors: offloaded 33/33 layers to GPU
+	Maximum resident set size (kbytes): 2817180
+[16:11:41] bench
+[16:12:25] GSM8K-50 + 10 coding tasks
+Ternary-Bonsai-2-9B-Q2_0 {"math_correct": 47, "math_n": 50, "code_pass": 10, "code_n": 10, "hit_max_tokens": 2, "gen_tokens": 14114, "median_gen_tps": 28.54, "wall_s": 543.5}
+[16:21:30] done: /home/red/1060-e1/experiments/lowbit/e3/20261120T161131Z

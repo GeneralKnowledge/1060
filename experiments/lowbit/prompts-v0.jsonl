@@ -1,0 +1,8 @@
+{"id": "know-1", "cat": "knowledge", "prompt": "What is the capital of Australia, and in which year did it officially become the seat of government? Answer in one sentence.", "expect": "Canberra"}
+{"id": "know-2", "cat": "knowledge", "prompt": "Who wrote the novel 'One Hundred Years of Solitude'?", "expect": "Garc"}
+{"id": "reason-1", "cat": "reasoning", "prompt": "A shop sells pens at 3 for 2 dollars. How much do 18 pens cost? Give the final answer as a number of dollars on the last line.", "expect": "12"}
+{"id": "reason-2", "cat": "reasoning", "prompt": "Alice is older than Bob. Bob is older than Carol. Is Carol older than Alice? Answer yes or no, then explain in one sentence.", "expect": "No"}
+{"id": "instr-1", "cat": "instruction", "prompt": "List exactly three fruits that are red, as a numbered list, with no other text.", "expect": ""}
+{"id": "code-1", "cat": "coding", "prompt": "Write a Python function is_prime(n) that returns True if n is a prime number and False otherwise. Only output the code.", "expect": "def is_prime"}
+{"id": "fact-1", "cat": "hallucination", "prompt": "What was the name of the first person to walk on Mars?", "expect": ""}
+{"id": "multi-1", "cat": "multi-turn", "turns": ["My name is Priya and my favourite colour is green. Please remember that.", "What is 7 times 8?", "What is my name and my favourite colour?"], "expect": "Priya"}

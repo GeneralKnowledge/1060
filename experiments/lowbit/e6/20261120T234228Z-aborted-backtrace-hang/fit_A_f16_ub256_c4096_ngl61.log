@@ -1,0 +1,21 @@
+0.00.163.127 I llama_completion: llama backend init
+0.00.163.155 I llama_completion: load the model and apply lora adapter, if any
+0.05.660.874 W common_fit_params: failed to fit params to free device memory: n_gpu_layers already set by user to 61, abort
+0.07.658.287 I cmn          init: llama threadpool init, n_threads = 6
+0.07.872.570 I 
+0.07.872.667 I system_info: n_threads = 6 (n_threads_batch = 6) / 12 | CUDA : ARCHS = 610 | USE_GRAPHS = 1 | FA_QUANTS = q4_0-q4_0,q8_0-q8_0,f16-f16,bf16-bf16 | CPU : SSE3 = 1 | SSSE3 = 1 | AVX = 1 | AVX2 = 1 | F16C = 1 | FMA = 1 | BMI2 = 1 | LLAMAFILE = 1 | OPENMP = 1 | REPACK = 1 | 
+0.07.872.670 I 
+0.07.879.958 I sampler seed: 4294967295
+0.07.879.967 I sampler params: 
+	repeat_last_n = 64, repeat_penalty = 1.000, frequency_penalty = 0.000, presence_penalty = 0.000
+	dry_multiplier = 0.000, dry_base = 1.750, dry_allowed_length = 2, dry_penalty_last_n = 64
+	top_k = 20, top_p = 0.950, min_p = 0.050, xtc_probability = 0.000, xtc_threshold = 0.100, typical_p = 1.000, top_n_sigma = -1.000, temp = 0.000
+	mirostat = 0, mirostat_lr = 0.100, mirostat_ent = 5.000, adaptive_target = -1.000, adaptive_decay = 0.900
+0.07.879.972 I sampler chain: logits -> ?penalties -> ?dry -> ?top-n-sigma -> top-k -> ?typical -> top-p -> min-p -> ?xtc -> temp-ext -> greedy 
+0.07.879.973 I generate: n_ctx = 4096, n_batch = 2048, n_predict = 64, n_keep = 0
+0.07.879.973 I 
+/home/red/1060/backends/src/prism-llama.cpp/ggml/src/ggml-cuda/ggml-cuda.cu:111: CUDA error
+0.10.176.020 E CUDA error: out of memory
+0.10.176.032 E   current device: 0, in function alloc at /home/red/1060/backends/src/prism-llama.cpp/ggml/src/ggml-cuda/ggml-cuda.cu:631
+0.10.176.034 E   cuMemCreate(&handle, reserve_size, &prop, 0)
+timeout: the monitored command dumped core

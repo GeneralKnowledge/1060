@@ -1,0 +1,47 @@
+0.00.011.769 I llama_completion: llama backend init
+0.00.011.776 I llama_completion: load the model and apply lora adapter, if any
+0.01.061.688 I cmn          init: llama threadpool init, n_threads = 6
+0.01.448.836 I 
+0.01.448.960 I system_info: n_threads = 6 (n_threads_batch = 6) / 12 | CUDA : ARCHS = 610 | USE_GRAPHS = 1 | FA_QUANTS = q4_0-q4_0,q8_0-q8_0,f16-f16,bf16-bf16 | CPU : SSE3 = 1 | SSSE3 = 1 | AVX = 1 | AVX2 = 1 | F16C = 1 | FMA = 1 | BMI2 = 1 | LLAMAFILE = 1 | OPENMP = 1 | REPACK = 1 | 
+0.01.448.964 I 
+0.01.449.192 I sampler seed: 4294967295
+0.01.449.210 I sampler params: 
+	repeat_last_n = 64, repeat_penalty = 1.000, frequency_penalty = 0.000, presence_penalty = 0.000
+	dry_multiplier = 0.000, dry_base = 1.750, dry_allowed_length = 2, dry_penalty_last_n = 64
+	top_k = 20, top_p = 0.950, min_p = 0.000, xtc_probability = 0.000, xtc_threshold = 0.100, typical_p = 1.000, top_n_sigma = -1.000, temp = 0.000
+	mirostat = 0, mirostat_lr = 0.100, mirostat_ent = 5.000, adaptive_target = -1.000, adaptive_decay = 0.900
+0.01.449.219 I sampler chain: logits -> ?penalties -> ?dry -> ?top-n-sigma -> top-k -> ?typical -> top-p -> ?min-p -> ?xtc -> temp-ext -> greedy 
+0.01.449.220 I generate: n_ctx = 4096, n_batch = 2048, n_predict = 96, n_keep = 0
+0.01.449.221 I 
+0.03.711.323 I common_perf_print:    sampling time =      47.54 ms
+0.03.711.324 I common_perf_print:    samplers time =      16.51 ms /   105 tokens
+0.03.711.327 I common_perf_print:        load time =     896.27 ms
+0.03.711.328 I common_perf_print: prompt eval time =     317.34 ms /     9 tokens (   35.26 ms per token,    28.36 tokens per second)
+0.03.711.329 I common_perf_print:        eval time =    1895.70 ms /    95 runs   (   19.95 ms per token,    50.11 tokens per second)
+0.03.711.330 I common_perf_print:       total time =    2262.50 ms /   104 tokens
+0.03.711.331 I common_perf_print: unaccounted time =       1.92 ms /   0.1 %      (total - sampling - prompt eval - eval) / (total)
+0.03.711.331 I common_perf_print:    graphs reused =         94
+0.03.711.332 I common_perf_print:   graph reallocs =          0    /     0        (same size) / (changed size)
+	Command being timed: "/home/red/1060/backends/builds/d2db58ba90808f32/build/bin/llama-completion -m /home/red/1060/models/Ternary-Bonsai-2-4B-Q2_0.gguf -p The three most important ideas in computer science are -n 96 -c 4096 --temp 0 --seed 1 -no-cnv -ngl 99 -fa 1 -ctk f16 -ctv f16 -b 2048 -ub 256"
+	User time (seconds): 2.98
+	System time (seconds): 0.38
+	Percent of CPU this job got: 84%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:03.97
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 1504964
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 191
+	Minor (reclaiming a frame) page faults: 87186
+	Voluntary context switches: 404
+	Involuntary context switches: 23
+	Swaps: 0
+	File system inputs: 41440
+	File system outputs: 16
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0

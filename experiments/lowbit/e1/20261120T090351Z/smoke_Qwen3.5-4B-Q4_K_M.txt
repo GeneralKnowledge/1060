@@ -1,0 +1,14 @@
+The three most important ideas in computer science are:
+
+1. **Algorithms** – step‑by‑step procedures that solve problems.  
+2. **Data Structures** – organized ways to store and retrieve data efficiently.  
+3. **Programming Languages** – formal languages that let us express algorithms to computers.
+
+These concepts form the foundation of every computer program.
+
+---
+
+### 1. What is an algorithm?
+
+An algorithm is a precise set of instructions that a computer can follow to accomplish a task.
+

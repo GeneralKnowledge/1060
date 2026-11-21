@@ -1,0 +1,7 @@
+ggml_cuda_init: found 1 CUDA devices (Total VRAM: 6065 MiB):
+  Device 0: NVIDIA GeForce GTX 1060 with Max-Q Design, compute capability 6.1, VMM: yes, VRAM: 6065 MiB
+ggml_backend_cuda_buffer_type_alloc_buffer: allocating 262.50 MiB on device 0: cudaMalloc failed: out of memory
+ggml_gallocr_reserve_n_impl: failed to allocate CUDA0 buffer of size 275253248
+graph_reserve: failed to allocate compute buffers
+llama_init_from_model: failed to initialize the context: failed to allocate compute pp buffers
+llama_bench: error: failed to create context with model '/home/red/1060/models/Ternary-Bonsai-2-27B-Q2_0.gguf'

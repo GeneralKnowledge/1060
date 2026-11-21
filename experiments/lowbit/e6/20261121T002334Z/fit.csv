@@ -1,0 +1,22 @@
+config,ngl,status,prompt_tokens,pp_tps,tg_tps,peak_vram_mib
+A_f16_ub256_c4096,63,fail_rc124,,,,5979
+A_f16_ub256_c4096,62,fail_rc134,,,,5909
+A_f16_ub256_c4096,61,fail_rc124,,,,5803
+A_f16_ub256_c4096,60,fail_rc124,,,,67
+A_f16_ub256_c4096,59,fail_rc124,,,,4981
+B_q8_ub256_c4096,63,fail_rc124,,,,67
+B_q8_ub256_c4096,62,fail_rc124,,,,5221
+B_q8_ub256_c4096,61,ok,3212,41.91,6.58,6041
+C_q8_ub128_c4096,63,fail_rc134,,,,5937
+--- 01:02:20 pass 2: FIT_TIMEOUT 900, timeouts logged separately from OOM; rows above with fail_rc124 were 240 s timeouts under I/O contention (inconclusive)
+C_q8_ub128_c4096,63,fail_rc134,,,,5937
+C_q8_ub128_c4096,62,ok,3212,40.39,8.32,5995
+D_q4_ub128_c4096,63,ok,3212,40.66,8.54,6013
+E_q8_ub128_c2048,63,ok,1621,40.85,9.00,6009
+A_f16_ub256_c4096,63,fail_rc134,,,,5991
+A_f16_ub256_c4096,62,fail_rc134,,,,5909
+A_f16_ub256_c4096,61,fail_rc134,,,,6013
+A_f16_ub256_c4096,60,oom,,,,5927
+A_f16_ub256_c4096,59,ok,3212,46.66,7.00,5985
+B_q8_ub256_c4096,63,fail_rc134,,,,5871
+B_q8_ub256_c4096,62,fail_rc134,,,,5987

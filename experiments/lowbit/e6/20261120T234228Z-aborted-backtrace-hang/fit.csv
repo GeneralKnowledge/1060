@@ -1,0 +1,8 @@
+config,ngl,status,prompt_tokens,pp_tps,tg_tps,peak_vram_mib
+A_f16_ub256_c4096,65,fail_rc124,,,,5463
+A_f16_ub256_c4096,64,fail_rc124,,,,6063
+A_f16_ub256_c4096,63,fail_rc124,,,,5991
+A_f16_ub256_c4096,62,fail_rc134,,,,5909
+A_f16_ub256_c4096,61,fail_rc134,,,,6013
+A_f16_ub256_c4096,60,fail_rc134,,,,5927
+A_f16_ub256_c4096,59,ok,3212,46.26,7.27,5985

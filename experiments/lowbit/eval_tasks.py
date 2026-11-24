@@ -157,7 +157,11 @@ def main():
                     print(tag, c["id"], "pass" if ok else "FAIL", flush=True)
             finally:
                 proc.terminate()
-                proc.wait(timeout=30)
+                try:
+                    proc.wait(timeout=30)
+                except subprocess.TimeoutExpired:
+                    proc.kill()
+                    proc.wait()
                 log.close()
             tps = sorted(x for x in s.pop("tps") if x)
             s["median_gen_tps"] = round(tps[len(tps) // 2], 2) if tps else None

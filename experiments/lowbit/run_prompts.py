@@ -94,7 +94,11 @@ def main():
                 print(tag, p["id"], "ok" if rows[-1]["contains_expect"] in (True, None) else "MISS", flush=True)
         finally:
             proc.terminate()
-            proc.wait(timeout=30)
+            try:
+                proc.wait(timeout=30)
+            except subprocess.TimeoutExpired:
+                proc.kill()
+                proc.wait()
             log.close()
     stream.close()
     md = ["# Fixed prompts, side by side", ""]

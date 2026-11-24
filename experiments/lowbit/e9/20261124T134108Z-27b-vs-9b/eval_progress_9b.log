@@ -1,0 +1,49 @@
+Ternary-Bonsai-2-9B-PQ2_0-MTP-Q8_0 test/prealgebra/1139.json WRONG
+Ternary-Bonsai-2-9B-PQ2_0-MTP-Q8_0 test/number_theory/737.json WRONG
+Ternary-Bonsai-2-9B-PQ2_0-MTP-Q8_0 test/algebra/1837.json ok
+Ternary-Bonsai-2-9B-PQ2_0-MTP-Q8_0 test/algebra/2427.json ok
+Ternary-Bonsai-2-9B-PQ2_0-MTP-Q8_0 test/counting_and_probability/525.json WRONG
+Ternary-Bonsai-2-9B-PQ2_0-MTP-Q8_0 test/counting_and_probability/134.json ok
+Ternary-Bonsai-2-9B-PQ2_0-MTP-Q8_0 test/counting_and_probability/119.json ok
+Ternary-Bonsai-2-9B-PQ2_0-MTP-Q8_0 test/geometry/627.json ok
+Ternary-Bonsai-2-9B-PQ2_0-MTP-Q8_0 test/algebra/305.json ok
+Ternary-Bonsai-2-9B-PQ2_0-MTP-Q8_0 test/prealgebra/1388.json ok
+Ternary-Bonsai-2-9B-PQ2_0-MTP-Q8_0 test/number_theory/1055.json ok
+Ternary-Bonsai-2-9B-PQ2_0-MTP-Q8_0 test/prealgebra/951.json ok
+Ternary-Bonsai-2-9B-PQ2_0-MTP-Q8_0 test/algebra/187.json ok
+Ternary-Bonsai-2-9B-PQ2_0-MTP-Q8_0 test/precalculus/675.json ok
+Ternary-Bonsai-2-9B-PQ2_0-MTP-Q8_0 test/intermediate_algebra/279.json ok
+Ternary-Bonsai-2-9B-PQ2_0-MTP-Q8_0 test/prealgebra/1233.json ok
+Ternary-Bonsai-2-9B-PQ2_0-MTP-Q8_0 test/precalculus/1313.json ok
+Ternary-Bonsai-2-9B-PQ2_0-MTP-Q8_0 test/intermediate_algebra/207.json ok
+Ternary-Bonsai-2-9B-PQ2_0-MTP-Q8_0 test/intermediate_algebra/1849.json WRONG
+Ternary-Bonsai-2-9B-PQ2_0-MTP-Q8_0 test/algebra/893.json ok
+Ternary-Bonsai-2-9B-PQ2_0-MTP-Q8_0 test/algebra/892.json WRONG
+Ternary-Bonsai-2-9B-PQ2_0-MTP-Q8_0 test/number_theory/357.json ok
+Ternary-Bonsai-2-9B-PQ2_0-MTP-Q8_0 test/algebra/873.json ok
+Ternary-Bonsai-2-9B-PQ2_0-MTP-Q8_0 test/prealgebra/1646.json WRONG
+Ternary-Bonsai-2-9B-PQ2_0-MTP-Q8_0 test/intermediate_algebra/582.json WRONG
+Ternary-Bonsai-2-9B-PQ2_0-MTP-Q8_0 test/intermediate_algebra/362.json ok
+Ternary-Bonsai-2-9B-PQ2_0-MTP-Q8_0 test/intermediate_algebra/345.json WRONG
+Ternary-Bonsai-2-9B-PQ2_0-MTP-Q8_0 test/algebra/2058.json ok
+Ternary-Bonsai-2-9B-PQ2_0-MTP-Q8_0 test/intermediate_algebra/232.json ok
+Ternary-Bonsai-2-9B-PQ2_0-MTP-Q8_0 test/geometry/283.json WRONG
+Ternary-Bonsai-2-9B-PQ2_0-MTP-Q8_0 hcode-lru_cache pass
+Ternary-Bonsai-2-9B-PQ2_0-MTP-Q8_0 hcode-dijkstra FAIL
+Ternary-Bonsai-2-9B-PQ2_0-MTP-Q8_0 hcode-calc FAIL
+Ternary-Bonsai-2-9B-PQ2_0-MTP-Q8_0 hcode-edit_distance pass
+Ternary-Bonsai-2-9B-PQ2_0-MTP-Q8_0 hcode-topo pass
+Ternary-Bonsai-2-9B-PQ2_0-MTP-Q8_0 hcode-lis pass
+Ternary-Bonsai-2-9B-PQ2_0-MTP-Q8_0 hcode-interval_rooms FAIL
+Ternary-Bonsai-2-9B-PQ2_0-MTP-Q8_0 hcode-sudoku_valid pass
+Traceback (most recent call last):
+  File "/home/red/1060-e1/experiments/lowbit/eval_tasks.py", line 171, in <module>
+    main()
+  File "/home/red/1060-e1/experiments/lowbit/eval_tasks.py", line 160, in main
+    proc.wait(timeout=30)
+  File "/usr/lib/python3.12/subprocess.py", line 1264, in wait
+    return self._wait(timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/subprocess.py", line 2045, in _wait
+    raise TimeoutExpired(self.args, timeout)
+subprocess.TimeoutExpired: Command '['/home/red/1060/backends/builds/prism-d7b289683/bin/llama-server', '-m', '/home/red/1060/models/Ternary-Bonsai-2-9B-PQ2_0-MTP-Q8_0.gguf', '-c', '4096', '--jinja', '--host', '127.0.0.1', '--port', '35127', '-ngl', '99', '-fa', 'on', '-np', '1', '--spec-type', 'draft-mtp', '--spec-draft-n-max', '2']' timed out after 30 seconds

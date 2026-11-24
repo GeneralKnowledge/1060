@@ -1,0 +1,8 @@
+{
+  "Ternary-Bonsai-2-27B-PTQ1_0": {
+    "math_correct_strict": 13,
+    "math_correct_recorded": 13,
+    "math_n": 14,
+    "changed": []
+  }
+}

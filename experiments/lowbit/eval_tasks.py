@@ -43,7 +43,7 @@ def num(s):
         return None
 
 
-ANSWER_RE = re.compile(r"Answer:\s*\**\s*\$?\s*(-?[\d,]*\.?\d+)(\s*/\s*-?[\d,]*\.?\d+)?(?!\d|[.,]\d|\s*/)")
+ANSWER_RE = re.compile(r"Answer:[ \t]*\**[ \t]*\$?[ \t]*(-?[\d,]*\.?\d+)([ \t]*/[ \t]*-?[\d,]*\.?\d+)?(?!\d|[.,]\d|[ \t]*/)")
 
 
 def math_answer(text):

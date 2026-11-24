@@ -73,7 +73,7 @@ At n=50 one standard error is about ±4–6 points. The differences among Bonsai
   - g5 computes a geometric series glass by glass until it is cut off.
   - On the code tasks, 7 of 10 answers hit the cap. 3 of those failures are only because the unclosed code fence became a SyntaxError (a grader artefact
     when the answer is truncated), and 3 are wrong logic (to_roman, rle, second_largest).
-- **IQ2_M** (10 GSM8K and 4 code). Mostly reasoning errors. 2 answers loop: g7 prints `Answer: 120 minutes.` 20× and g12 repeats per-year cash-flow
+- **IQ2_M** (14 GSM8K after rescoring, 10 at run time, and 4 code). Mostly reasoning errors. 2 answers loop: g7 prints `Answer: 120 minutes.` 20× and g12 repeats per-year cash-flow
   blocks. g5 makes the same "flat $3" error as Bonsai.
 
 ## E2 success criterion (experiments/lowbit/README.md)

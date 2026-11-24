@@ -10,6 +10,7 @@ Model-written code runs in a subprocess (python3 -I, temp dir, 10 s timeout).
 import argparse
 import json
 import re
+import secrets
 import subprocess
 import sys
 import tempfile
@@ -62,7 +63,6 @@ def math_answer(text):
     return v
 
 
-PASS_MARK = "__ALL_TESTS_COMPLETED_7f3a__"
 
 
 def _limits():
@@ -74,14 +74,16 @@ def _limits():
 
 def run_code(text, tests):
     """Run model-written code plus the unit tests. Passes only if the trusted tail runs to the end and
-    prints PASS_MARK, so an early sys.exit(0) in the generated code is a failure. Output goes to files in
+    prints a random per-call marker the generated code cannot know, so an early sys.exit(0) (even after
+    printing a guessed marker) is a failure. Output goes to files in
     the temp dir (bounded by RLIMIT_FSIZE), and the child has memory and process limits. This is not
     a filesystem or network sandbox: run it only on prompts you trust the model to answer benignly."""
     m = re.findall(r"```(?:python)?\n(.*?)```", text, re.S)
     code = m[0] if m else text
     with tempfile.TemporaryDirectory() as d:
         f = Path(d) / "t.py"
-        f.write_text(code + "\n\n" + tests + f"\nprint({PASS_MARK!r})\n")
+        mark = "__TESTS_DONE_" + secrets.token_hex(16) + "__"
+        f.write_text(code + "\n\n" + tests + f"\nprint({mark!r})\n")
         out, err = Path(d) / "out.txt", Path(d) / "err.txt"
         try:
             with open(out, "w") as fo, open(err, "w") as fe:
@@ -90,7 +92,7 @@ def run_code(text, tests):
         except subprocess.TimeoutExpired:
             return False, "timeout"
         tail = out.read_text(errors="replace")[-2000:]
-        ok = p.returncode == 0 and tail.rstrip().endswith(PASS_MARK)
+        ok = p.returncode == 0 and tail.rstrip().endswith(mark)
         return ok, err.read_text(errors="replace")[-300:] or ("" if ok else "tests did not complete")
 
 

@@ -11,3 +11,4 @@ experiments/.hashcache.json
 experiments/STOP
 mind/state/
 mind/STOP
+experiments/agent/runs/

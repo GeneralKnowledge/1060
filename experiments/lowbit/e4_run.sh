@@ -12,6 +12,8 @@ OUT="$ROOT/experiments/lowbit/e4/$(date -u +%Y%m%dT%H%M%SZ)-$MODE"
 mkdir -p "$OUT"
 HARD=(--math "$ROOT/experiments/lowbit/math500-l45-int-first30.jsonl" --code "$ROOT/experiments/lowbit/code-tasks-hard-v0.jsonl" --max-tokens 1024 --tag hard)
 log() { echo "[$(date -u +%H:%M:%S)] $*" | tee -a "$OUT/run.log"; }
+FAIL=0
+fail() { FAIL=1; log "FAILED: $*"; }
 {
   echo "date_utc: $(date -u +%FT%TZ)"; echo "lab_commit: $(git -C "$ROOT" rev-parse HEAD)"
   "$BIN/llama-cli" --version 2>&1 | head -3
@@ -31,7 +33,7 @@ mark() { echo "MARK,$(date -u +%FT%T),$1" >> "$OUT/gpu.csv"; echo "MARK $(date -
 
 if [ "$MODE" = hard ]; then
   log "hard eval: $*"; mark hard
-  python3 "$ROOT/experiments/lowbit/eval_tasks.py" --bin "$BIN" --out "$OUT" "${HARD[@]}" --models "$@" > "$OUT/eval_progress.log" 2>&1
+  python3 "$ROOT/experiments/lowbit/eval_tasks.py" --bin "$BIN" --out "$OUT" "${HARD[@]}" --models "$@" > "$OUT/eval_progress.log" 2>&1 || fail "hard eval"
   grep '^.* {' "$OUT/eval_progress.log" | tee -a "$OUT/run.log"
 
 elif [ "$MODE" = offload ]; then
@@ -57,11 +59,11 @@ elif [ "$MODE" = offload ]; then
   [ "$best" -gt 0 ] || exit 6
   log "smoke ngl=$best"; mark smoke
   /usr/bin/time -v "$BIN/llama-completion" -v -m "$M" -ngl "$best" "${RT[@]}" -p "The three most important ideas in computer science are" \
-    -n 64 -c 4096 --temp 0 --seed 1 -no-cnv > "$OUT/smoke.txt" 2> "$OUT/smoke.log"
+    -n 64 -c 4096 --temp 0 --seed 1 -no-cnv > "$OUT/smoke.txt" 2> "$OUT/smoke.log" || fail "smoke ngl=$best"
   grep -E "offloaded|general.architecture|model size|Maximum resident|load time|eval time|out of memory" "$OUT/smoke.log" | tee -a "$OUT/run.log"
   log "hard eval subset at ngl=$best"; mark eval
   python3 "$ROOT/experiments/lowbit/eval_tasks.py" --bin "$BIN" --out "$OUT" "${HARD[@]}" \
-    --math-limit "${MATH_N:-6}" --code-limit "${CODE_N:-3}" --server-args "-ngl $best -np 1 ${RT[*]}" --models "$M" > "$OUT/eval_progress.log" 2>&1
+    --math-limit "${MATH_N:-6}" --code-limit "${CODE_N:-3}" --server-args "-ngl $best -np 1 ${RT[*]}" --models "$M" > "$OUT/eval_progress.log" 2>&1 || fail "offload eval"
   grep '^.* {' "$OUT/eval_progress.log" | tee -a "$OUT/run.log"
 fi
-log "done: $OUT"
+if [ "$FAIL" = 0 ]; then log "done: $OUT"; else log "INCOMPLETE, a required step failed: $OUT"; exit 1; fi

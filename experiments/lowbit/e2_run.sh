@@ -17,6 +17,8 @@ OUT="$ROOT/experiments/lowbit/e2/$(date -u +%Y%m%dT%H%M%SZ)"
 mkdir -p "$OUT"
 RT=(-ngl 99 -fa 1 -ctk f16 -ctv f16 -b 2048 -ub 256)
 log() { echo "[$(date -u +%H:%M:%S)] $*" | tee -a "$OUT/run.log"; }
+FAIL=0
+fail() { FAIL=1; log "FAILED: $*"; }
 
 {
   echo "date_utc: $(date -u +%FT%TZ)"; echo "lab_commit: $(git -C "$ROOT" rev-parse HEAD)"
@@ -67,19 +69,19 @@ for m in "${ALL[@]}"; do stat -c '%n %s' "$m"; sha256sum "$m"; done | tee "$OUT/
 # --- step 4: speed (one round, r3, same flags as the lab benchmark)
 for m in "${ALL[@]}"; do
   tag=$(basename "$m" .gguf); log "step 4: bench $tag"; mark "bench-$tag"
-  "$BIN/llama-bench" -m "$m" -p 512 -n 128 -r 3 -o json -lm none "${RT[@]}" > "$OUT/bench_$tag.json" 2> "$OUT/bench_$tag.log"
+  "$BIN/llama-bench" -m "$m" -p 512 -n 128 -r 3 -o json -lm none "${RT[@]}" > "$OUT/bench_$tag.json" 2> "$OUT/bench_$tag.log" || fail "bench $tag"
   sleep 15
 done
 
 # --- step 5: PPL and KLD vs the Qwen Q8_0 reference for the new quants (E1 has them for the other two)
 for m in "${QUANTS[@]}"; do
   tag=$(basename "$m" .gguf); log "step 5: kld $tag"; mark "kld-$tag"
-  "$BIN/llama-perplexity" -m "$m" -f "$DATA" --chunks 20 -c 512 --kl-divergence-base "$REF" --kl-divergence "${RT[@]}" > "$OUT/kld_$tag.txt" 2>&1
+  "$BIN/llama-perplexity" -m "$m" -f "$DATA" --chunks 20 -c 512 --kl-divergence-base "$REF" --kl-divergence "${RT[@]}" > "$OUT/kld_$tag.txt" 2>&1 || fail "kld $tag"
   grep -E "Mean +KLD|Same top|Mean PPL\(Q\)" "$OUT/kld_$tag.txt" | tee -a "$OUT/run.log"
 done
 
 # --- step 6: checkable tasks
 log "step 6: GSM8K-50 + 10 coding tasks"; mark eval
-python3 "$ROOT/experiments/lowbit/eval_tasks.py" --bin "$BIN" --out "$OUT" --models "${ALL[@]}" > "$OUT/eval_progress.log" 2>&1
+python3 "$ROOT/experiments/lowbit/eval_tasks.py" --bin "$BIN" --out "$OUT" --models "${ALL[@]}" > "$OUT/eval_progress.log" 2>&1 || fail "eval"
 grep '^.* {' "$OUT/eval_progress.log" | tee -a "$OUT/run.log"
-log "done: $OUT"
+if [ "$FAIL" = 0 ]; then log "done: $OUT"; else log "INCOMPLETE, a required step failed: $OUT"; exit 1; fi

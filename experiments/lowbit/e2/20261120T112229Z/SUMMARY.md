@@ -49,17 +49,19 @@ trained model, so its KLD includes genuine model differences on top of quantisat
 
 | model | GSM8K | code | answers at 512-token cap (of 60) | answers with a line repeated ≥ 5× | median gen tok/s | eval wall |
 |---|---|---|---|---|---|---|
-| Q4_K_M | **46/50 (92 %)** | **10/10** | 4 | 0 | 28.6 | 641 s |
+| Q4_K_M | **44/50 (88 %)** | **10/10** | 4 | 0 | 28.6 | 641 s |
 | Bonsai Q2_0 | **44/50 (88 %)** | **10/10** | 3 | 0 | **49.1** | **356 s** |
 | IQ2_XXS | 13/50 (26 %) | 3/10 | **52** | **45** | 30.5 | 998 s |
-| IQ2_M | 40/50 (80 %) | 6/10 | 13 | 2 | 28.5 | 682 s |
+| IQ2_M | 36/50 (72 %) | 6/10 | 13 | 2 | 28.5 | 682 s |
 
 At n=50 one standard error is about ±4–6 points. The differences among Bonsai, Q4_K_M and IQ2_M are within noise. The gap to IQ2_XXS is not.
 
+**Rescored 2026-11-24 (PR #20 review):** maths is now graded only from the last `Answer:` line, with no fallback to the last number in the text, and fractions are evaluated. Answers that ran out of tokens before an `Answer:` line now count as wrong. This changed Q4_K_M from 46 to 44 and IQ2_M from 40 to 36; Bonsai (44) and IQ2_XXS (13) are unchanged.
+
 ### Representative wrong answers
 
-- **Q4_K_M** (g12, g37, g41, g43). These are ordinary reasoning slips. g12 answers the break-even year 12 instead of 13. g37 and g43 hit the cap while
-  double-checking after reaching the right value, so the lenient last-number grader picked a stray number.
+- **Q4_K_M** (six misses). g12 and g41 are ordinary reasoning slips; g12 answers the break-even year 12 instead of 13. The other four hit the 512-token cap,
+  g37 and g43 while double-checking after reaching the right value.
 - **Bonsai Q2_0** (g5, g8, g12, g21, g38, g39). These are coherent reasoning errors, with no loops or garbage:
   - g5 ignores "60 % of the price" and uses $3 per glass (50 vs 64).
   - g21 misreads the ages (2 vs 14).

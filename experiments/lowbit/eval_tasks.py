@@ -43,25 +43,54 @@ def num(s):
         return None
 
 
+ANSWER_RE = re.compile(r"Answer:\s*\**\s*\$?\s*(-?[\d,]*\.?\d+)(\s*/\s*\d+)?")
+
+
 def math_answer(text):
-    m = re.findall(r"Answer:\s*\**\s*\$?(-?[\d,]*\.?\d+)", text)
-    if m:
-        return num(m[-1])
-    m = re.findall(r"-?\d[\d,]*\.?\d*", text)
-    return num(m[-1]) if m else None
+    """Value on the last 'Answer:' line, or None. A fraction such as 18/5 is evaluated, never read as its
+    numerator. There is no fallback to the last number in the text: a reply cut off before its
+    'Answer:' line scores as wrong."""
+    m = ANSWER_RE.findall(text)
+    if not m:
+        return None
+    whole, frac = m[-1]
+    v = num(whole)
+    if v is not None and frac:
+        d = num(frac.strip().lstrip("/").strip())
+        v = v / d if d else None
+    return v
+
+
+PASS_MARK = "__ALL_TESTS_COMPLETED_7f3a__"
+
+
+def _limits():
+    import resource
+    resource.setrlimit(resource.RLIMIT_AS, (1 << 30, 1 << 30))       # 1 GiB address space
+    resource.setrlimit(resource.RLIMIT_FSIZE, (16 << 20, 16 << 20))  # 16 MiB per written file
+    resource.setrlimit(resource.RLIMIT_NPROC, (64, 64))
 
 
 def run_code(text, tests):
+    """Run model-written code plus the unit tests. Passes only if the trusted tail runs to the end and
+    prints PASS_MARK, so an early sys.exit(0) in the generated code is a failure. Output goes to files in
+    the temp dir (bounded by RLIMIT_FSIZE), and the child has memory and process limits. This is not
+    a filesystem or network sandbox: run it only on prompts you trust the model to answer benignly."""
     m = re.findall(r"```(?:python)?\n(.*?)```", text, re.S)
     code = m[0] if m else text
     with tempfile.TemporaryDirectory() as d:
         f = Path(d) / "t.py"
-        f.write_text(code + "\n\n" + tests + "\n")
+        f.write_text(code + "\n\n" + tests + f"\nprint({PASS_MARK!r})\n")
+        out, err = Path(d) / "out.txt", Path(d) / "err.txt"
         try:
-            p = subprocess.run([sys.executable, "-I", str(f)], cwd=d, capture_output=True, text=True, timeout=10)
-            return p.returncode == 0, p.stderr[-300:]
+            with open(out, "w") as fo, open(err, "w") as fe:
+                p = subprocess.run([sys.executable, "-I", str(f)], cwd=d, stdout=fo, stderr=fe,
+                                   timeout=10, preexec_fn=_limits)
         except subprocess.TimeoutExpired:
             return False, "timeout"
+        tail = out.read_text(errors="replace")[-2000:]
+        ok = p.returncode == 0 and tail.rstrip().endswith(PASS_MARK)
+        return ok, err.read_text(errors="replace")[-300:] or ("" if ok else "tests did not complete")
 
 
 def main():
@@ -81,6 +110,9 @@ def main():
     a = ap.parse_args()
     maths = [json.loads(l) for l in Path(a.math).read_text().splitlines() if l.strip()]
     codes = [json.loads(l) for l in Path(a.code).read_text().splitlines() if l.strip()]
+    stems = [Path(m).stem for m in a.models]
+    if len(set(stems)) != len(stems):
+        sys.exit(f"duplicate model file names: {stems}")
     maths = maths[:a.math_limit] if a.math_limit else maths
     codes = codes[:a.code_limit] if a.code_limit else codes
     sfx = f"_{a.tag}" if a.tag else ""

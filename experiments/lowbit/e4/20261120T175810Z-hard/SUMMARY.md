@@ -12,9 +12,9 @@ The 27B download ran concurrently from 17:58 to about 18:25, and only for the fi
 
 | model | maths | code | total | answers at the 1024 cap (of 38) | real loops | median gen tok/s | wall |
 |---|---|---|---|---|---|---|---|
-| Qwen3.5-4B Q4_K_M | 17/30 (57 %) | **6/8** | **23/38** | 14 | 0 | 28.5 | 1013 s |
-| Bonsai-2-4B Q2_0 | 16/30 (53 %) | 5/8 | 21/38 | 15 | 0 | **48.8** | **556 s** |
-| Bonsai-2-9B Q2_0 | **18/30 (60 %)** | 5/8 | **23/38** | **12** | 0 | 28.2 | 977 s |
+| Qwen3.5-4B Q4_K_M | 15/30 (50 %) | **6/8** | 21/38 | 14 | 0 | 28.5 | 1013 s |
+| Bonsai-2-4B Q2_0 | 14/30 (47 %) | 5/8 | 19/38 | 15 | 0 | **48.8** | **556 s** |
+| Bonsai-2-9B Q2_0 | **17/30 (57 %)** | 5/8 | **22/38** | **12** | 0 | 28.2 | 977 s |
 
 All cap hits are maths items, with none in code. The script's "line repeated ≥ 5×" check flags 1 / 1 / 2 answers, but these are false positives:
 repeated `$$` or `\[` LaTeX delimiters, and `i += 1` inside generated code. None is a real loop.
@@ -22,12 +22,14 @@ repeated `$$` or `\[` LaTeX delimiters, and `i += 1` inside generated code. None
 ## What the set actually measures
 
 The cap dominates. **Every model's maths misses except one are answers that ran out of the 1024 tokens**:
-- Q4_K_M: 13 misses, 12 at the cap.
-- Bonsai-4B: 14 misses, 13 at the cap.
-- Bonsai-9B: 12 misses, 11 at the cap.
+- Q4_K_M: 15 misses, 14 at the cap.
+- Bonsai-4B: 16 misses, 15 at the cap.
+- Bonsai-9B: 13 misses, 12 at the cap.
+
+**Rescored 2026-11-24 (PR #20 review):** maths is now graded only from the last `Answer:` line, with no fallback to the last number in the text, and fractions are evaluated. Answers that ran out of tokens before an `Answer:` line now count as wrong. Before rescoring, a lenient last-number fallback credited a few cap-hit answers (maths was 17 / 16 / 18).
 
 Seven items (intermediate algebra 279/1849/582/362/345/232 and geometry 283) hit the cap for **all three** models. Without thinking mode and with a
-1024-token budget, these level 4–5 problems mostly test whether the model finishes in time. The 9B hits the cap least, which is where its +1–2 comes from.
+1024-token budget, these level 4–5 problems mostly test whether the model finishes in time. The 9B hits the cap least, which is where its +2–3 comes from.
 
 Only one maths answer per model was finished but wrong:
 - Q4_K_M, prealgebra/1646: answered angle 110 (want 80).

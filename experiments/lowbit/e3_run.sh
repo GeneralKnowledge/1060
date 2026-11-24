@@ -10,6 +10,8 @@ OUT="$ROOT/experiments/lowbit/e3/$(date -u +%Y%m%dT%H%M%SZ)"
 mkdir -p "$OUT"
 RT=(-ngl 99 -fa 1 -ctk f16 -ctv f16 -b 2048 -ub 256)
 log() { echo "[$(date -u +%H:%M:%S)] $*" | tee -a "$OUT/run.log"; }
+FAIL=0
+fail() { FAIL=1; log "FAILED: $*"; }
 {
   echo "date_utc: $(date -u +%FT%TZ)"; echo "lab_commit: $(git -C "$ROOT" rev-parse HEAD)"
   "$BIN/llama-cli" --version 2>&1 | head -3
@@ -27,13 +29,13 @@ tag=$(basename "$CAND" .gguf)
 
 log "smoke"; mark smoke
 /usr/bin/time -v "$BIN/llama-completion" -v -m "$CAND" -p "The three most important ideas in computer science are" \
-  -n 64 -c 4096 --temp 0 --seed 1 -no-cnv "${RT[@]}" > "$OUT/smoke.txt" 2> "$OUT/smoke.log"
+  -n 64 -c 4096 --temp 0 --seed 1 -no-cnv "${RT[@]}" > "$OUT/smoke.txt" 2> "$OUT/smoke.log" || fail "smoke"
 grep -E "offloaded|general.architecture|n_vocab|model size|Maximum resident|out of memory" "$OUT/smoke.log" | tee -a "$OUT/run.log"
 
 log "bench"; mark bench
-"$BIN/llama-bench" -m "$CAND" -p 512,2048 -n 128 -r 3 -o json -lm none "${RT[@]}" > "$OUT/bench.json" 2> "$OUT/bench.log"
+"$BIN/llama-bench" -m "$CAND" -p 512,2048 -n 128 -r 3 -o json -lm none "${RT[@]}" > "$OUT/bench.json" 2> "$OUT/bench.log" || fail "bench"
 
 log "GSM8K-50 + 10 coding tasks"; mark eval
-python3 "$ROOT/experiments/lowbit/eval_tasks.py" --bin "$BIN" --out "$OUT" --models "$CAND" > "$OUT/eval_progress.log" 2>&1
+python3 "$ROOT/experiments/lowbit/eval_tasks.py" --bin "$BIN" --out "$OUT" --models "$CAND" > "$OUT/eval_progress.log" 2>&1 || fail "eval"
 grep '^.* {' "$OUT/eval_progress.log" | tee -a "$OUT/run.log"
-log "done: $OUT"
+if [ "$FAIL" = 0 ]; then log "done: $OUT"; else log "INCOMPLETE, a required step failed: $OUT"; exit 1; fi

@@ -15,6 +15,8 @@ mkdir -p "$OUT"
 RT=(-ngl 99 -fa 1 -ctk f16 -ctv f16 -b 2048 -ub 256)
 
 log() { echo "[$(date -u +%H:%M:%S)] $*" | tee -a "$OUT/run.log"; }
+FAIL=0
+fail() { FAIL=1; log "FAILED: $*"; }
 
 # --- environment record
 {
@@ -42,7 +44,7 @@ mark() { echo "MARK,$(date -u +%FT%T),$1" >> "$OUT/gpu.csv"; }
 # --- step 1: kernel correctness vs CPU on Pascal
 log "step 1: test-backend-ops"
 mark kernels
-"$BIN/test-backend-ops" test -b CUDA0 -o MUL_MAT -p "type_a=(q1_0|q2_0|iq1_s|iq2_xxs|tq2_0),type_b=f32" > "$OUT/kernels_mul_mat.txt" 2>&1
+"$BIN/test-backend-ops" test -b CUDA0 -o MUL_MAT -p "type_a=(q1_0|q2_0|iq1_s|iq2_xxs|tq2_0),type_b=f32" > "$OUT/kernels_mul_mat.txt" 2>&1 || fail "kernel test"
 "$BIN/test-backend-ops" test -b CUDA0 -o GET_ROWS > "$OUT/kernels_get_rows.txt" 2>&1
 grep -E "passed|FAIL|not supported" "$OUT/kernels_mul_mat.txt" | tail -5 | tee -a "$OUT/run.log"
 
@@ -52,7 +54,7 @@ for m in "$CAND" "$BASE"; do
   log "step 2: smoke $tag"
   mark "smoke-$tag"
   /usr/bin/time -v "$BIN/llama-completion" -v -m "$m" -p "The three most important ideas in computer science are" \
-    -n 96 -c 4096 --temp 0 --seed 1 -no-cnv "${RT[@]}" > "$OUT/smoke_$tag.txt" 2> "$OUT/smoke_$tag.log"
+    -n 96 -c 4096 --temp 0 --seed 1 -no-cnv "${RT[@]}" > "$OUT/smoke_$tag.txt" 2> "$OUT/smoke_$tag.log" || fail "smoke $tag"
   grep -E "offloaded|n_vocab|general.architecture|file type|model size|Maximum resident|Elapsed|eval time|load time" "$OUT/smoke_$tag.log" | tee -a "$OUT/run.log"
 done
 
@@ -62,7 +64,7 @@ for round in 1 2; do
     tag=$(basename "$m" .gguf)
     log "step 3: bench round $round $tag"
     mark "bench-$round-$tag"
-    "$BIN/llama-bench" -m "$m" -p 512,2048 -n 128 -r 5 -o json -lm none "${RT[@]}" > "$OUT/bench_${round}_$tag.json" 2> "$OUT/bench_${round}_$tag.log"
+    "$BIN/llama-bench" -m "$m" -p 512,2048 -n 128 -r 5 -o json -lm none "${RT[@]}" > "$OUT/bench_${round}_$tag.json" 2> "$OUT/bench_${round}_$tag.log" || fail "bench $tag"
     sleep 20
   done
 done
@@ -73,16 +75,16 @@ for m in "$CAND" "$BASE"; do
   log "step 4: perplexity $tag"
   mark "ppl-$tag"
   if [ -f "$REF" ]; then
-    "$BIN/llama-perplexity" -m "$m" -f "$DATA" --chunks 20 -c 512 --kl-divergence-base "$REF" --kl-divergence "${RT[@]}" > "$OUT/kld_$tag.txt" 2>&1
+    "$BIN/llama-perplexity" -m "$m" -f "$DATA" --chunks 20 -c 512 --kl-divergence-base "$REF" --kl-divergence "${RT[@]}" > "$OUT/kld_$tag.txt" 2>&1 || fail "kld $tag"
   fi
-  "$BIN/llama-perplexity" -m "$m" -f "$DATA" --chunks 20 -c 512 "${RT[@]}" > "$OUT/ppl_$tag.txt" 2>&1
-  "$BIN/llama-perplexity" -m "$m" -f "$DATA" --chunks 2 -c 512 "${RT[@]}" -ub 1 > "$OUT/ppl_decode_$tag.txt" 2>&1
+  "$BIN/llama-perplexity" -m "$m" -f "$DATA" --chunks 20 -c 512 "${RT[@]}" > "$OUT/ppl_$tag.txt" 2>&1 || fail "ppl $tag"
+  "$BIN/llama-perplexity" -m "$m" -f "$DATA" --chunks 2 -c 512 "${RT[@]}" -ub 1 > "$OUT/ppl_decode_$tag.txt" 2>&1 || fail "decode ppl $tag"
   grep -E "Final estimate|Mean +KLD|Mean KLD" "$OUT/kld_$tag.txt" "$OUT/ppl_$tag.txt" "$OUT/ppl_decode_$tag.txt" 2>/dev/null | tee -a "$OUT/run.log"
 done
 
 # --- step 5: fixed prompts (greedy, thinking off) for side-by-side reading
 log "step 5: prompts"
 python3 "$ROOT/experiments/lowbit/run_prompts.py" --bin "$BIN" --out "$OUT" --models "$CAND" "$BASE" \
-  --prompts "$ROOT/experiments/lowbit/prompts-v0.jsonl" 2>&1 | tail -3 | tee -a "$OUT/run.log"
+  --prompts "$ROOT/experiments/lowbit/prompts-v0.jsonl" 2>&1 | tail -3 | tee -a "$OUT/run.log" || fail "prompts"
 
-log "done: $OUT"
+if [ "$FAIL" = 0 ]; then log "done: $OUT"; else log "INCOMPLETE, a required step failed: $OUT"; exit 1; fi

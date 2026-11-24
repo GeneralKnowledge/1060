@@ -37,7 +37,7 @@ Run: 2026-11-20 16:11–16:21 UTC, `experiments/lowbit/e3_run.sh` at lab commit 
 | model | GSM8K | code | 512-token cap hits (of 60) | answers with a line repeated ≥ 5× | median gen tok/s | tg128 | peak VRAM (eval) |
 |---|---|---|---|---|---|---|---|
 | **Bonsai-2-9B Q2_0 (E3)** | **47/50 (94 %)** | **10/10** | 2 | 0 | 28.5 | 29.5 | 2,707 MiB |
-| Qwen3.5-4B Q4_K_M (E2) | 46/50 (92 %) | 10/10 | 4 | 0 | 28.6 | 29.8 | 3,063 MiB |
+| Qwen3.5-4B Q4_K_M (E2) | 44/50 (88 %) | 10/10 | 4 | 0 | 28.6 | 29.8 | 3,063 MiB |
 | Bonsai-2-4B Q2_0 (E2) | 44/50 (88 %) | 10/10 | 3 | 0 | 49.1 | 50.7 | 1,623 MiB |
 
 Wrong answers (3). All are coherent and there were no loops:
@@ -54,11 +54,11 @@ That is milder than Bonsai-4B's "Abstraction ×3" collapse, and chat-mode answer
 | criterion | result | verdict |
 |---|---|---|
 | Runs fully on the GPU | 33/33 layers | **PASS** |
-| Beats Bonsai-2-4B and Q4_K_M on GSM8K-50 + code (≥ 47/50 or clearly better on code) | 47/50 and 10/10, vs 44 and 46 (code tied at 10/10) | **PASS** (exactly at the threshold) |
+| Beats Bonsai-2-4B and Q4_K_M on GSM8K-50 + code (≥ 47/50 or clearly better on code) | 47/50 and 10/10, vs 44 and 44 (code tied at 10/10; Q4_K_M rescored from 46, see E2) | **PASS** (exactly at the threshold) |
 | ≥ 20 tok/s | 29.5 tok/s | **PASS** |
 | VRAM ≤ 4.5 GiB | 2.69 GiB peak | **PASS** |
 
-**E3 passes.** The caveat is that 47 vs 46 vs 44 on 50 questions is within one standard error (about ±4 points). So the 9B is *not demonstrably* better
+**E3 passes.** The caveat is that 47 vs 44 vs 44 on 50 questions is within one standard error (about ±4 points). So the 9B is *not demonstrably* better
 than Qwen3.5-4B Q4_K_M on this set. It is about as good at the same decode speed, with 12 % less VRAM, fewer cap hits and no loops. The set is near
 ceiling (all three are ≥ 88 % and code is 10/10 everywhere), so a harder or larger eval is needed to separate them.
 VRAM headroom is large: 2.7 of 6 GiB leaves about 3 GiB for longer context.

@@ -59,7 +59,7 @@ for t in IQ2_XXS IQ2_M; do
   q="$MODELS/Qwen3.5-4B-$t.gguf"
   if [ ! -f "$q" ]; then
     log "step 3: quantize $t"
-    "$TOOLS_BIN/llama-quantize" --allow-requantize --imatrix "$IMAT" "$Q8" "$q" "$t" > "$OUT/quantize_$t.log" 2>&1 || { log "quantize $t failed"; continue; }
+    "$TOOLS_BIN/llama-quantize" --allow-requantize --imatrix "$IMAT" "$Q8" "$q" "$t" > "$OUT/quantize_$t.log" 2>&1 || { fail "quantize $t"; rm -f "$q"; continue; }
   fi
   QUANTS+=("$q")
 done

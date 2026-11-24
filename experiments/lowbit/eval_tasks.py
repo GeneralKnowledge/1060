@@ -144,6 +144,7 @@ def main():
                     s["tps"].append(tps or 0)
                     fo.write(json.dumps({"model": tag, "id": q["id"], "ok": ok, "got": got, "want": q["answer"],
                                          "finish": fin, "tokens": n, "tps": tps, "text": text}) + "\n")
+                    fo.flush()
                     print(tag, q["id"], "ok" if ok else "WRONG", flush=True)
                 for c in codes:
                     text, fin, n, tps, wall = chat(c["prompt"], a.max_tokens)
@@ -154,6 +155,7 @@ def main():
                     s["tps"].append(tps or 0)
                     fo.write(json.dumps({"model": tag, "id": c["id"], "ok": ok, "err": err, "finish": fin,
                                          "tokens": n, "tps": tps, "text": text}) + "\n")
+                    fo.flush()
                     print(tag, c["id"], "pass" if ok else "FAIL", flush=True)
             finally:
                 proc.terminate()

@@ -51,12 +51,12 @@ trained model, so its KLD includes genuine model differences on top of quantisat
 |---|---|---|---|---|---|---|
 | Q4_K_M | **44/50 (88 %)** | **10/10** | 4 | 0 | 28.6 | 641 s |
 | Bonsai Q2_0 | **44/50 (88 %)** | **10/10** | 3 | 0 | **49.1** | **356 s** |
-| IQ2_XXS | 13/50 (26 %) | 3/10 | **52** | **45** | 30.5 | 998 s |
+| IQ2_XXS | 11/50 (22 %) | 3/10 | **52** | **45** | 30.5 | 998 s |
 | IQ2_M | 36/50 (72 %) | 6/10 | 13 | 2 | 28.5 | 682 s |
 
 At n=50 one standard error is about ±4–6 points. The differences among Bonsai, Q4_K_M and IQ2_M are within noise. The gap to IQ2_XXS is not.
 
-**Rescored 2026-11-24 (PR #20 review):** maths is now graded only from the last `Answer:` line, with no fallback to the last number in the text, and fractions are evaluated. Answers that ran out of tokens before an `Answer:` line now count as wrong. The raw jsonl and summary json keep the run-time verdicts; strict counts and the changed ids are in the `*_rescored.json` file next to them (`rescore_math.py`). This changed Q4_K_M from 46 to 44 and IQ2_M from 40 to 36; Bonsai (44) and IQ2_XXS (13) are unchanged.
+**Rescored 2026-11-24 (PR #20 review):** maths is now graded only from the last `Answer:` line, with no fallback to the last number in the text, and fractions are evaluated. Answers that ran out of tokens before an `Answer:` line now count as wrong. The raw jsonl and summary json keep the run-time verdicts; strict counts and the changed ids are in the `*_rescored.json` file next to them (`rescore_math.py`). This changed Q4_K_M from 46 to 44, IQ2_M from 40 to 36 and IQ2_XXS from 13 to 11 (two looping replies whose last `Answer:` line is not a number); Bonsai (44) is unchanged.
 
 ### Representative wrong answers
 
@@ -80,8 +80,8 @@ At n=50 one standard error is about ±4–6 points. The differences among Bonsai
 
 | criterion | values | verdict |
 |---|---|---|
-| Bonsai ≥ IQ2_XXS + 10 points on GSM8K | 88 % vs 26 % (+62) | **PASS** |
-| Bonsai within 15 points of Q4_K_M on GSM8K | 88 % vs 92 % (−4) | **PASS** |
+| Bonsai ≥ IQ2_XXS + 10 points on GSM8K | 88 % vs 22 % (+66) | **PASS** |
+| Bonsai within 15 points of Q4_K_M on GSM8K | 88 % vs 88 % (0; was 92 % before rescoring) | **PASS** |
 
 **E2 passes.** At 1.2 GB (2.3 bits per weight, 1.6 GB VRAM) the trained ternary model holds Q4_K_M-level task accuracy on this set, at 1.7× the decode speed.
 Post-training 2-bit of the same base collapses at IQ2_XXS and is still clearly worse at IQ2_M (3.3 bits per weight, 2.1 GB). PPL/KLD rank Bonsai below

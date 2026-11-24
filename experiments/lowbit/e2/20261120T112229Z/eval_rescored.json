@@ -25,10 +25,23 @@
     "changed": []
   },
   "Qwen3.5-4B-IQ2_XXS": {
-    "math_correct_strict": 13,
+    "math_correct_strict": 11,
     "math_correct_recorded": 13,
     "math_n": 50,
-    "changed": []
+    "changed": [
+      {
+        "id": "gsm8k-test-28",
+        "recorded": true,
+        "strict": false,
+        "finish": "length"
+      },
+      {
+        "id": "gsm8k-test-34",
+        "recorded": true,
+        "strict": false,
+        "finish": "length"
+      }
+    ]
   },
   "Qwen3.5-4B-IQ2_M": {
     "math_correct_strict": 36,

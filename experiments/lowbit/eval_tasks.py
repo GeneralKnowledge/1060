@@ -50,10 +50,11 @@ def math_answer(text):
     """Value on the last 'Answer:' line, or None. A fraction such as 18/5 is evaluated, never read as its
     numerator. There is no fallback to the last number in the text: a reply cut off before its
     'Answer:' line scores as wrong."""
-    m = ANSWER_RE.findall(text)
+    i = text.rfind("Answer:")
+    m = ANSWER_RE.match(text, i) if i >= 0 else None
     if not m:
         return None
-    whole, frac = m[-1]
+    whole, frac = m.groups()
     v = num(whole)
     if v is not None and frac:
         d = num(frac.strip().lstrip("/").strip())

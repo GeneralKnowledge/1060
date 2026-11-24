@@ -48,10 +48,10 @@ Each model solves a different subset of the code tasks, and 6 of the 8 tasks spl
 
 | criterion | result | verdict |
 |---|---|---|
-| Spread ≥ 15 points between the three models | maths 53–60 % (7 points); total 55–61 % (5 points) | **FAIL** |
+| Spread ≥ 15 points between the three models | maths 47–57 % (10 points); total 50–58 % (8 points), after rescoring | **FAIL** |
 | Expected order 9B > Q4_K_M > Bonsai-4B | maths 17 > 15 > 14 (matches, after rescoring); total 22 > 21 > 19 | order matches on maths, but the gaps are 1–2 items each, well inside noise (±9 points at n=30) |
 
-**E4a fails to separate the models.** The harder set moved all three from about 90 % to about 57 %, but they moved together. The remaining gap is
+**E4a fails to separate the models.** The harder set moved all three from about 90 % to about 50 %, but they moved together. The remaining gap is
 1–2 items, and most of it comes from finishing within the 1024-token cap rather than from being right more often. To separate them, a next eval
 would need a larger cap (2048+, or thinking on with a reasoning budget) so that cap hits stop dominating, and more items (≥ 100) to bring the noise
 below the size of the effect. On this hardware Bonsai-4B remains the speed pick (1.7× decode), and on quality the 9B ≈ Q4_K_M.

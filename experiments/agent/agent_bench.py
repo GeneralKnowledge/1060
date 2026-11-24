@@ -49,11 +49,13 @@ Every reply is exactly one JSON action:
 
 - write: create or replace the file `path` with the complete text in `content`.
 - read: show the file `path`.
-- run: run `python3 path` and show its output.
+- run: run `python3 path` and show its output (`path` is just the file name, e.g. "demo.py").
 - test: run all the unittest tests (test_*.py) and show the result.
-- done: you have finished. Only say done after your tests pass.
+- done: you have finished. Say done once your tests pass.
 
-Work in small steps: write the module, write the tests, run test, then fix what fails and test again."""
+Work in small steps: write the module, write the tests, run test, then fix what fails and test again.
+When a test fails, first decide which side is wrong: re-read the task. Your own test can be the mistake
+(a wrong expected value); then fix the test, not the code. Never repeat an action that just failed the same way."""
 
 
 # --- the model ---------------------------------------------------------------
@@ -148,6 +150,9 @@ def act(ws, a):
         p = safe_path(ws, path)
         return tail(p.read_text(), 3000) if p.is_file() else f"No file {path}."
     if kind == "run":
+        words = path.split()
+        if len(words) > 1:  # "python3 test_x.py": the model wrote a command, not a file name
+            path = next((w for w in words if w.endswith(".py")), path)
         p = safe_path(ws, path)
         if not p.is_file():
             return f"No file {path}."
@@ -220,6 +225,9 @@ def run_task(model, task, max_steps, log):
                 result = act(ws, a)
             except Exception as e:
                 result = f"Error: {e}"
+            prev = [m.get("_action") for m in history[:-1] if m.get("_action")]
+            if prev and prev[-1] == a and a["action"] != "write":
+                result += "\nYou just did exactly this. Do something different."
             history.append({"role": "user", "content": f"{result}\n{files_line(ws)}"})
             print(f"  {task['id']} step {step + 1}: {rec['actions'][-1]} -> {result.splitlines()[0][:80]}", flush=True)
         rec["wall_s"] = round(time.time() - t0, 1)

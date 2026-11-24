@@ -26,7 +26,7 @@ The cap dominates. **Every model's maths misses except one are answers that ran 
 - Bonsai-4B: 16 misses, 15 at the cap.
 - Bonsai-9B: 13 misses, 12 at the cap.
 
-**Rescored 2026-11-24 (PR #20 review):** maths is now graded only from the last `Answer:` line, with no fallback to the last number in the text, and fractions are evaluated. Answers that ran out of tokens before an `Answer:` line now count as wrong. Before rescoring, a lenient last-number fallback credited a few cap-hit answers (maths was 17 / 16 / 18).
+**Rescored 2026-11-24 (PR #20 review):** maths is now graded only from the last `Answer:` line, with no fallback to the last number in the text, and fractions are evaluated. Answers that ran out of tokens before an `Answer:` line now count as wrong. The raw jsonl and summary json keep the run-time verdicts; strict counts and the changed ids are in the `*_rescored.json` file next to them (`rescore_math.py`). Before rescoring, a lenient last-number fallback credited a few cap-hit answers (maths was 17 / 16 / 18).
 
 Seven items (intermediate algebra 279/1849/582/362/345/232 and geometry 283) hit the cap for **all three** models. Without thinking mode and with a
 1024-token budget, these level 4–5 problems mostly test whether the model finishes in time. The 9B hits the cap least, which is where its +2–3 comes from.

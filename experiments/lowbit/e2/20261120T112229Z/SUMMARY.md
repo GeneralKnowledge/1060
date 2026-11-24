@@ -56,7 +56,7 @@ trained model, so its KLD includes genuine model differences on top of quantisat
 
 At n=50 one standard error is about ±4–6 points. The differences among Bonsai, Q4_K_M and IQ2_M are within noise. The gap to IQ2_XXS is not.
 
-**Rescored 2026-11-24 (PR #20 review):** maths is now graded only from the last `Answer:` line, with no fallback to the last number in the text, and fractions are evaluated. Answers that ran out of tokens before an `Answer:` line now count as wrong. This changed Q4_K_M from 46 to 44 and IQ2_M from 40 to 36; Bonsai (44) and IQ2_XXS (13) are unchanged.
+**Rescored 2026-11-24 (PR #20 review):** maths is now graded only from the last `Answer:` line, with no fallback to the last number in the text, and fractions are evaluated. Answers that ran out of tokens before an `Answer:` line now count as wrong. The raw jsonl and summary json keep the run-time verdicts; strict counts and the changed ids are in the `*_rescored.json` file next to them (`rescore_math.py`). This changed Q4_K_M from 46 to 44 and IQ2_M from 40 to 36; Bonsai (44) and IQ2_XXS (13) are unchanged.
 
 ### Representative wrong answers
 

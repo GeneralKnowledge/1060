@@ -1,0 +1,64 @@
+{
+  "Qwen3.5-4B-Q4_K_M": {
+    "math_correct_strict": 44,
+    "math_correct_recorded": 46,
+    "math_n": 50,
+    "changed": [
+      {
+        "id": "gsm8k-test-8",
+        "recorded": true,
+        "strict": false,
+        "finish": "length"
+      },
+      {
+        "id": "gsm8k-test-21",
+        "recorded": true,
+        "strict": false,
+        "finish": "length"
+      }
+    ]
+  },
+  "Ternary-Bonsai-2-4B-Q2_0": {
+    "math_correct_strict": 44,
+    "math_correct_recorded": 44,
+    "math_n": 50,
+    "changed": []
+  },
+  "Qwen3.5-4B-IQ2_XXS": {
+    "math_correct_strict": 13,
+    "math_correct_recorded": 13,
+    "math_n": 50,
+    "changed": []
+  },
+  "Qwen3.5-4B-IQ2_M": {
+    "math_correct_strict": 36,
+    "math_correct_recorded": 40,
+    "math_n": 50,
+    "changed": [
+      {
+        "id": "gsm8k-test-4",
+        "recorded": true,
+        "strict": false,
+        "finish": "length"
+      },
+      {
+        "id": "gsm8k-test-8",
+        "recorded": true,
+        "strict": false,
+        "finish": "length"
+      },
+      {
+        "id": "gsm8k-test-19",
+        "recorded": true,
+        "strict": false,
+        "finish": "length"
+      },
+      {
+        "id": "gsm8k-test-20",
+        "recorded": true,
+        "strict": false,
+        "finish": "length"
+      }
+    ]
+  }
+}

@@ -1,0 +1,13 @@
+0.00.185.834 I srv  llama_server: initializing ...
+0.00.185.851 I cmn  common_param: common_params_print_info: verbosity = 3 (adjust with the `-lv N` CLI arg)
+0.00.234.999 W srv  server_setup: security: no API key is set and CORS allows all origins (see https://github.com/ggml-org/llama.cpp/pull/25655)
+0.00.237.137 I srv    load_model: loading model '/home/red/1060/models/Ternary-Bonsai-2-27B-Q2_0.gguf'
+0.05.534.873 W common_fit_params: failed to fit params to free device memory: n_gpu_layers already set by user to 50, abort
+3.41.292.710 E ggml_backend_cuda_buffer_type_alloc_buffer: allocating 448.88 MiB on device 0: cudaMalloc failed: out of memory
+3.41.292.729 E ggml_backend_buft_alloc_buffer_n_default: failed to allocate CUDA0 buffer of size 470679552
+3.41.771.330 E llama_init_from_model: failed to initialize the context: failed to allocate buffer for rs cache
+3.41.782.214 E cmn  common_init_: failed to create context with model '/home/red/1060/models/Ternary-Bonsai-2-27B-Q2_0.gguf'
+3.41.782.251 E cmn  common_init_: failed to create context with model '/home/red/1060/models/Ternary-Bonsai-2-27B-Q2_0.gguf'
+3.41.796.870 E srv    load_model: failed to create_context with model '/home/red/1060/models/Ternary-Bonsai-2-27B-Q2_0.gguf'
+3.41.825.127 I srv    operator(): operator(): cleaning up before exit...
+3.41.983.153 E srv  server_run_i: exiting due to model loading error

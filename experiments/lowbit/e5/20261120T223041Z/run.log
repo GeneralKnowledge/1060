@@ -1,0 +1,6 @@
+[22:50:26] fork Q2_0 baseline ngl50
+rc 0
+  pp512 59.44 +- 7.31
+  tg64 5.16 +- 0.07
+[22:55:04] e4_run.sh offload PTQ1_0 with fork bin
+e4_run exit 0

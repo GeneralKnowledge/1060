@@ -1,0 +1,8 @@
+{
+  "Ternary-Bonsai-2-9B-PQ2_0-MTP-Q8_0": {
+    "math_correct_strict": 46,
+    "math_correct_recorded": 46,
+    "math_n": 50,
+    "changed": []
+  }
+}

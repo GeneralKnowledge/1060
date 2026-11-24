@@ -1,0 +1,4 @@
+0.00.806.112 I llama_completion: llama backend init
+0.00.806.144 I llama_completion: load the model and apply lora adapter, if any
+0.12.596.025 W common_fit_params: failed to fit params to free device memory: n_gpu_layers already set by user to 64, abort
+4.17.180.107 I cmn          init: llama threadpool init, n_threads = 6

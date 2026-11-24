@@ -1,0 +1,53 @@
+{
+  "Qwen3.5-4B-Q4_K_M": {
+    "math_correct_strict": 15,
+    "math_correct_recorded": 17,
+    "math_n": 30,
+    "changed": [
+      {
+        "id": "test/number_theory/1055.json",
+        "recorded": true,
+        "strict": false,
+        "finish": "length"
+      },
+      {
+        "id": "test/algebra/892.json",
+        "recorded": true,
+        "strict": false,
+        "finish": "length"
+      }
+    ]
+  },
+  "Ternary-Bonsai-2-4B-Q2_0": {
+    "math_correct_strict": 14,
+    "math_correct_recorded": 16,
+    "math_n": 30,
+    "changed": [
+      {
+        "id": "test/counting_and_probability/525.json",
+        "recorded": true,
+        "strict": false,
+        "finish": "length"
+      },
+      {
+        "id": "test/algebra/892.json",
+        "recorded": true,
+        "strict": false,
+        "finish": "length"
+      }
+    ]
+  },
+  "Ternary-Bonsai-2-9B-Q2_0": {
+    "math_correct_strict": 17,
+    "math_correct_recorded": 18,
+    "math_n": 30,
+    "changed": [
+      {
+        "id": "test/prealgebra/1139.json",
+        "recorded": true,
+        "strict": false,
+        "finish": "length"
+      }
+    ]
+  }
+}

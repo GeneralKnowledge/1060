@@ -1,0 +1,4 @@
+config,ngl,status,prompt_tokens,pp_tps,tg_tps,peak_vram_mib
+A_f16_ub256_c4096,65,fail_rc124,,,,5875
+A_f16_ub256_c4096,64,fail_rc124,,,,67
+A_f16_ub256_c4096,63,fail_rc124,,,,67

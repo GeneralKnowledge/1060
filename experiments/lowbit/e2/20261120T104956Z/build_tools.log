@@ -1,0 +1,17 @@
+[  0%] Building CXX object common/CMakeFiles/llama-common-base.dir/build-info.cpp.o
+[  0%] Building C object ggml/src/CMakeFiles/ggml-base.dir/ggml.c.o
+[  0%] Linking CXX static library libllama-common-base.a
+[  0%] Built target llama-common-base
+[  0%] Building CXX object vendor/cpp-httplib/CMakeFiles/cpp-httplib.dir/httplib.cpp.o
+[  2%] Building CXX object ggml/src/CMakeFiles/ggml-base.dir/ggml.cpp.o
+[  2%] Building C object ggml/src/CMakeFiles/ggml-base.dir/ggml-alloc.c.o
+[  2%] Building CXX object ggml/src/CMakeFiles/ggml-base.dir/ggml-backend.cpp.o
+[  2%] Building CXX object ggml/src/CMakeFiles/ggml-base.dir/ggml-backend-meta.cpp.o
+[  2%] Building CXX object ggml/src/CMakeFiles/ggml-base.dir/ggml-opt.cpp.o
+[  2%] Building CXX object ggml/src/CMakeFiles/ggml-base.dir/ggml-threading.cpp.o
+[  4%] Building C object ggml/src/CMakeFiles/ggml-base.dir/ggml-quants.c.o
+gmake[3]: *** [vendor/cpp-httplib/CMakeFiles/cpp-httplib.dir/build.make:76: vendor/cpp-httplib/CMakeFiles/cpp-httplib.dir/httplib.cpp.o] Terminated
+gmake[3]: *** [ggml/src/CMakeFiles/ggml-base.dir/build.make:174: ggml/src/CMakeFiles/ggml-base.dir/ggml-quants.c.o] Terminated
+gmake[2]: *** [CMakeFiles/Makefile2:2143: vendor/cpp-httplib/CMakeFiles/cpp-httplib.dir/all] Terminated
+gmake[1]: *** [CMakeFiles/Makefile2:5106: tools/quantize/CMakeFiles/llama-quantize.dir/rule] Terminated
+gmake: *** [Makefile:1843: llama-quantize] Terminated

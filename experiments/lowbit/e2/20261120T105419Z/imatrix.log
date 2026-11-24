@@ -1,0 +1,8 @@
+0.34.187.750 I cmn          init: llama threadpool init, n_threads = 6
+0.34.187.773 I 
+0.34.187.847 I system_info: n_threads = 6 (n_threads_batch = 6) / 12 | CPU : SSE3 = 1 | SSSE3 = 1 | AVX = 1 | AVX2 = 1 | F16C = 1 | FMA = 1 | BMI2 = 1 | LLAMAFILE = 1 | OPENMP = 1 | REPACK = 1 | 
+0.34.187.850 I compute_imatrix: tokenizing the input ..
+0.34.279.349 I compute_imatrix: tokenization took 91.493 ms
+0.34.279.380 I compute_imatrix: computing over 40 chunks, n_ctx=512, batch_size=2048, n_seq=4
+7.32.543.534 I compute_imatrix: 418.26 seconds per pass - ETA 1 hours 9.70 minutes
+[1]5.9906,[2]8.4824,[3]8.6242,[4]8.5043,

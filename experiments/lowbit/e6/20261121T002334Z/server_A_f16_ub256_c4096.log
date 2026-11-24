@@ -1,0 +1,23 @@
+0.00.013.235 I srv  llama_server: initializing ...
+0.00.013.248 I cmn  common_param: common_params_print_info: verbosity = 3 (adjust with the `-lv N` CLI arg)
+0.00.013.694 W srv  server_setup: security: no API key is set and CORS allows all origins (see https://github.com/ggml-org/llama.cpp/pull/25655)
+0.00.015.446 I srv    load_model: loading model '/home/red/1060/models/Ternary-Bonsai-2-27B-PTQ1_0.gguf'
+0.00.457.611 W common_fit_params: failed to fit params to free device memory: n_gpu_layers already set by user to 59, abort
+0.02.191.013 I cmn          init: llama threadpool init, n_threads = 6
+0.02.578.896 I srv    load_model: initializing, n_slots = 1, n_ctx_slot = 4096, kv_unified = 'false'
+0.02.584.171 W srv          init: chat template supports preserving reasoning, it is enabled by default (may use more tokens, disable via --no-reasoning-preserve)
+0.02.584.212 I srv  server_run_i: model loaded
+0.02.584.217 I srv  server_on_li: listening on http://127.0.0.1:8099
+0.03.143.419 I slot get_availabl: id  0 | task -1 | selected slot by LRU, n_tokens = 0, t_last = -1
+0.03.143.447 I slot launch_slot_: id  0 | task 0 | processing task, is_child = 0
+0.42.864.454 I slot print_timing: id  0 | task 0 | prompt processing, n_tokens =   2048, progress = 0.64, t =  39.72 s / 51.56 tokens per second
+1.04.203.833 I slot print_timing: id  0 | task 0 | prompt processing, n_tokens =   2952, progress = 0.92, t =  61.06 s / 48.35 tokens per second
+1.09.413.095 I slot print_timing: id  0 | task 0 | prompt processing, n_tokens =   3208, progress = 1.00, t =  66.27 s / 48.41 tokens per second
+1.21.356.326 I slot print_timing: id  0 | task 0 | prompt eval time =   69277.93 ms /  3212 tokens (   21.57 ms per token,    46.36 tokens per second)
+1.21.356.331 I slot print_timing: id  0 | task 0 |        eval time =    8934.93 ms /    64 tokens (  141.82 ms per token,     7.05 tokens per second)
+1.21.356.332 I slot print_timing: id  0 | task 0 |       total time =   78212.85 ms /  3276 tokens
+1.21.356.336 I slot print_timing: id  0 | task 0 |    graphs reused =         63
+1.21.356.336 I slot print_timing: id  0 | task 0 |   graph reallocs =         12    /     0        (same size) / (changed size)
+1.21.356.678 I slot      release: id  0 | task 0 | stop processing: n_tokens = 3275, truncated = 0
+1.21.572.469 I srv    operator(): operator(): cleaning up before exit...
+1.21.574.506 W ~llama_context:      CUDA0 compute buffer size of  90.1582 MiB, does not match expectation of  76.0020 MiB

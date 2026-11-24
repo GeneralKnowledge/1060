@@ -1,0 +1,10 @@
+0.00.014.855 I llama_completion: llama backend init
+0.00.014.862 I llama_completion: load the model and apply lora adapter, if any
+0.00.470.585 W common_fit_params: failed to fit params to free device memory: n_gpu_layers already set by user to 65, abort
+3.41.928.698 E ggml_backend_cuda_buffer_type_alloc_buffer: allocating 264.51 MiB on device 0: cudaMalloc failed: out of memory
+3.41.928.737 E ggml_gallocr_reserve_n_impl: failed to allocate CUDA0 buffer of size 277359744
+3.41.928.741 E graph_reserve: failed to allocate compute buffers
+3.43.225.060 E llama_init_from_model: failed to initialize the context: failed to allocate compute pp buffers
+3.43.225.135 E cmn  common_init_: failed to create context with model '/home/red/1060/models/Ternary-Bonsai-2-27B-PTQ1_0.gguf'
+3.43.390.171 E cmn  common_init_: failed to create context with model '/home/red/1060/models/Ternary-Bonsai-2-27B-PTQ1_0.gguf'
+3.43.390.221 E llama_completion: error: unable to create context

@@ -1,0 +1,55 @@
+[
+(lldb) process attach --pid 1308746
+Process 1308746 stopped
+* thread #1, name = 'llama-bench', stop reason = signal SIGSTOP
+    frame #0: 0x000075efc5b108d3 libc.so.6`wait4 + 83
+libc.so.6`wait4:
+->  0x75efc5b108d3 <+83>: cmpq   $-0x1000, %rax            ; imm = 0xF000 
+    0x75efc5b108d9 <+89>: ja     0x75efc5b10908            ; <+136>
+    0x75efc5b108db <+91>: movl   %r8d, %edi
+    0x75efc5b108de <+94>: movl   %eax, -0x4(%rbp)
+  thread #2, name = 'cuda00001400006', stop reason = signal SIGSTOP
+    frame #0: 0x000075efc5b1b75d libc.so.6`__poll + 77
+libc.so.6`__poll:
+->  0x75efc5b1b75d <+77>: cmpq   $-0x1000, %rax            ; imm = 0xF000 
+    0x75efc5b1b763 <+83>: ja     0x75efc5b1b790            ; <+128>
+    0x75efc5b1b765 <+85>: movl   %r8d, %edi
+    0x75efc5b1b768 <+88>: movl   %eax, -0x8(%rbp)
+  thread #3, name = 'cuda-EvtHandlr', stop reason = signal SIGSTOP
+    frame #0: 0x000075efc5b1b75d libc.so.6`__poll + 77
+libc.so.6`__poll:
+->  0x75efc5b1b75d <+77>: cmpq   $-0x1000, %rax            ; imm = 0xF000 
+    0x75efc5b1b763 <+83>: ja     0x75efc5b1b790            ; <+128>
+    0x75efc5b1b765 <+85>: movl   %r8d, %edi
+    0x75efc5b1b768 <+88>: movl   %eax, -0x8(%rbp)
+  thread #4, name = 'llama-bench', stop reason = signal SIGSTOP
+    frame #0: 0x000075efc5a98e31 libc.so.6`___lldb_unnamed_symbol3645 + 225
+libc.so.6`___lldb_unnamed_symbol3645:
+->  0x75efc5a98e31 <+225>: movl   %r13d, %edi
+    0x75efc5a98e34 <+228>: movq   %rax, %rbx
+    0x75efc5a98e37 <+231>: callq  0x75efc5a98690            ; ___lldb_unnamed_symbol3633
+    0x75efc5a98e3c <+236>: jmp    0x75efc5a98da6            ; <+86>
+Target 0: (llama-bench) stopped.
+Executable binary set to "/home/red/1060/backends/builds/prism-d7b289683/bin/llama-bench".
+Architecture set to: x86_64-unknown-linux-gnu.
+(lldb) bt
+* thread #1, name = 'llama-bench', stop reason = signal SIGSTOP
+  * frame #0: 0x000075efc5b108d3 libc.so.6`wait4 + 83
+    frame #1: 0x000075efc60e9cd3 libggml-base.so.0`ggml_print_backtrace + 595
+    frame #2: 0x000075efc60e9e7b libggml-base.so.0`ggml_abort + 347
+    frame #3: 0x000075efbc3047b7 libggml-cuda.so.0`ggml_cuda_error(char const*, char const*, char const*, int, char const*) + 167
+    frame #4: 0x000075efbc32aa52 libggml-cuda.so.0`ggml_cuda_pool_vmm::alloc(unsigned long, unsigned long*) + 1282
+    frame #5: 0x000075efbc30fa5f libggml-cuda.so.0`void ggml_cuda_mul_mat_cublas_impl<(ggml_type)0>(ggml_backend_cuda_context&, ggml_tensor const*, ggml_tensor const*, ggml_tensor*) + 2703
+    frame #6: 0x000075efbc316557 libggml-cuda.so.0`ggml_cuda_compute_forward(ggml_backend_cuda_context&, ggml_tensor*) + 167
+    frame #7: 0x000075efbc3238e5 libggml-cuda.so.0`ggml_cuda_graph_evaluate_and_capture(ggml_backend_cuda_context*, ggml_cgraph*, bool, bool, void const*) + 3877
+    frame #8: 0x000075efbc325f73 libggml-cuda.so.0`ggml_backend_cuda_graph_compute(ggml_backend*, ggml_cgraph*) + 275
+    frame #9: 0x000075efc6109700 libggml-base.so.0`ggml_backend_sched_graph_compute_async + 1664
+    frame #10: 0x000075efc50613f2 libllama.so.0`llama_context::graph_compute(ggml_cgraph*, bool) + 226
+    frame #11: 0x000075efc5068cc3 libllama.so.0`llama_context::process_ubatch(llama_ubatch const&, llm_graph_type, llama_memory_context_i*, ggml_status&) + 387
+    frame #12: 0x000075efc507176f libllama.so.0`llama_context::decode(llama_batch_ext const&) + 1551
+    frame #13: 0x000075efc6211473 libllama-bench-impl.so`test_prompt(llama_context*, int, int, int) + 403
+    frame #14: 0x000075efc62208e8 libllama-bench-impl.so`llama_bench(int, char**) + 3752
+    frame #15: 0x000075efc5a2a1ca libc.so.6`___lldb_unnamed_symbol3278 + 122
+    frame #16: 0x000075efc5a2a28b libc.so.6`__libc_start_main + 139
+    frame #17: 0x00005f92827762a5 llama-bench`_start + 37
+(lldb) quit

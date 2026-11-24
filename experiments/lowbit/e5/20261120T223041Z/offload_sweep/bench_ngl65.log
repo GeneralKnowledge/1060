@@ -1,0 +1,7 @@
+ggml_cuda_init: found 1 CUDA devices (Total VRAM: 6065 MiB):
+  Device 0: NVIDIA GeForce GTX 1060 with Max-Q Design, compute capability 6.1, VMM: yes, VRAM: 6065 MiB
+CUDA error: out of memory
+  current device: 0, in function alloc at /home/red/1060/backends/src/prism-llama.cpp/ggml/src/ggml-cuda/ggml-cuda.cu:631
+  cuMemCreate(&handle, reserve_size, &prop, 0)
+/home/red/1060/backends/src/prism-llama.cpp/ggml/src/ggml-cuda/ggml-cuda.cu:111: CUDA error
+timeout: the monitored command dumped core

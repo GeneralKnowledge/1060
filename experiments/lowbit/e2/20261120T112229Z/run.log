@@ -1,0 +1,35 @@
+[11:22:56] step 2: imatrix
+[11:39:03] step 3: quantize IQ2_XXS
+[11:45:10] step 3: quantize IQ2_M
+/home/red/1060/models/Qwen3.5-4B-Q4_K_M.gguf 2740937888
+00fe7986ff5f6b463e62455821146049db6f9313603938a70800d1fb69ef11a4  /home/red/1060/models/Qwen3.5-4B-Q4_K_M.gguf
+/home/red/1060/models/Ternary-Bonsai-2-4B-Q2_0.gguf 1212103520
+64a5183b44921bdb5ac4a6f5f92007821d6ebe5c66997d3c147fd214ab9433d4  /home/red/1060/models/Ternary-Bonsai-2-4B-Q2_0.gguf
+/home/red/1060/models/Qwen3.5-4B-IQ2_XXS.gguf 1538393280
+e7d0834e48cb27fc3d9261044eed8af027f629e8cdc6e16df43d7608a9b91bad  /home/red/1060/models/Qwen3.5-4B-IQ2_XXS.gguf
+/home/red/1060/models/Qwen3.5-4B-IQ2_M.gguf 1741554880
+8427e2c128c09ebadcebc4f384a9de4e12b3ba4405b664aa337fa469a8b794f9  /home/red/1060/models/Qwen3.5-4B-IQ2_M.gguf
+[11:51:01] step 4: bench Qwen3.5-4B-Q4_K_M
+[11:52:08] step 4: bench Ternary-Bonsai-2-4B-Q2_0
+[11:52:46] step 4: bench Qwen3.5-4B-IQ2_XXS
+[11:53:36] step 4: bench Qwen3.5-4B-IQ2_M
+[11:54:27] step 5: kld Qwen3.5-4B-IQ2_XXS
+chunk             PPL               ln(PPL(Q)/PPL(base))          KL Divergence              Δp RMS            Same top p
+Mean PPL(Q)                   :  15.850962 ±   0.630914
+Mean PPL(Q)/PPL(base)         :   1.563174 ±   0.028563
+Mean PPL(Q)-PPL(base)         :   5.710722 ±   0.332298
+Mean    KLD:   0.559110 ±   0.011349
+Same top p: 66.706 ± 0.660 %
+[11:55:23] step 5: kld Qwen3.5-4B-IQ2_M
+chunk             PPL               ln(PPL(Q)/PPL(base))          KL Divergence              Δp RMS            Same top p
+Mean PPL(Q)                   :  12.469470 ±   0.482985
+Mean PPL(Q)/PPL(base)         :   1.229702 ±   0.016269
+Mean PPL(Q)-PPL(base)         :   2.329230 ±   0.174253
+Mean    KLD:   0.287447 ±   0.008460
+Same top p: 76.118 ± 0.597 %
+[11:56:19] step 6: GSM8K-50 + 10 coding tasks
+Qwen3.5-4B-Q4_K_M {"math_correct": 46, "math_n": 50, "code_pass": 10, "code_n": 10, "hit_max_tokens": 4, "gen_tokens": 15496, "median_gen_tps": 28.56, "wall_s": 641.2}
+Ternary-Bonsai-2-4B-Q2_0 {"math_correct": 44, "math_n": 50, "code_pass": 10, "code_n": 10, "hit_max_tokens": 3, "gen_tokens": 13980, "median_gen_tps": 49.12, "wall_s": 356.1}
+Qwen3.5-4B-IQ2_XXS {"math_correct": 13, "math_n": 50, "code_pass": 3, "code_n": 10, "hit_max_tokens": 52, "gen_tokens": 27871, "median_gen_tps": 30.49, "wall_s": 998.1}
+Qwen3.5-4B-IQ2_M {"math_correct": 40, "math_n": 50, "code_pass": 6, "code_n": 10, "hit_max_tokens": 13, "gen_tokens": 16435, "median_gen_tps": 28.45, "wall_s": 681.7}
+[12:41:03] done: /home/red/1060-e1/experiments/lowbit/e2/20261120T112229Z

@@ -280,7 +280,11 @@ def main():
             finally:
                 if proc:
                     proc.terminate()
-                    proc.wait(timeout=30)
+                    try:
+                        proc.wait(timeout=120)  # the GPU driver can hold it for a while
+                    except subprocess.TimeoutExpired:
+                        proc.kill()
+                        proc.wait(timeout=120)
             summary[tag] = {
                 "hidden_pass": sum(r["hidden_pass"] for r in recs), "tasks": len(recs),
                 "by_level": {lv: f"{sum(r['hidden_pass'] for r in recs if r['level'] == lv)}/{sum(1 for r in recs if r['level'] == lv)}"
@@ -294,7 +298,7 @@ def main():
                 "load_s": round(load_s, 1), "wall_s": round(time.time() - t0, 1),
             }
             print(tag, json.dumps(summary[tag]), flush=True)
-    (out / "summary.json").write_text(json.dumps(summary, indent=2))
+            (out / "summary.json").write_text(json.dumps(summary, indent=2))  # after each model
 
 
 if __name__ == "__main__":

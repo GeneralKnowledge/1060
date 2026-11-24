@@ -49,7 +49,7 @@ Each model solves a different subset of the code tasks, and 6 of the 8 tasks spl
 | criterion | result | verdict |
 |---|---|---|
 | Spread ≥ 15 points between the three models | maths 53–60 % (7 points); total 55–61 % (5 points) | **FAIL** |
-| Expected order 9B > Q4_K_M > Bonsai-4B | maths 18 > 17 > 16 (matches); total 23 = 23 > 21 | order matches on maths, but the gaps are 1 item each, well inside noise (±9 points at n=30) |
+| Expected order 9B > Q4_K_M > Bonsai-4B | maths 17 > 15 > 14 (matches, after rescoring); total 22 > 21 > 19 | order matches on maths, but the gaps are 1–2 items each, well inside noise (±9 points at n=30) |
 
 **E4a fails to separate the models.** The harder set moved all three from about 90 % to about 57 %, but they moved together. The remaining gap is
 1–2 items, and most of it comes from finishing within the 1024-token cap rather than from being right more often. To separate them, a next eval

@@ -1,0 +1,16 @@
+0.01.988.093 I srv  llama_server: initializing ...
+0.01.988.152 I cmn  common_param: common_params_print_info: verbosity = 3 (adjust with the `-lv N` CLI arg)
+0.03.142.850 W srv  server_setup: security: no API key is set and CORS allows all origins (see https://github.com/ggml-org/llama.cpp/pull/25655)
+0.03.146.720 I srv    load_model: loading model '/home/red/1060/models/Ternary-Bonsai-2-27B-PTQ1_0.gguf'
+0.09.526.195 W common_fit_params: failed to fit params to free device memory: n_gpu_layers already set by user to 56, abort
+8.20.335.101 I cmn          init: llama threadpool init, n_threads = 6
+9.29.338.125 I common_speculative_init_result: loading draft model '/home/red/1060/models/Ternary-Bonsai-2-2B-PTQ1_0.gguf'
+10.38.228.468 I srv    load_model: initializing, n_slots = 1, n_ctx_slot = 4096, kv_unified = 'false'
+11.04.620.553 I srv    load_model: speculative decoding enabled: draft-simple
+11.05.368.246 W srv          init: chat template supports preserving reasoning, it is enabled by default (may use more tokens, disable via --no-reasoning-preserve)
+11.05.477.113 I srv  server_run_i: model loaded
+11.05.477.517 I srv  server_on_li: listening on http://127.0.0.1:8099
+11.26.723.687 I slot get_availabl: id  0 | task -1 | selected slot by LRU, n_tokens = 0, t_last = -1
+11.26.724.384 I slot launch_slot_: id  0 | task 0 | processing task, is_child = 0
+/home/red/1060/backends/src/prism-llama.cpp/ggml/src/ggml-cuda/ggml-cuda.cu:111: CUDA error
+11.30.607.966 

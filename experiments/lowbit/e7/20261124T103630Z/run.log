@@ -1,0 +1,100 @@
+[10:36:31] variant A0: Ternary-Bonsai-2-9B-Q2_0.gguf -ngl 99 -fa 1 -ctk f16 -ctv f16 -b 2048 -ub 256
+  A0 gsm8k-test-0: 178 tok, 32.35 tok/s
+  A0 gsm8k-test-1: 109 tok, 32.27 tok/s
+  A0 gsm8k-test-2: 256 tok, 32.15 tok/s
+  A0 test/prealgebra/1139.json: 256 tok, 32.02 tok/s
+  A0 test/number_theory/737.json: 256 tok, 31.94 tok/s
+  A0 hcode-lru_cache: 186 tok, 32.00 tok/s
+[A0] ok ready 38.1s peak VRAM 2549 MiB min MemAvailable 4867 MiB
+[10:37:57] variant A3a: Ternary-Bonsai-2-9B-Q2_0.gguf -ngl 99 -fa 1 -ctk f16 -ctv f16 -b 2048 -ub 256 --spec-type ngram-mod
+  A3a gsm8k-test-0: 178 tok, 31.94 tok/s
+  A3a gsm8k-test-1: 109 tok, 28.91 tok/s acc 1/64
+  A3a gsm8k-test-2: 256 tok, 30.64 tok/s acc 1/64
+  A3a test/prealgebra/1139.json: 256 tok, 30.52 tok/s acc 1/64
+  A3a test/number_theory/737.json: 256 tok, 30.48 tok/s acc 0/64
+  A3a hcode-lru_cache: 186 tok, 31.66 tok/s
+[A3a] ok ready 2.2s peak VRAM 2573 MiB min MemAvailable 4881 MiB
+[10:38:50] variant B0: Ternary-Bonsai-2-27B-PTQ1_0.gguf -ngl 62 -fa 1 -ctk q8_0 -ctv q8_0 -b 2048 -ub 128
+  B0 gsm8k-test-0: 157 tok, 6.54 tok/s
+  B0 gsm8k-test-1: 109 tok, 8.12 tok/s
+  B0 gsm8k-test-2: 256 tok, 7.16 tok/s
+  B0 test/prealgebra/1139.json: 256 tok, 7.81 tok/s
+  B0 test/number_theory/737.json: 256 tok, 8.12 tok/s
+  B0 hcode-lru_cache: 229 tok, 8.04 tok/s
+[B0] ok ready 352.1s peak VRAM 5909 MiB min MemAvailable 3386 MiB
+[10:49:09] variant B1: Ternary-Bonsai-2-27B-PTQ1_0.gguf -ngl 62 -fa 1 -ctk q8_0 -ctv q8_0 -b 2048 -ub 128 --spec-type ngram-mod
+  B1 gsm8k-test-0: 157 tok, 7.30 tok/s
+[B1] FAILED: Remote end closed connection without response ready 851.5s peak VRAM 5935 MiB min MemAvailable 4327 MiB
+[11:04:31] done: /home/red/1060-e1/experiments/lowbit/e7/20261124T103630Z
+[11:05:01] variant A1n: Ternary-Bonsai-2-9B-PQ2_0-MTP-Q8_0.gguf -ngl 99 -fa 1 -ctk f16 -ctv f16 -b 2048 -ub 256
+  A1n gsm8k-test-0: 178 tok, 38.77 tok/s
+  A1n gsm8k-test-1: 109 tok, 38.71 tok/s
+  A1n gsm8k-test-2: 256 tok, 38.49 tok/s
+  A1n test/prealgebra/1139.json: 256 tok, 38.31 tok/s
+  A1n test/number_theory/737.json: 256 tok, 38.31 tok/s
+  A1n hcode-lru_cache: 186 tok, 38.36 tok/s
+[A1n] ok ready 61.2s peak VRAM 2431 MiB min MemAvailable 5179 MiB
+[11:07:01] variant A1m2: Ternary-Bonsai-2-9B-PQ2_0-MTP-Q8_0.gguf -ngl 99 -fa 1 -ctk f16 -ctv f16 -b 2048 -ub 256 --spec-type draft-mtp --spec-draft-n-max 2
+  A1m2 gsm8k-test-0: 178 tok, 69.93 tok/s acc 112/130
+  A1m2 gsm8k-test-1: 109 tok, 72.42 tok/s acc 68/80
+  A1m2 gsm8k-test-2: 256 tok, 73.27 tok/s acc 162/184
+  A1m2 test/prealgebra/1139.json: 256 tok, 68.74 tok/s acc 156/196
+  A1m2 test/number_theory/737.json: 256 tok, 74.57 tok/s acc 164/182
+  A1m2 hcode-lru_cache: 186 tok, 77.00 tok/s acc 122/128
+[A1m2] ok ready 2.0s peak VRAM 2847 MiB min MemAvailable 5061 MiB
+[11:07:29] variant A1m3: Ternary-Bonsai-2-9B-PQ2_0-MTP-Q8_0.gguf -ngl 99 -fa 1 -ctk f16 -ctv f16 -b 2048 -ub 256 --spec-type draft-mtp --spec-draft-n-max 3
+  A1m3 gsm8k-test-0: 175 tok, 61.65 tok/s acc 120/165
+  A1m3 gsm8k-test-1: 109 tok, 66.25 tok/s acc 76/96
+  A1m3 gsm8k-test-2: 256 tok, 66.63 tok/s acc 180/224
+  A1m3 test/prealgebra/1139.json: 256 tok, 59.76 tok/s acc 171/248
+  A1m3 test/number_theory/737.json: 256 tok, 67.50 tok/s acc 181/221
+  A1m3 hcode-lru_cache: 186 tok, 70.80 tok/s acc 134/153
+[A1m3] ok ready 2.0s peak VRAM 2897 MiB min MemAvailable 5084 MiB
+[11:07:59] variant A2n: Ternary-Bonsai-2-9B-PQ2_0-MTP-Q8_0.gguf -ngl 99 -fa 1 -ctk q8_0 -ctv q8_0 -b 2048 -ub 256
+  A2n gsm8k-test-0: 175 tok, 37.88 tok/s
+  A2n gsm8k-test-1: 109 tok, 37.89 tok/s
+  A2n gsm8k-test-2: 256 tok, 37.76 tok/s
+  A2n test/prealgebra/1139.json: 256 tok, 37.64 tok/s
+  A2n test/number_theory/737.json: 256 tok, 37.74 tok/s
+  A2n hcode-lru_cache: 186 tok, 37.82 tok/s
+[A2n] ok ready 2.0s peak VRAM 2371 MiB min MemAvailable 5081 MiB
+[11:08:42] variant A2m2: Ternary-Bonsai-2-9B-PQ2_0-MTP-Q8_0.gguf -ngl 99 -fa 1 -ctk q8_0 -ctv q8_0 -b 2048 -ub 256 --spec-type draft-mtp --spec-draft-n-max 2
+  A2m2 gsm8k-test-0: 178 tok, 70.93 tok/s acc 112/130
+  A2m2 gsm8k-test-1: 109 tok, 71.21 tok/s acc 68/80
+  A2m2 gsm8k-test-2: 256 tok, 72.20 tok/s acc 162/184
+  A2m2 test/prealgebra/1139.json: 256 tok, 68.22 tok/s acc 157/194
+  A2m2 test/number_theory/737.json: 256 tok, 73.19 tok/s acc 164/182
+  A2m2 hcode-lru_cache: 186 tok, 75.85 tok/s acc 122/128
+[A2m2] ok ready 2.2s peak VRAM 2787 MiB min MemAvailable 4797 MiB
+[11:09:10] variant A2m3: Ternary-Bonsai-2-9B-PQ2_0-MTP-Q8_0.gguf -ngl 99 -fa 1 -ctk q8_0 -ctv q8_0 -b 2048 -ub 256 --spec-type draft-mtp --spec-draft-n-max 3
+  A2m3 gsm8k-test-0: 178 tok, 60.01 tok/s acc 121/171
+  A2m3 gsm8k-test-1: 109 tok, 65.36 tok/s acc 76/96
+  A2m3 gsm8k-test-2: 256 tok, 58.86 tok/s acc 171/250
+  A2m3 test/prealgebra/1139.json: 256 tok, 56.01 tok/s acc 169/254
+  A2m3 test/number_theory/737.json: 256 tok, 66.56 tok/s acc 181/221
+  A2m3 hcode-lru_cache: 186 tok, 70.18 tok/s acc 134/153
+[A2m3] ok ready 2.0s peak VRAM 2837 MiB min MemAvailable 4922 MiB
+[11:09:40] done: /home/red/1060-e1/experiments/lowbit/e7/20261124T103630Z
+[11:09:53] variant A3b: Ternary-Bonsai-2-9B-PQ2_0-MTP-Q8_0.gguf -ngl 99 -fa 1 -ctk q8_0 -ctv q8_0 -b 2048 -ub 256 --spec-type draft-mtp,ngram-mod --spec-draft-n-max 2
+  A3b gsm8k-test-0: 178 tok, 71.43 tok/s acc 112/130
+  A3b gsm8k-test-1: 109 tok, 57.30 tok/s acc 68/140
+  A3b gsm8k-test-2: 256 tok, 66.62 tok/s acc 162/244
+  A3b test/prealgebra/1139.json: 256 tok, 62.01 tok/s acc 155/258
+  A3b test/number_theory/737.json: 256 tok, 66.73 tok/s acc 163/244
+  A3b hcode-lru_cache: 186 tok, 75.98 tok/s acc 122/128
+[A3b] ok ready 2.0s peak VRAM 2811 MiB min MemAvailable 4845 MiB
+[11:10:22] variant B2cpu3: Ternary-Bonsai-2-27B-PTQ1_0.gguf -ngl 62 -fa 1 -ctk q8_0 -ctv q8_0 -b 2048 -ub 128 -md /home/red/1060/models/Ternary-Bonsai-2-2B-PTQ1_0.gguf -ngld 0 --spec-type draft-simple --spec-draft-n-max 3
+[B2cpu3] FAILED: Remote end closed connection without response ready 358.2s peak VRAM 6011 MiB min MemAvailable 5471 MiB
+[11:17:03] variant B2g56n3: Ternary-Bonsai-2-27B-PTQ1_0.gguf -ngl 56 -fa 1 -ctk q8_0 -ctv q8_0 -b 2048 -ub 128 -md /home/red/1060/models/Ternary-Bonsai-2-2B-PTQ1_0.gguf -ngld all -ctkd q8_0 -ctvd q8_0 --spec-type draft-simple --spec-draft-n-max 3
+[B2g56n3] FAILED: Remote end closed connection without response ready 681.0s peak VRAM 5975 MiB min MemAvailable 5259 MiB
+[11:29:04] variant B2g54n3: Ternary-Bonsai-2-27B-PTQ1_0.gguf -ngl 54 -fa 1 -ctk q8_0 -ctv q8_0 -b 2048 -ub 128 -md /home/red/1060/models/Ternary-Bonsai-2-2B-PTQ1_0.gguf -ngld all -ctkd q8_0 -ctvd q8_0 --spec-type draft-simple --spec-draft-n-max 3
+[B2g54n3] FAILED: Remote end closed connection without response ready 876.3s peak VRAM 5987 MiB min MemAvailable 4940 MiB
+[11:44:44] variant B2g52n3: Ternary-Bonsai-2-27B-PTQ1_0.gguf -ngl 52 -fa 1 -ctk q8_0 -ctv q8_0 -b 2048 -ub 128 -md /home/red/1060/models/Ternary-Bonsai-2-2B-PTQ1_0.gguf -ngld all -ctkd q8_0 -ctvd q8_0 --spec-type draft-simple --spec-draft-n-max 3
+  B2g52n3 gsm8k-test-0: 157 tok, 3.12 tok/s acc 70/258
+  B2g52n3 gsm8k-test-1: 109 tok, 3.45 tok/s acc 60/144
+  B2g52n3 gsm8k-test-2: 256 tok, 3.63 tok/s acc 144/332
+  B2g52n3 test/prealgebra/1139.json: 256 tok, 3.23 tok/s acc 130/370
+  B2g52n3 test/number_theory/737.json: 256 tok, 3.44 tok/s acc 143/333
+  B2g52n3 hcode-lru_cache: 229 tok, 3.09 tok/s acc 118/330
+[B2g52n3] ok ready 677.8s peak VRAM 6007 MiB min MemAvailable 2663 MiB
+[12:06:11] variant B2g52n5: Ternary-Bonsai-2-27B-PTQ1_0.gguf -ngl 52 -fa 1 -ctk q8_0 -ctv q8_0 -b 2048 -ub 128 -md /home/red/1060/models/Ternary-Bonsai-2-2B-PTQ1_0.gguf -ngld all -ctkd q8_0 -ctvd q8_0 --spec-type draft-simple --spec-draft-n-max 5

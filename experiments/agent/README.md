@@ -19,3 +19,7 @@ Self-check without a model: `python3 experiments/agent/agent_bench.py --fake --o
 Outputs per run: `summary.json` (hidden pass rate by model and level, said-done, own tests
 passing, invalid actions, steps, tokens, time), `runs.jsonl` (per task, with final files),
 `transcripts.jsonl`, `gpu.csv`.
+
+`--tests-first`: two conversations per task. First the model writes one test file from the task
+alone (up to 3 tries, must compile). Then a fresh conversation sees the task plus those tests,
+marked locked (writes to test files are refused), and writes the code. Same 14-step budget in total.
